@@ -10,53 +10,45 @@ class ScenarioPrintTests extends EngineStringStringTests with JunitUniverse[Stri
     scenario("s1_1").expected("a").scenario("s1_2").expected("b").
     useCase("uc2").scenario("s2_1").expected("c").scenario("s2_2").expected("d")
 
-  "Walking a scenario" should "visit each scenario and use case " in {
+  class ScenarioVisitorForTests extends ScenarioVisitor {
     var actualUseCaseStrings = List[String]();
     var actualEndUseCaseStrings = List[String]();
     var actualScenarioStrings = List[String]();
     var actualDescription: Option[String] = None
     var started = false
     var ended = false;
-    bldr.walkScenarios(new ScenarioVisitor() {
-      def start(engineDescription: Option[String]) = actualDescription = engineDescription; if (actualUseCaseStrings ::: actualEndUseCaseStrings ::: actualScenarioStrings != List()) throw new IllegalStateException; started = true; if (ended) throw new IllegalStateException
-      def visitUseCase(ui: Int, u: UseCase) = actualUseCaseStrings = (ui + "/" + u.description) :: actualUseCaseStrings; if (ended) throw new IllegalStateException
-      def visitUseCaseEnd(u: UseCase) = actualEndUseCaseStrings = u.description :: actualEndUseCaseStrings; if (ended) throw new IllegalStateException
-      def visitScenario(ui: Int, u: UseCase, si: Int, s: Scenario) = actualScenarioStrings = (ui + "/" + u.description + "/" + si + "/" + s.expected) :: actualScenarioStrings; if (ended) throw new IllegalStateException
-      def end = ended = true
-    }, false)
+    def start(engineDescription: Option[String]) = actualDescription = engineDescription; if (actualUseCaseStrings ::: actualEndUseCaseStrings ::: actualScenarioStrings != List()) throw new IllegalStateException; started = true; if (ended) throw new IllegalStateException
+    def visitUseCase(ui: Int, u: UseCase) = actualUseCaseStrings = (ui + "/" + u.description.get) :: actualUseCaseStrings; if (ended) throw new IllegalStateException
+    def visitUseCaseEnd(u: UseCase) = actualEndUseCaseStrings = u.description.get :: actualEndUseCaseStrings; if (ended) throw new IllegalStateException
+    def visitScenario(ui: Int, u: UseCase, si: Int, s: Scenario) = actualScenarioStrings = (ui + "/" + u.description.get + "/" + si + "/" + s.expected.getOrElse("<N/A>")) :: actualScenarioStrings; if (ended) throw new IllegalStateException
+    def end = ended = true
+  }
 
-    assert(started)
-    assert(ended)
-    assertEquals(List("0/uc2", "1/uc1"), actualUseCaseStrings.reverse)
-    assertEquals(List("uc2", "uc1"), actualEndUseCaseStrings.reverse)
-    assertEquals(List("0/uc2/0/d", "0/uc2/1/c", "1/uc1/0/b", "1/uc1/1/a"), actualScenarioStrings.reverse)
-    assertEquals(Some("EngineDescription"), actualDescription)
+  "Walking a scenario" should "visit each scenario and use case " in {
+    val visitor = new ScenarioVisitorForTests
+    bldr.walkScenarios(visitor, false)
+
+    assert(visitor.started)
+    assert(visitor.ended)
+    assertEquals(List("0/uc2", "1/uc1"), visitor.actualUseCaseStrings.reverse)
+    assertEquals(List("uc2", "uc1"), visitor.actualEndUseCaseStrings.reverse)
+    assertEquals(List("0/uc2/0/d", "0/uc2/1/c", "1/uc1/0/b", "1/uc1/1/a"), visitor.actualScenarioStrings.reverse)
+    assertEquals(Some("EngineDescription"), visitor.actualDescription)
   }
 
   "Walking a scenario in reverse" should "visit each scenario and use case " in {
-    var actualUseCaseStrings = List[String]();
-    var actualEndUseCaseStrings = List[String]();
-    var actualScenarioStrings = List[String]();
-    var started = false
-    var ended = false;
-    var actualDescription: Option[String] = None
-    bldr.walkScenarios(new ScenarioVisitor() {
-      def start(engineDescription: Option[String]) = actualDescription = engineDescription; if (actualUseCaseStrings ::: actualEndUseCaseStrings ::: actualScenarioStrings != List()) throw new IllegalStateException; started = true; if (ended) throw new IllegalStateException
-      def visitUseCase(ui: Int, u: UseCase) = actualUseCaseStrings = (ui + "/" + u.description) :: actualUseCaseStrings; if (ended) throw new IllegalStateException
-      def visitUseCaseEnd(u: UseCase) = actualEndUseCaseStrings = u.description :: actualEndUseCaseStrings; if (ended) throw new IllegalStateException
-      def visitScenario(ui: Int, u: UseCase, si: Int, s: Scenario) = actualScenarioStrings = (ui + "/" + u.description + "/" + si + "/" + s.expected) :: actualScenarioStrings; if (ended) throw new IllegalStateException
-      def end = ended = true
-    }, true)
+   val visitor = new ScenarioVisitorForTests
+    bldr.walkScenarios(visitor, true)
 
-    assert(started)
-    assert(ended)
-    assertEquals(List("0/uc1", "1/uc2"), actualUseCaseStrings.reverse)
-    assertEquals(List("uc1", "uc2"), actualEndUseCaseStrings.reverse)
-    assertEquals(List("0/uc1/0/a", "0/uc1/1/b", "1/uc2/0/c", "1/uc2/1/d"), actualScenarioStrings.reverse)
-    assertEquals(Some("EngineDescription"), actualDescription)
+    assert(visitor.started)
+    assert(visitor.ended)
+    assertEquals(List("0/uc1", "1/uc2"), visitor.actualUseCaseStrings.reverse)
+    assertEquals(List("uc1", "uc2"),visitor.actualEndUseCaseStrings.reverse)
+    assertEquals(List("0/uc1/0/a", "0/uc1/1/b", "1/uc2/0/c", "1/uc2/1/d"), visitor.actualScenarioStrings.reverse)
+    assertEquals(Some("EngineDescription"),visitor. actualDescription)
   }
 
-  "The Junit scebario printer" should "produce an HTML entry for each scenario and use case with default values if not specified" in {
+  "The Junit scenario printer" should "produce an HTML entry for each scenario and use case with default values if not specified" in {
     val manipulator = new JUnitTestManipulator()
     val visitor = new JunitScenarioReporter(manipulator, logger)
     bldr.walkScenarios(visitor, true);

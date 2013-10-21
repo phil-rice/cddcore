@@ -20,9 +20,9 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   "A scenario" should " remember parameters and have None for the other parameters" in {
     val c = firstScenario
     assert(c.params == firstParams)
-    assert(c.code == None)
+    assert(c.optCode == None)
     assert(c.because == None)
-    assert(c.expected == ROrException[R]())
+    assert(c.expected ==None)
     assert(c.configuration == None)
     assert(c.description == None, c.description)
   }
@@ -37,9 +37,9 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   it should "add expected when produces is called" in {
     val c = scenarioLens.get(builderWithScenario.expected(firstResult))
     assert(c.params == firstParams)
-    assert(c.code == None)
+    assert(c.optCode == None)
     assert(c.because == None)
-    assert(c.expected == ROrException[R](firstResult), c)
+    assert(c.expected == Some(ROrException[R](firstResult)), c)
     assert(c.configuration == None)
   }
 
@@ -47,19 +47,19 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
     val c = scenarioLens.get(builderWithScenario.expected(firstResult).code(codeFn))
     assert(c.params == firstParams)
     val expectedCode = Some(new CodeFn(codeFn, "AbstractScenarioTests.this.codeFn"))
-    assert(c.code == expectedCode, "Scenario: " + c + "\nCode: " + c.code + "\nExpected: " + expectedCode)
+    assertEquals( expectedCode,c.optCode)
     assert(c.because == None)
-    assert(c.expected ==  ROrException[R](firstResult))
+    assert(c.expected == Some(ROrException[R](firstResult)))
     assert(c.configuration == None)
   }
 
   it should "add because when because is called" in {
     val c = scenarioLens.get(builderWithScenario.expected(firstResult).because(because))
     assert(c.params == firstParams)
-    assert(c.code == None)
+    assert(c.optCode == None)
     val expected = Some(new Because(because, "AbstractScenarioTests.this.because"))
     assert(c.because == expected, c.because)
-    assert(c.expected == ROrException[R](firstResult))
+    assert(c.expected == Some(ROrException[R](firstResult)))
     assert(c.configuration == None)
   }
 
@@ -77,7 +77,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
     val b = builderWithScenario.expected(firstResult)
     val engine = build(b)
     assertEquals("UseCases", b.useCasesForBuild, engine.useCases)
-    val expectedScenario = Scenario(firstUseCaseDescription + "[0]", None, firstParams, logger, ROrException[R](firstResult));
+    val expectedScenario = Scenario(firstUseCaseDescription + "[0]", None, firstParams, logger, Some(ROrException[R](firstResult)));
     assertEquals(List(expectedScenario), engine.scenarios)
   }
 
@@ -114,10 +114,10 @@ class Scenario1Tests extends FirstScenario1Test[Int, Int] with AbstractScenarioT
     assertEquals(2, e.scenarios.size)
 
     assertEquals("", firstScenaro.becauseString)
-    assertEquals(ROrException[Int](firstResult), firstScenaro.expected)
+    assertEquals(Some(ROrException[Int](firstResult)), firstScenaro.expected)
 
     assertEquals("((x: Int) => x.>(2))", secondScenaro.becauseString)
-    assertEquals(ROrException[Int](7), secondScenaro.expected)
+    assertEquals(Some(ROrException[Int](7)), secondScenaro.expected)
   }
 
   it should "have a tostring method that includes the locator and the descriptor if it exists" in {

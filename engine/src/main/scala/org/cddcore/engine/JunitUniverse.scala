@@ -37,7 +37,7 @@ trait JunitUniverse[R] extends EngineUniverse[R] {
     }
 
     def visitUseCase(ui: Int, u: UseCase) {
-      val text = <h2>Usecase { ui }: { u.description }</h2>.mkString;
+      val text = <h2>Usecase { ui }: { u.description.getOrElse("") }</h2>.mkString;
       manipulator.append(text)
     }
 
@@ -50,14 +50,14 @@ trait JunitUniverse[R] extends EngineUniverse[R] {
         <h3>{ scenarioIndex }{ s.description.collect { case d => ": " + d } getOrElse ("") }</h3>
         <table>
           <tr><td>Parameters</td><td><pre>{ s.params.map(displayProcessor).mkString(", ") }</pre></td></tr>
-          <tr><td>Expected</td><td><pre>{ s.expected }</pre></td></tr>
+          <tr><td>Expected</td><td><pre>{ s.expected.getOrElse("Not Defined") }</pre></td></tr>
           {
             if (s.because.isDefined)
               <tr><td>Because</td><td><pre>{ s.becauseString }</pre></td><td><pre>{ s.because.get.comment }</pre></td></tr>
           }
           {
-            if (s.code.isDefined)
-              <tr><td>Code</td><td><pre>{ s.code.get.description }</pre></td><td><pre>{ s.code.get.comment }</pre></td></tr>
+            if (s.optCode.isDefined)
+              <tr><td>Code</td><td><pre>{ s.optCode.get.description }</pre></td><td><pre>{ s.optCode.get.comment }</pre></td></tr>
           }
           {
             if (s.assertions.size > 0)

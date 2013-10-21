@@ -4,7 +4,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UseCaseExceptionTests extends EngineStringStringTests {
+class UseCaseExpectedTests extends EngineStringStringTests {
 
   "A Builder" should "add an expected straight after the usecase declaration to the use case" in {
     val b1 = builderWithUseCase.expected("X")

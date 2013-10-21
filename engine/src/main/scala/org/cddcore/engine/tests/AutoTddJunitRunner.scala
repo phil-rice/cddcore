@@ -60,11 +60,11 @@ trait CddRunner extends Runner with JunitUniverse[Any] with NotActuallyFactory[A
     engineMap = engineMap + (engineDescription -> engine)
 
     for (u <- engine.useCases) yield {
-      val useCaseDescription = Description.createSuiteDescription(Strings.clean(u.description))
+      val useCaseDescription = Description.createSuiteDescription(Strings.clean(u.description.getOrElse("")))
       engineDescription.addChild(useCaseDescription)
 
       for (s <- u.scenarios) yield {
-        val name = s.description.getOrElse(s.params.map(logger).mkString(",")) + " => " + logger(s.expected) + " " + s.becauseString
+        val name = s.description.getOrElse(s.params.map(logger).mkString(",")) + " => " + logger(s.expected.getOrElse("")) + " " + s.becauseString
         val cleanedName = Strings.clean(name)
         println("   " + cleanedName)
         val scenarioDescription = Description.createSuiteDescription(cleanedName)
@@ -111,7 +111,7 @@ trait CddRunner extends Runner with JunitUniverse[Any] with NotActuallyFactory[A
               } else
                 try {
                   val actual = ROrException(engine.applyParam(engine.root, scenario.params, true))
-                  if (scenario.expected == actual) {
+                  if (scenario.expected == Some(actual)) {
                     log("notifier.fireTestFinished(sd)" + sd)
                     notifier.fireTestFinished(sd)
                   } else
