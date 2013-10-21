@@ -7,7 +7,7 @@ import org.joda.time.DateTime
 import org.joda.time.format._
 import scala.concurrent.stm._
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests.AutoTddJunitRunner
+import org.cddcore.engine.tests.CddJunitRunner
 import org.cddcore.engine._
 
 case class CarersXmlSituation(w: World, e: Elem) extends XmlSituation {
@@ -48,7 +48,7 @@ case class CarersXmlSituation(w: World, e: Elem) extends XmlSituation {
 
 }
 
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object Carers {
   implicit def worldElemToCarers(x: Tuple2[World, Elem]) = CarersXmlSituation(x._1, x._2)
   implicit def worldStringToCarers(x: Tuple2[World, String]) = CarersXmlSituation(x._1, Xmls.validateClaim(x._2))

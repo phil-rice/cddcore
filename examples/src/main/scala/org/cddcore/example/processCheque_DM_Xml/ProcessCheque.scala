@@ -130,7 +130,7 @@ case class ChequeSituation(world: World, cheque: Elem) extends XmlSituation {
 }
 class ProcessChequeXml
 
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object ProcessChequeXml {
   import ProcessChequeTestMother._
   import GBP._

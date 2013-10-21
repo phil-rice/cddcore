@@ -4,7 +4,7 @@ import org.cddcore.engine.Engine
 import org.junit.runner.RunWith
 import org.cddcore.engine.tests._
 
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object TennisScorer {
   val lookup = Map(0 -> "love", 1 -> "fifteen", 2 -> "thirty", 3 -> "forty")
 

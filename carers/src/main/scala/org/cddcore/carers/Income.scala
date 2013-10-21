@@ -1,11 +1,11 @@
 package org.cddcore.carers
 
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests.AutoTddJunitRunner
+import org.cddcore.engine.tests.CddJunitRunner
 import org.cddcore.engine.Engine
 import scala.xml.Elem
 
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object Income {
 
   val income = Engine[World, Elem, ReasonAndAmount]().

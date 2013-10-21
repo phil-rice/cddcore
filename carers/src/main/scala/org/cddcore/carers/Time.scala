@@ -2,7 +2,7 @@ package org.cddcore.carers
 
 import org.junit.runner.RunWith
 import org.cddcore.engine.Engine
-import org.cddcore.engine.tests.AutoTddJunitRunner
+import org.cddcore.engine.tests.CddJunitRunner
 import scala.xml.Elem
 import org.joda.time.DateTime
 import scala.language.implicitConversions
@@ -19,7 +19,7 @@ object DateRange {
     DateRange(Xmls.asDate(from), Xmls.asDate(to))
 }
 
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object Time {
 
   implicit def stringToDate(s: String): DateTime = Xmls.asDate(s)

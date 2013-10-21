@@ -15,10 +15,10 @@ import sys.process._
 import java.lang.reflect.Field
 import junit.framework.AssertionFailedError
 
-object AutoTddJunitRunner {
+object CddRunner {
   val separator = "\n#########\n"
   val userHome = System.getProperty("user.home");
-  val directory = new File(userHome, ".autoTdd")
+  val directory = new File(userHome, ".cdd")
 
 }
 trait NotActuallyFactory[R] extends EngineUniverse[R] {
@@ -32,7 +32,7 @@ trait NotActuallyFactory[R] extends EngineUniverse[R] {
 
 }
 
-trait AutoTddRunner extends Runner with JunitUniverse[Any] with NotActuallyFactory[Any] {
+trait CddRunner extends Runner with JunitUniverse[Any] with NotActuallyFactory[Any] {
 
   var engineMap: Map[Description, Engine] = Map()
   var ScenarioMap: Map[Description, Scenario] = Map()
@@ -75,11 +75,11 @@ trait AutoTddRunner extends Runner with JunitUniverse[Any] with NotActuallyFacto
     }
   }
 
-  def fileFor(clazz: Class[Any], ed: Description, extension: String) = new File(AutoTddJunitRunner.directory, clazz.getName() + "." + ed.getDisplayName() + "." + extension)
+  def fileFor(clazz: Class[Any], ed: Description, extension: String) = new File(CddRunner.directory, clazz.getName() + "." + ed.getDisplayName() + "." + extension)
 
   def saveResults(clazz: Class[Any], ed: Description, e: Any) {
     import Files._
-    AutoTddJunitRunner.directory.mkdirs()
+    CddRunner.directory.mkdirs()
     printToFile(fileFor(clazz, ed, "attd"))((pw) => pw.write(e.toString))
     //        new File(AutoTddRunner.directory, clazz.getName() + "." + ed.getDisplayName() + ".attd"))((pw) => pw.write(e.toString))
   }
@@ -162,7 +162,7 @@ trait AutoTddRunner extends Runner with JunitUniverse[Any] with NotActuallyFacto
 
 }
 
-class AutoTddJunitRunner(val clazz: Class[Any]) extends AutoTddRunner {
+class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
 
   val getDescription = Description.createSuiteDescription("ATDD: " + clazz.getName);
 

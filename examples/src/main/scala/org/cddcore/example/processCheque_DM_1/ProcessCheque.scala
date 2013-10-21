@@ -56,7 +56,7 @@ object ProcessChequeTestMother {
 
 }
 
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object ProcessCheque {
   import ProcessChequeTestMother._
   import GBP._

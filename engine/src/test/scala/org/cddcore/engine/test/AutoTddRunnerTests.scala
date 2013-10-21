@@ -24,7 +24,7 @@ class RunListenerForTests extends RunListener {
 }
 @RunWith(classOf[JUnitRunner])
 class AutoTddRunnerTests extends AbstractEngine1Test[String, String] {
-  class AutoTddRunnerForTests extends AutoTddRunner {
+  class CddRunnerForTests extends CddRunner {
     val getDescription = Description.createSuiteDescription("Test")
   }
 
@@ -85,7 +85,7 @@ class AutoTddRunnerTests extends AbstractEngine1Test[String, String] {
   }
 
   def runAndGetListOfNotifications(engine: Engine) = {
-    val runner = new AutoTddRunnerForTests
+    val runner = new CddRunnerForTests
     runner.addEngineForTest("Engine", engine)
     val listener = new RunListenerForTests
     val notifier = new RunNotifier()

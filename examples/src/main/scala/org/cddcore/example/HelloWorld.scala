@@ -2,8 +2,8 @@ package org.cddcore.example
 
 import org.cddcore.engine.Engine
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests.AutoTddJunitRunner
-@RunWith(classOf[AutoTddJunitRunner])
+import org.cddcore.engine.tests.CddJunitRunner
+@RunWith(classOf[CddJunitRunner])
 object HelloWorld {
 
   val engine = Engine[Int, String]().

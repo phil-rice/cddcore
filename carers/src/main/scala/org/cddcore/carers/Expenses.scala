@@ -3,9 +3,9 @@ package org.cddcore.carers
 import org.cddcore.engine.Engine
 import scala.xml.Elem
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests.AutoTddJunitRunner
+import org.cddcore.engine.tests.CddJunitRunner
 
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object Expenses {
 
   val childCareExpenses = Engine[World, Elem, ReasonAndAmount]().

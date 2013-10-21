@@ -12,7 +12,7 @@ case class Person(savings: GBP, ageInYears: Int) {
   lazy val tooYoung = ageInYears < 16
 }
 
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object CategorisePerson {
   import GBP._
   val categorise = Engine[Person, String]().

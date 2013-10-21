@@ -2,7 +2,7 @@ package org.cddcore.example.tennisScore
 
 import org.cddcore.engine.Engine
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests.AutoTddJunitRunner
+import org.cddcore.engine.tests.CddJunitRunner
 
 object Score {
   val love = Score("love")
@@ -17,7 +17,7 @@ object Score {
   val lost = Score("lost")
 }
 case class Score(item: String)
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object TennisScorer1 {
   import Score._
   val lookup = Map(0 -> love, 1 -> s15, 2 -> s30, 3 -> s40)

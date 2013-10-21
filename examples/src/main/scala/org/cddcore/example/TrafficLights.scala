@@ -5,7 +5,7 @@ import org.junit.runner.RunWith
 import org.cddcore.engine.tests._
 
 case class TrafficLight(red: Boolean = false, orange: Boolean = false, green: Boolean = false)
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object DecideAction {
 
   //This isn't complex enough to really need use cases

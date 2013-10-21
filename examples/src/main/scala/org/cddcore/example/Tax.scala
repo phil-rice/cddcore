@@ -34,7 +34,7 @@ object TaxReference {
 class Tax {
 
 }
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object Tax {
 
   val allowanceSelectionByDate = Engine[Date, SinglePersonsAllowanceReference, AllowanceAndLimit]().

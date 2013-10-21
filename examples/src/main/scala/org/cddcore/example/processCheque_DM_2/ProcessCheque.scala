@@ -82,7 +82,7 @@ case class ChequeSituation(world: World, cheque: Cheque) extends LoggerDisplay {
 
 }
 
-@RunWith(classOf[AutoTddJunitRunner])
+@RunWith(classOf[CddJunitRunner])
 object ProcessCheque {
   import ProcessChequeTestMother._
   import GBP._
