@@ -22,7 +22,7 @@ object BuildSettings {
     pomIncludeRepository := { _ => false },
 
     pomExtra := (
-      <url>http://www.autotdd.com</url>
+      <url>http://www.constraintdrivendevelopment.com</url>
       <licenses>
         <license>
           <name>BSD-style</name>
@@ -32,19 +32,19 @@ object BuildSettings {
       </licenses>
       <scm>
         <url>https://github.com/phil-rice/autoTdd</url>
-        <connection>https://github.com/phil-rice/autoTdd.git</connection>
+        <connection>git@github.com:phil-rice/cddcore.git</connection>
       </scm>
       <developers>
         <developer>
           <id>phil.rice</id>
           <name>Phil Rice</name>
-          <url>http://www.autotdd.org</url>
+          <url>http://www.constraintdrivendevelopment.org</url>
         </developer>
       </developers>),
 
-    organization := "org.autotdd",
-    //version := "1.2.0-SNAPSHOT",
-    version := "1.2.0",
+    organization := "org.corecdd",
+    //version := "1.4.0-SNAPSHOT",
+    version := "1.4.0",
     scalacOptions ++= Seq(),
     retrieveManaged := false,
     scalaVersion := "2.10.1",
