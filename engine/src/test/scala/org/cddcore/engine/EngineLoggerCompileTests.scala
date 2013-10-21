@@ -15,10 +15,25 @@ class EngineLoggerCompileTests extends EngineStringStringTests {
     logger.reset
     bldr.build
     checkMessages(
-      "DEBUG Compile() Adding UseCase[0] as new root",
-      "DEBUG Compile() Adding UseCase[1] as first if then else",
-      "DEBUG Compile() Adding UseCase[2] under no of node UseCase[1]")
+      "DEBUG Compile() Adding W as new root",
+      "DEBUG Compile() Adding A as first if then else",
+      "DEBUG Compile() Adding B under no of node A")
   }
+  
+  it should "use the scenario description if it exists" in { 
+    val bldr = builder.useCase("UseCase").
+      scenario("W", "w").expected("Z").
+      scenario("A", "a").expected("X").because("A").
+      scenario("B", "b").expected("Y").because("B")
+    logger.reset
+    bldr.build
+    checkMessages(
+      "DEBUG Compile() Adding w as new root",
+      "DEBUG Compile() Adding a as first if then else",
+      "DEBUG Compile() Adding b under no of node a")
+  }
+  
+  
 
   "An empty engine" should "Add scenario to root if adding assertion" in {
     val bldr = builder.useCase("UseCase").
@@ -27,14 +42,14 @@ class EngineLoggerCompileTests extends EngineStringStringTests {
     logger.reset
 
     bldr.build
-    checkMessages("DEBUG Compile() Adding UseCase[0] as new root", "DEBUG Compile() Adding UseCase[1] as extra scenario for Z")
+    checkMessages("DEBUG Compile() Adding W as new root", "DEBUG Compile() Adding A as extra scenario for Z")
   }
 
   it should "log the change from null to a root with one scenario" in {
     val b = builder.useCase("UseCase").scenario("W").expected("Z")
     logger.reset
     b.build
-    checkMessages("DEBUG Compile() Adding UseCase[0] as new root")
+    checkMessages("DEBUG Compile() Adding W as new root")
   }
 
   "An empty engine" should "log the change from null root to if then with two scenarios" in {
@@ -43,7 +58,7 @@ class EngineLoggerCompileTests extends EngineStringStringTests {
       scenario("A").expected("X").because("A")
     logger.reset
     bldr.build
-    checkMessages("DEBUG Compile() Adding UseCase[0] as new root", "DEBUG Compile() Adding UseCase[1] as first if then else")
+    checkMessages("DEBUG Compile() Adding W as new root", "DEBUG Compile() Adding A as first if then else")
   }
 
   it should "log adding to yes clause if because is true for root" in {
@@ -54,9 +69,9 @@ class EngineLoggerCompileTests extends EngineStringStringTests {
     logger.reset
     bldr.build
     checkMessages(
-      "DEBUG Compile() Adding UseCase[0] as new root",
-      "DEBUG Compile() Adding UseCase[1] as first if then else",
-      "DEBUG Compile() Adding UseCase[2] under yes of node UseCase[1]")
+      "DEBUG Compile() Adding W as new root",
+      "DEBUG Compile() Adding A as first if then else",
+      "DEBUG Compile() Adding AB under yes of node A")
   }
 
   it should "log correctly when three scenarios are added" in {
@@ -68,10 +83,10 @@ class EngineLoggerCompileTests extends EngineStringStringTests {
     logger.reset
     bldr.build
     checkMessages(
-      "DEBUG Compile() Adding UseCase[0] as new root",
-      "DEBUG Compile() Adding UseCase[1] as first if then else",
-      "DEBUG Compile() Adding UseCase[2] under no of node UseCase[1]",
-      "DEBUG Compile() Adding UseCase[3] under yes of node UseCase[1]")
+      "DEBUG Compile() Adding W as new root",
+      "DEBUG Compile() Adding A as first if then else",
+      "DEBUG Compile() Adding B under no of node A",
+      "DEBUG Compile() Adding AB under yes of node A")
   }
 
   it should "log adding an or rule" in {
@@ -81,7 +96,7 @@ class EngineLoggerCompileTests extends EngineStringStringTests {
     logger.reset
     val e = b.build
     checkMessages(
-      "DEBUG Compile() Adding UseCase1[0] as new root",
+      "DEBUG Compile() Adding W as new root",
       "DEBUG Compile() Adding a as first if then else",
       "DEBUG Compile() Merging ab under yes of a")
   }
@@ -91,8 +106,8 @@ class EngineLoggerCompileTests extends EngineStringStringTests {
     logger.reset
     val e = b.build
     checkMessages(
-      "DEBUG Compile() Adding UseCase1[0] as new root",
-      "DEBUG Compile() Merging UseCase1[1] into root")
+      "DEBUG Compile() Adding W as new root",
+      "DEBUG Compile() Merging B into root")
   }
 
   it should "make an or rule even if several deep" in {
@@ -103,7 +118,7 @@ class EngineLoggerCompileTests extends EngineStringStringTests {
     logger.reset
     val e = b.build
     checkMessages(
-      "DEBUG Compile() Adding UseCase1[0] as new root",
+      "DEBUG Compile() Adding W as new root",
       "DEBUG Compile() Adding a as first if then else",
       "DEBUG Compile() Merging b under yes of a")
   }

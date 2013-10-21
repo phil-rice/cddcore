@@ -14,7 +14,7 @@ class ExceptionMessageTests extends EngineStringStringTests {
     assertEquals(b.scenariosForBuild(1), e.scenario)
     assertEquals("\nActual Result: Z\n" +
       "Expected X\n" +
-      " Scenario Scenario(UseCase1[1], A, because=, expected=X)\n" +
+      " Scenario Scenario(, A, because=, expected=X)\n" +
       "Detailed:\n" +
       "  List(A)", e.getMessage())
   }
@@ -23,7 +23,7 @@ class ExceptionMessageTests extends EngineStringStringTests {
     val b = builderWithScenario.code("Z")
     val e = evaluating { b.build } should produce[NoExpectedException]
     assertEquals(b.scenariosForBuild(0), e.scenario)
-    assertEquals("No expected in Scenario(UseCase1[0], W, because=, expected=<N/A>)\n" +
+    assertEquals("No expected in Scenario(, W, because=, expected=<N/A>)\n" +
       "Detailed:\n" +
       "  List(W)", e.getMessage())
   }
@@ -32,7 +32,7 @@ class ExceptionMessageTests extends EngineStringStringTests {
     val b = builderWithDefault.scenario("B").because("X")
     val e = evaluating { b.build } should produce[ScenarioBecauseException]
     assertEquals(b.scenariosForBuild(1), e.scenario)
-    assertEquals("X is not true for Scenario(UseCase1[1], B, because=X, expected=<N/A>)\n" +
+    assertEquals("X is not true for Scenario(, B, because=X, expected=<N/A>)\n" +
       "Detailed:\n" +
       "  List(B)", e.getMessage())
   }
@@ -45,12 +45,12 @@ class ExceptionMessageTests extends EngineStringStringTests {
     val e = evaluating { bldr.build } should produce[ScenarioConflictException]
     assertEquals("Cannot differentiate based on:\n" +
       " B\n" +
-      "Existing: UseCase1[1]\n" +
-      "Being Added: UseCase1[2]\n" +
+      "Existing: AB\n" +
+      "Being Added: AB\n" +
       "Detailed existing:\n" +
-      "Scenario(UseCase1[1], AB, because=A, expected=X)\n" +
+      "Scenario(, AB, because=A, expected=X)\n" +
       "Detailed of being Added:\n" +
-      "Scenario(UseCase1[2], AB, because=B, expected=Y)", e.getMessage())
+      "Scenario(, AB, because=B, expected=Y)", e.getMessage())
   }
 
   it should "Throw ScenarioConflictingWithDefaultException if engine just has default output and scenario comes to wrong conclusion" in {
@@ -61,7 +61,7 @@ class ExceptionMessageTests extends EngineStringStringTests {
     assertEquals(e.scenario, bldr.scenariosForBuild(1))
     assertEquals("\nActual Result: Z\n" +
       "Expected X\n" +
-      " Scenario Scenario(UseCase1[1], AB, because=, expected=X)\n" +
+      " Scenario Scenario(, AB, because=, expected=X)\n" +
       "Detailed:\n" +
       "  List(AB)", e.getMessage())
   }

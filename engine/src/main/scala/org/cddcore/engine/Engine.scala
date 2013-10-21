@@ -73,10 +73,10 @@ class BuilderFactory1[P, R](override val logger: TddLogger = TddLogger.noLogger)
   type RealScenarioBuilder = Builder1
   def builder = new Builder1
 
-  class Builder1(val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int=0) extends ABuilder1 {
+  class Builder1(val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int=0, val references: List[Reference]=List()) extends ABuilder1 {
     def thisAsBuilder = this
-    def withCases(description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int) =
-      new Builder1(description, useCases, optCode, expected, priority)
+    def withCases(description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference]) =
+      new Builder1(description, useCases, optCode, expected, priority, references)
   }
 }
 
@@ -101,9 +101,9 @@ class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.noLo
   type RealScenarioBuilder = Builder2
   def builder = new Builder2
 
-  class Builder2(val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int=0) extends ABuilder2 {
+  class Builder2(val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int=0, val references: List[Reference]=List()) extends ABuilder2 {
     def thisAsBuilder = this
-    def withCases(description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int) = new Builder2(description, useCases, optCode, expected, priority)
+    def withCases(description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference]=List()) = new Builder2(description, useCases, optCode, expected, priority, references)
   }
 }
 
@@ -112,9 +112,9 @@ class BuilderFactory3[P1, P2, P3, R](override val logger: TddLogger = TddLogger.
   type RealScenarioBuilder = Builder3
   def builder = new Builder3
 
-  class Builder3(val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int=0) extends ScenarioBuilder {
+  class Builder3(val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int=0, val references: List[Reference]=List()) extends ScenarioBuilder {
     def thisAsBuilder = this
-    def withCases(engineDescription: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int) = new Builder3(engineDescription, useCases, optCode, expected, priority)
+    def withCases(engineDescription: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference]) = new Builder3(engineDescription, useCases, optCode, expected, priority, references)
     def scenario(p1: P1, p2: P2, p3: P3, description: String = null) = newScenario(description, List(p1, p2, p3))
     def build = new Engine(description, optCode) with Function3[P1, P2, P3, R] {
       def useCases = useCasesForBuild

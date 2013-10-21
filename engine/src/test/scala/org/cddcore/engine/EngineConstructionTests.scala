@@ -6,41 +6,31 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class EngineConstructionStringTest extends EngineStringStringTests {
 
-  val wCString = "Z:UseCase1[0]\n"
+  val wCString = "Z:W\n"
 
   val w_aCString = "if(hA)\n" +
-    " XA:UseCase1[1]\n" +
+    " XA:A\n" +
     "else\n" +
-    " Z:UseCase1[0]\n"
+    " Z:W\n"
 
   val w_b_aCString = "if(hA)\n" +
-    " XA:UseCase1[1]\n" +
+    " XA:A\n" +
     "else\n" +
     " if(hB)\n" +
-    "  XB:UseCase1[2]\n" +
+    "  XB:B\n" +
     " else\n" +
-    "  Z:UseCase1[0]\n"
+    "  Z:W\n"
 
   val w_ab_b_aCString = "if(hA)\n" +
     " if(hAB)\n" +
-    "  XAB:UseCase1[3]\n" +
+    "  XAB:AB\n" +
     " else\n" +
-    "  XA:UseCase1[1]\n" +
+    "  XA:A\n" +
     "else\n" +
     " if(hB)\n" +
-    "  XB:UseCase1[2]\n" +
+    "  XB:B\n" +
     " else\n" +
-    "  Z:UseCase1[0]\n"
-
-  //  "An engine's construction string" should "be included in scenario conflict exceptions to help explain how the exception happened" in {
-  //    val bldrA = builderWithDefault.
-  //      scenario("AB").because(becauseA).expected("X")
-  //    val bldr = bldrA.
-  //      scenario("AB").because(becauseA).expected("Y")
-  //    val e = evaluating { bldr.build } should produce[ScenarioConflictException]
-  //    val cs = bldrA.build.constructionString
-  //    assert(e.getMessage().contains(cs), "Message: " + e.getMessage() + "\n-------\nConstruction String: " + cs)
-  //  }
+    "  Z:W\n"
 
   it should "return the aggregate of the toString of an engine created from the scenarios, one after another" in {
     val bldr = builderWithDefault.
@@ -49,10 +39,10 @@ class EngineConstructionStringTest extends EngineStringStringTests {
       scenario("AB").because(becauseAB).expected("XAB")
     val e = bldr.build
     val cs = e.constructionString
-    assertEquals("Adding Scenario(UseCase1[0], W, because=, expected=Z)\n" + wCString + "\n" +
-      "Adding Scenario(UseCase1[1], A, because=hA, expected=XA)\n" + w_aCString + "\n" +
-      "Adding Scenario(UseCase1[2], B, because=hB, expected=XB)\n" + w_b_aCString + "\n" +
-      "Adding Scenario(UseCase1[3], AB, because=hAB, expected=XAB)\n" + w_ab_b_aCString, cs)
+    assertEquals("Adding Scenario(, W, because=, expected=Z)\n" + wCString + "\n" +
+      "Adding Scenario(, A, because=hA, expected=XA)\n" + w_aCString + "\n" +
+      "Adding Scenario(, B, because=hB, expected=XB)\n" + w_b_aCString + "\n" +
+      "Adding Scenario(, AB, because=hAB, expected=XAB)\n" + w_ab_b_aCString, cs)
   }
 
   "An engine's increasingScenariosList method" should "return a list of increasing numbers of scenarios" in {

@@ -241,15 +241,17 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     override def toString = getClass().getSimpleName() + "(" + becauseString + " => " + yes.toString() + " =/> " + no.toString() + " / " + scenarioThatCausedNode.description + ")";
   }
 
+  case class Reference(ref: String = "", document: String = "")
+
   trait BuilderNode {
     def description: Option[String]
     def expected: Option[ROrException[R]]
     def optCode: Option[Code]
     def priority: Int
+    def references: List[Reference]
   }
 
   case class Scenario(
-    locator: String,
     description: Option[String],
     params: List[Any],
     paramPrinter: LoggerDisplayProcessor,
@@ -258,7 +260,8 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     because: Option[Because[B]] = None,
     assertions: List[Assertion[A]] = List(),
     configuration: Option[CfgFn] = None,
-    priority: Int = 0) extends BuilderNode {
+    priority: Int = 0,
+    references: List[Reference] = List()) extends BuilderNode {
 
     def configure = if (configuration.isDefined) makeClosureForCfg(params)(configuration.get)
     lazy val actualCode: CodeFn[B, RFn, R] = optCode.getOrElse({
@@ -271,9 +274,10 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     })
     def becauseString = because match { case Some(b) => b.description; case _ => "" }
-    def descriptionString = description.getOrElse(locator)
+    def descriptionString = description.getOrElse(paramString)
+    lazy val paramString = params.map(paramPrinter).mkString(",")
     override def toString =
-      s"Scenario(${descriptionString}, ${params.map(paramPrinter).mkString(",")}, because=${becauseString}, expected=${logger(expected.getOrElse("<N/A>"))})"
+      s"Scenario(${description.getOrElse("")}, ${paramString}, because=${becauseString}, expected=${logger(expected.getOrElse("<N/A>"))})"
   }
 
   case class ScenarioExceptionMap(map: Map[Scenario, Throwable] = Map(), first: Option[Throwable] = None) {
@@ -293,13 +297,13 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     },
     (b, s) => b.useCases match {
       case u :: ut => u.scenarios match {
-        case sold :: st => b.withCases(b.description, u.copy(scenarios = s :: st) :: ut, b.optCode, b.expected, b.priority)
+        case sold :: st => b.withCases(b.description, u.copy(scenarios = s :: st) :: ut, b.optCode, b.expected, b.priority, b.references)
         case _ => throw new NeedScenarioException
       }
       case _ => throw new NeedUseCaseException
     })
 
-  case class UseCase(description: Option[String], scenarios: List[Scenario], expected: Option[ROrException[R]], optCode: Option[Code], priority: Int) extends BuilderNode
+  case class UseCase(description: Option[String], scenarios: List[Scenario], expected: Option[ROrException[R]], optCode: Option[Code], priority: Int, references: List[Reference]) extends BuilderNode
 
   trait ScenarioBuilder extends ScenarioWalker with BuilderNode {
     def validateBecause(s: Scenario) = {
@@ -324,47 +328,55 @@ trait EngineUniverse[R] extends EngineTypes[R] {
               checkFn(h, x); uFn(h, x)
             case s :: tail => checkFn(s, x); h.copy(scenarios = sFn(s, x) :: tail)
           }
-          withCases(description, newHead :: tail, optCode, expected, priority)
+          withCases(description, newHead :: tail, optCode, expected, priority, references)
       }
     }
 
-    def withCases(description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int): RealScenarioBuilder;
+    def withCases(description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference]): RealScenarioBuilder;
 
     def thisAsBuilder: RealScenarioBuilder
 
     def description(description: String): RealScenarioBuilder =
       set[Option[String]](Some(description),
-        (b, description) => withCases(description, useCases, optCode, expected, priority),
+        (b, description) => withCases(description, useCases, optCode, expected, priority, references),
         (u, description) => u.copy(description = description),
         (s, description) => s.copy(description = description),
         (n, description) => if (n.description.isDefined) throw CannotDefineDescriptionTwiceException(n.description.get, description.get))
 
     def expectException[E <: Throwable](e: E, comment: String = "") =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
-        (b, newE) => withCases(description, useCases, optCode, newE, priority),
+        (b, newE) => withCases(description, useCases, optCode, newE, priority, references),
         (u, newE) => u.copy(expected = newE),
         (s, newE) => s.copy(expected = newE),
         (n, newE) => if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newE.get))
 
     def expected(e: R): RealScenarioBuilder =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
-        (b, newExpected) => withCases(description, useCases, optCode, newExpected, priority),
+        (b, newExpected) => withCases(description, useCases, optCode, newExpected, priority, references),
         (u, newExpected) => u.copy(expected = newExpected),
         (s, newExpected) => s.copy(expected = newExpected),
         (n, newExpected) => if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newExpected.get))
 
     def code(c: Code, comment: String = "") =
       set[Option[Code]](Some(c),
-        (b, newCode) => withCases(description, useCases, newCode, expected, priority),
+        (b, newCode) => withCases(description, useCases, newCode, expected, priority, references),
         (u, newCode) => u.copy(optCode = newCode),
         (s, newCode) => s.copy(optCode = newCode),
         (n, newCode) => if (n.optCode.isDefined) throw CannotDefineCodeTwiceException(n.optCode.get, newCode.get))
 
-    def priority(priority: Int): RealScenarioBuilder = set[Int](
-      priority,
-      (b, priority) => withCases(description, useCases, optCode, expected, priority),
-      (u, priority) => u.copy(priority = priority),
-      (s, priority) => s.copy(priority = priority))
+    def priority(priority: Int): RealScenarioBuilder =
+      set[Int](
+        priority,
+        (b, priority) => withCases(description, useCases, optCode, expected, priority, references),
+        (u, priority) => u.copy(priority = priority),
+        (s, priority) => s.copy(priority = priority))
+
+    def reference(locator: String, document: String = "") =
+      set[Reference](
+        Reference(locator, document),
+        (b, r) => withCases(description, useCases, optCode, expected, priority, r :: b.references),
+        (u, r) => u.copy(references = r :: u.references),
+        (s, r) => s.copy(references = r :: s.references))
 
     def because(b: Because[B], comment: String = "") = scenarioLens.mod(thisAsBuilder,
       (s) => {
@@ -373,7 +385,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       })
 
     protected def withUseCase(useCaseDescription: String) =
-      withCases(description, UseCase(Some(useCaseDescription), List(), None, None, 0) :: useCases, optCode, expected, priority);
+      withCases(description, UseCase(Some(useCaseDescription), List(), None, None, 0, List()) :: useCases, optCode, expected, priority, references);
 
     def useCase(useCaseDescription: String) = withUseCase(useCaseDescription)
 
@@ -391,7 +403,8 @@ trait EngineUniverse[R] extends EngineTypes[R] {
             }).reverse,
           u.expected,
           u.optCode,
-          u.priority)).reverse;
+          u.priority,
+          u.references.reverse)).reverse;
 
     def scenariosForBuild: List[Scenario] =
       useCasesForBuild.flatMap((u) => u.scenarios);
@@ -399,7 +412,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def newScenario(scenarioDescription: String, params: List[Any]) = useCases match {
       case h :: t => {
         val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
-        withCases(description, UseCase(h.description, Scenario(s"${h.description.getOrElse("")}[${h.scenarios.size}]", descriptionString, params, logger) :: h.scenarios, h.expected, h.optCode, h.priority) :: t, optCode, expected, priority)
+        withCases(description, h.copy(scenarios = Scenario(descriptionString, params, logger) :: h.scenarios) :: t, optCode, expected, priority, references)
       }
       case _ => throw new NeedUseCaseException
     }
@@ -771,6 +784,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
 
   }
+  
   abstract class Engine(val description: Option[String], val optCode: Option[Code]) extends BuildEngine with ScenarioWalker {
     def defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))

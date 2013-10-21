@@ -28,6 +28,14 @@ class BuilderNodeTests extends EngineStringStringTests {
     evaluating { b1.expectException(new RuntimeException) } should produce[CannotDefineExpectedTwiceException]
   }
 
+  it should "allow references to be added" in {
+    val b1 = builder.reference("1.1")
+    val b2 = builder.reference("1.2", "x").reference("1.3")
+
+    assertEquals(List(Reference("1.1")), b1.references);
+    assertEquals(List(Reference("1.3"), Reference("1.2", "x")), b2.references);
+  }
+
   "A use case" should "have its builder nodes setable" in {
     val b1 = builder.useCase("one").code(c).expected("x").priority(2);
     val b2 = builder.useCase("two").code(c).expectException(new RuntimeException).priority(2);
@@ -55,7 +63,15 @@ class BuilderNodeTests extends EngineStringStringTests {
     evaluating { b1.expected("again") } should produce[CannotDefineExpectedTwiceException]
     evaluating { b1.expectException(new RuntimeException) } should produce[CannotDefineExpectedTwiceException]
   }
+  it should "allow references to be added" in {
+    val b1 = builder.useCase("one").code(c).expected("x").priority(2).reference("1.1")
+    val b2 = builder.useCase("two").code(c).expectException(new RuntimeException).priority(2).reference("1.2", "x").reference("1.3");
+    val uc1 = b1.useCases(0);
+    val uc2 = b2.useCases(0);
 
+    assertEquals(List(Reference("1.1")), uc1.references);
+    assertEquals(List(Reference("1.3"), Reference("1.2", "x")), uc2.references);
+  }
   "A scenario" should "have its builder nodes setable" in {
     val b1 = builder.useCase("one").scenario("x").description("one").code(c).expected("x").priority(2);
     val b2 = builder.useCase("two").scenario("x", "two").code(c).expectException(new RuntimeException).priority(2);
@@ -84,6 +100,16 @@ class BuilderNodeTests extends EngineStringStringTests {
     evaluating { b1.code(c) } should produce[CannotDefineCodeTwiceException]
     evaluating { b1.expected("again") } should produce[CannotDefineExpectedTwiceException]
     evaluating { b1.expectException(new RuntimeException) } should produce[CannotDefineExpectedTwiceException]
+  }
+  
+  it should "allow references to be added" in {
+    val b1 = builder.useCase("one").scenario("x").description("one").code(c).expected("x").priority(2).reference("1.1")
+    val b2 = builder.useCase("two").scenario("x", "two").code(c).expectException(new RuntimeException).priority(2).reference("1.2", "x").reference("1.3");
+    val s1 = b1.useCases(0).scenarios(0);
+    val s2 = b2.useCases(0).scenarios(0);
+
+    assertEquals(List(Reference("1.1")), s1.references);
+    assertEquals(List(Reference("1.3"), Reference("1.2", "x")), s2.references);
   }
 
 }

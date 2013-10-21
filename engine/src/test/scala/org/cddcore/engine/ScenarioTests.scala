@@ -22,13 +22,13 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
     assert(c.params == firstParams)
     assert(c.optCode == None)
     assert(c.because == None)
-    assert(c.expected ==None)
+    assert(c.expected == None)
     assert(c.configuration == None)
     assert(c.description == None, c.description)
   }
 
   "The ScenarioBuilder" should "allow the scenario lens to set /get the scenario" in {
-    val expected = new Scenario("", None, List(), logger)
+    val expected = new Scenario(None, List(), logger)
     val newBuilder = scenarioLens.set(builderWithScenario, expected);
     assert(List(expected) == newBuilder.useCases.head.scenarios, newBuilder.useCases.head.scenarios) //i.e. this has replaced the head scenario
     assert(expected == scenarioLens.get(newBuilder), scenarioLens.get(newBuilder))
@@ -47,7 +47,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
     val c = scenarioLens.get(builderWithScenario.expected(firstResult).code(codeFn))
     assert(c.params == firstParams)
     val expectedCode = Some(new CodeFn(codeFn, "AbstractScenarioTests.this.codeFn"))
-    assertEquals( expectedCode,c.optCode)
+    assertEquals(expectedCode, c.optCode)
     assert(c.because == None)
     assert(c.expected == Some(ROrException[R](firstResult)))
     assert(c.configuration == None)
@@ -77,12 +77,8 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
     val b = builderWithScenario.expected(firstResult)
     val engine = build(b)
     assertEquals("UseCases", b.useCasesForBuild, engine.useCases)
-    val expectedScenario = Scenario(firstUseCaseDescription + "[0]", None, firstParams, logger, Some(ROrException[R](firstResult)));
+    val expectedScenario = Scenario(None, firstParams, logger, Some(ROrException[R](firstResult)));
     assertEquals(List(expectedScenario), engine.scenarios)
-  }
-
-  it should "allow a specified description for a use ca to be used" in {
-
   }
 
 }
@@ -120,13 +116,6 @@ class Scenario1Tests extends FirstScenario1Test[Int, Int] with AbstractScenarioT
     assertEquals(Some(ROrException[Int](7)), secondScenaro.expected)
   }
 
-  it should "have a tostring method that includes the locator and the descriptor if it exists" in {
-    val b = builderWithUseCase.scenario(111).expected(123).scenario(222, "withDescription").because((x: Int) => x == 222).expected(234).build;
-    val s0 = b.scenarios(0);
-    val s1 = b.scenarios(1);
-    assertEquals("Scenario(UseCase1[0], 111, because=, expected=123)", s0.toString)
-    assertEquals("Scenario(withDescription, 222, because=((x: Int) => x.==(222)), expected=234)", s1.toString)
-  }
 
 }
 @RunWith(classOf[JUnitRunner])
