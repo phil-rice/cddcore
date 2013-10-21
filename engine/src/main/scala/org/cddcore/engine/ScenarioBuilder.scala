@@ -301,53 +301,69 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     }
 
-    def description: Option[String]
-
-    def optCode: Option[Code]
-
     def useCases: List[UseCase]
 
-    def expected: Option[ROrException[R]]
-    def priority: Int
+    def set(bFn: (RealScenarioBuilder) => RealScenarioBuilder, uFn: (UseCase) => UseCase, sFn: (Scenario) => Scenario) = {
+      useCases match {
+        case Nil => bFn(thisAsBuilder)
+        case h :: tail =>
+          val newHead = h.scenarios match {
+            case Nil => uFn(h)
+            case s :: tail => h.copy(scenarios = sFn(s) :: tail)
+          }
+          withCases(description, newHead :: tail, optCode, expected, priority)
+      }
+    }
 
     def withCases(description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int): RealScenarioBuilder;
-    def description(description: String) = withCases(Some(description), useCases, optCode, expected, priority)
-    def thisAsBuilder: RealScenarioBuilder
 
-    def checkExpectedEmpty(s: Scenario) = if (s.expected.isDefined) throw new IllegalStateException("Cannot specify expected a second time")
-    def checkCodeEmpty(s: Scenario) = if (s.optCode != None) throw new IllegalStateException("Cannot specify code a second time")
-    def expectException[E <: Throwable](e: E, comment: String = "") = (useCases match {
-      case u :: ut => u.scenarios match {
-        case s :: st => scenarioLens.mod(thisAsBuilder, (s) => { checkExpectedEmpty(s); s.copy(expected = Some(ROrException(e))) })
-        case _ => withCases(description, UseCase(u.description, u.scenarios, Some(ROrException[R](e)), u.optCode, u.priority) :: ut, optCode, expected, priority)
-      }
-      case _ => throw new NeedUseCaseException
-    })
-    def expected(e: R): RealScenarioBuilder = (useCases match {
-      case u :: ut => u.scenarios match {
-        case s :: st => scenarioLens.mod(thisAsBuilder, (s) => { checkExpectedEmpty(s); s.copy(expected = Some(ROrException(e))) })
-        case _ => withCases(description, UseCase(u.description, u.scenarios, Some(ROrException[R](e)), u.optCode, u.priority) :: ut, optCode, expected, priority)
-      }
-      case _ => throw new NeedUseCaseException
-    })
+    def thisAsBuilder: RealScenarioBuilder
+    def description(description: String): RealScenarioBuilder =
+      set((b) => withCases(Some(description), useCases, optCode, expected, priority),
+        (u) => u.copy(description = Some(description)),
+        (s) => s.copy(description = Some(description)))
+
+    def expectException[E <: Throwable](e: E, comment: String = "") = {
+      val newExpected = Some(ROrException[R](e))
+      set((b) => withCases(description, useCases, optCode, newExpected, priority),
+        (u) => u.copy(expected = newExpected),
+        (s) => s.copy(expected = newExpected))
+    }
+
+    def expected(e: R): RealScenarioBuilder = {
+      val newExpected = Some(ROrException[R](e))
+      set((b) => withCases(description, useCases, optCode, newExpected, priority),
+        (u) => u.copy(expected = newExpected),
+        (s) => s.copy(expected = newExpected))
+    }
+
+    def code(c: CodeFn[B, RFn, R], comment: String = "") = set(
+      (b) => if (optCode.isDefined)
+        throw CannotDefineDefaultTwiceException(optCode.get, c)
+      else
+        withCases(description, useCases, Some(c), expected, priority),
+      (u) => u.copy(optCode = Some(c)),
+      (s) => s.copy(optCode = Some(c)))
+
+    def priority(priority: Int): RealScenarioBuilder = set(
+      (b) => withCases(description, useCases, optCode, expected, priority),
+      (u) => u.copy(priority = priority),
+      (s) => s.copy(priority = priority))
+
     def because(b: Because[B], comment: String = "") = scenarioLens.mod(thisAsBuilder,
       (s) => {
         validateBecause(s);
         s.copy(because = Some(b.copy(comment = comment)))
       })
+    def checkExpectedEmpty(s: Scenario) = if (s.expected.isDefined) throw new IllegalStateException("Cannot specify expected a second time")
+    def checkCodeEmpty(s: Scenario) = if (s.optCode != None) throw new IllegalStateException("Cannot specify code a second time")
 
     protected def withUseCase(useCaseDescription: String) =
       withCases(description, UseCase(Some(useCaseDescription), List(), None, None, 0) :: useCases, optCode, expected, priority);
+
     def useCase(useCaseDescription: String) = withUseCase(useCaseDescription)
-    def code(c: CodeFn[B, RFn, R], comment: String = "") =
-      if (useCases.isEmpty)
-        if (optCode.isDefined)
-          throw CannotDefineDefaultTwiceException(optCode.get, c)
-        else
-          withCases(description, useCases, Some(c), expected, priority)
-      else scenarioLens.mod(thisAsBuilder, (s) => { checkCodeEmpty(s); s.copy(optCode = Some(c.copy(comment = comment))) })
+
     def configuration[K](cfg: CfgFn) = scenarioLens.mod(thisAsBuilder, (s) => s.copy(configuration = Some(cfg)))
-    def priority(priority: Int): RealScenarioBuilder = scenarioLens.mod(thisAsBuilder, (s) => s.copy(priority = priority))
     def assertion(a: Assertion[A], comment: String = "") = scenarioLens.mod(thisAsBuilder, (s) => s.copy(assertions = a.copy(comment = comment) :: s.assertions))
 
     def useCasesForBuild: List[UseCase] =
