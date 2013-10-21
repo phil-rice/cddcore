@@ -53,11 +53,15 @@ class EngineDefaultTests extends EngineStringStringTests {
   }
 
   it should "Allow a default value to be specified" in {
-    val e = builderWithUseCase.withDefaultCode((s: String) => "default").build;
+    val e = builder.
+      code((s: String) => "default").
+      build;
     assertEquals("default", e("X"))
   }
+
   it should "Allow a default value to be specified with scenarios" in {
-    val e = builderWithUseCase.withDefaultCode((s: String) => "default").
+    val e = builder.code((s: String) => "default").
+      useCase("UC1").
       scenario("A").expected("X").because("A").
       scenario("AB").because("B").expected("Y").
       build
@@ -68,8 +72,8 @@ class EngineDefaultTests extends EngineStringStringTests {
   }
 
   it should "Allow throw exception if second default value is specified" in {
-    val bldr = builderWithUseCase.withDefaultCode((s: String) => "default")
-    val e = evaluating { bldr.withDefaultCode((s: String) => "default2") } should produce[CannotDefineDefaultTwiceException]
+    val bldr = builder.code((s: String) => "default")
+    val e = evaluating { bldr.code((s: String) => "default2") } should produce[CannotDefineDefaultTwiceException]
     assertEquals("Original Code:\nCodeFn(((s: String) => \"default\"))\nBeingAdded\nCodeFn(((s: String) => \"default2\"))", e.getMessage())
   }
 

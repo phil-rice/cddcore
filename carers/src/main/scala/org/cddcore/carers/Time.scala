@@ -93,7 +93,7 @@ object Time {
     }
   val weeksActive = Engine[DateTime, DateTime, Int]().
     description("First datetime is the start date. Second is current date. How many weeks between the two dates").
-    withDefaultCode((startDate: DateTime, current: DateTime) => 0).
+    code((startDate: DateTime, current: DateTime) => 0).
     useCase("If current date is before start date, should be zero").
     scenario("2013-8-10", "2010-4-10", "current day two days before start date").
     expected(0).

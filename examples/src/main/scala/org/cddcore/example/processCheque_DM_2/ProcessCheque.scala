@@ -89,7 +89,7 @@ object ProcessCheque {
   implicit def tupleToChequeSituation(t: (World, Cheque)) = ChequeSituation(t._1, t._2)
 
   val processCheque = Engine[ChequeSituation, ProcessChequeResult]().
-    withDefaultCode((s: ChequeSituation) => ProcessChequeResult(false, "processCheque.defaultResult.shouldntHappen")).
+    code((s: ChequeSituation) => ProcessChequeResult(false, "processCheque.defaultResult.shouldntHappen")).
     description("This engine works out whether to pay a cheque that has been presented to the bank specified in the world").
 
     useCase("Cheques that are for a different bank should be rejected").

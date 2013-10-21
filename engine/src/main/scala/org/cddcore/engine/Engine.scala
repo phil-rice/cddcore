@@ -56,7 +56,7 @@ trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
 
   trait ABuilder1 extends ScenarioBuilder {
     def scenario(p: P, description: String = null) = newScenario(description, List(p))
-    def build = new Engine(description, defaultCode) with Function[P, R] {
+    def build = new Engine(description, optCode) with Function[P, R] {
       def useCases = useCasesForBuild
       def apply(p: P): R = {
         logParams(p)
@@ -73,9 +73,10 @@ class BuilderFactory1[P, R](override val logger: TddLogger = TddLogger.noLogger)
   type RealScenarioBuilder = Builder1
   def builder = new Builder1
 
-  class Builder1(val description: Option[String] = None, val useCases: List[UseCase] = List(), val defaultCode: Option[Code] = None) extends ABuilder1 {
+  class Builder1(val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None) extends ABuilder1 {
     def thisAsBuilder = this
-    def withCases(description: Option[String], useCases: List[UseCase], code: Option[Code]) = new Builder1(description, useCases, code)
+    def withCases(description: Option[String], useCases: List[UseCase], optCode: Option[Code]) =
+      new Builder1(description, useCases, optCode)
   }
 }
 
@@ -83,7 +84,7 @@ trait ABuilderFactory2[P1, P2, R] extends EngineUniverse[R] with Engine2Types[P1
 
   trait ABuilder2 extends ScenarioBuilder {
     def scenario(p1: P1, p2: P2, description: String = null) = newScenario(description, List(p1, p2))
-    def build = new Engine(description, defaultCode) with Function2[P1, P2, R] {
+    def build = new Engine(description, optCode) with Function2[P1, P2, R] {
       def useCases = useCasesForBuild
       def apply(p1: P1, p2: P2): R = {
         logParams(p1, p2)
@@ -100,9 +101,9 @@ class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.noLo
   type RealScenarioBuilder = Builder2
   def builder = new Builder2
 
-  class Builder2(val description: Option[String] = None, val useCases: List[UseCase] = List(), val defaultCode: Option[Code] = None) extends ABuilder2 {
+  class Builder2(val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None) extends ABuilder2 {
     def thisAsBuilder = this
-    def withCases(description: Option[String], useCases: List[UseCase], code: Option[Code]) = new Builder2(description, useCases, code)
+    def withCases(description: Option[String], useCases: List[UseCase], optCode: Option[Code]) = new Builder2(description, useCases, optCode)
   }
 }
 
@@ -111,11 +112,11 @@ class BuilderFactory3[P1, P2, P3, R](override val logger: TddLogger = TddLogger.
   type RealScenarioBuilder = Builder3
   def builder = new Builder3
 
-  class Builder3(val description: Option[String] = None, val useCases: List[UseCase] = List(), val defaultCode: Option[Code] = None) extends ScenarioBuilder {
+  class Builder3(val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None) extends ScenarioBuilder {
     def thisAsBuilder = this
-    def withCases(engineDescription: Option[String], useCases: List[UseCase], code: Option[Code]) = new Builder3(engineDescription, useCases, code)
+    def withCases(engineDescription: Option[String], useCases: List[UseCase], optCode: Option[Code]) = new Builder3(engineDescription, useCases, optCode)
     def scenario(p1: P1, p2: P2, p3: P3, description: String = null) = newScenario(description, List(p1, p2, p3))
-    def build = new Engine(description, defaultCode) with Function3[P1, P2, P3, R] {
+    def build = new Engine(description, optCode) with Function3[P1, P2, P3, R] {
       def useCases = useCasesForBuild
       def apply(p1: P1, p2: P2, p3: P3): R = {
         logParams(p1, p2)

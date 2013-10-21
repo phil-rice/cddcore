@@ -8,8 +8,8 @@ class EnginePriorityTests extends EngineStringStringTests {
 
   "An Engine" should "allow the priority to set the rules order" in {
     def build(a: Int, b: Int, c: Int) =
-      builder.useCase("U").
-        withDefaultCode((x: String) => "U").
+      builder.code((x: String) => "U").
+        useCase("U").
         scenario("A").because("A").expected("FromA").priority(a).
         scenario("B").because("B").expected("FromB").priority(b).
         scenario("C").because("C").expected("FromC").priority(c).

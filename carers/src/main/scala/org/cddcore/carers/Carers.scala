@@ -56,7 +56,7 @@ object Carers {
   //  implicit def carersToElem(x: CarersXmlSituation) = x.e
 
   val engine = Engine[CarersXmlSituation, ReasonAndAmount]().
-    withDefaultCode((c: CarersXmlSituation) => ReasonAndAmount("carer.default.notPaid")).
+    code((c: CarersXmlSituation) => ReasonAndAmount("carer.default.notPaid")).
     useCase("Customers under age 16 are not entitled to CA").
     scenario((World("2010-6-9"), "CL100104A"), "Cl100104A-Age Under 16").
     expected(ReasonAndAmount("carer.claimant.under16")).
