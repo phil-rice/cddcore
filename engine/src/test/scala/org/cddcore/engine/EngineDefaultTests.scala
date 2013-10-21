@@ -73,7 +73,7 @@ class EngineDefaultTests extends EngineStringStringTests {
 
   it should "Allow throw exception if second default value is specified" in {
     val bldr = builder.code((s: String) => "default")
-    val e = evaluating { bldr.code((s: String) => "default2") } should produce[CannotDefineDefaultTwiceException]
+    val e = evaluating { bldr.code((s: String) => "default2") } should produce[CannotDefineCodeTwiceException ]
     assertEquals("Original Code:\nCodeFn(((s: String) => \"default\"))\nBeingAdded\nCodeFn(((s: String) => \"default2\"))", e.getMessage())
   }
 
