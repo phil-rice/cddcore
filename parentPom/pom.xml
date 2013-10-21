@@ -5,7 +5,7 @@
 	<artifactId>parentPom</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<description>Autotdd is a tool designed to automate some aspects of Test Driven Development. It treats tests as constraints, and produces functions that meet the test. This increases the focus on testing rather than coding, and as a sideeffect increases the intention revealing nature of the code</description>
+	<description>CDD or Constraint Driven Development  is a tool designed to automate some aspects of Test Driven Development. It treats tests as constraints, and produces functions that meet the test. This increases the focus on testing rather than coding, and as a sideeffect increases the intention revealing nature of the code</description>
 
 	<properties>
 		<scala-version>2.10.1</scala-version>
