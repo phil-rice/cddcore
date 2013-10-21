@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="CDD"
+            id="org.cddcore.category">
+      </category>
+      <view
+            name="CDD2 2"
+            icon="icons/Cdd.png"
+            category="org.cddcore.category"
+            class="org.cddcore.eclipse2.AutoTddView"
+            id="org.cddcore.eclipse2.AutoTddView">
+      </view>
+   </extension>
+
+</plugin>

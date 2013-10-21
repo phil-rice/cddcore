@@ -1,0 +1,8 @@
+*.class
+*/target/*
+*/bin/*
+target/
+*/neo4j/*
+*.zip
+*.jar
+.cache

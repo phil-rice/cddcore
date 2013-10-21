@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2010 rel. 3 sp1 (http://www.altova.com) by Adrian Hepworth (Erudine) -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:simpleType name="PopulatedStringType">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="RestrictedStringType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern
+				value="[A-Za-z0-9\s~!&quot;@#$%&amp;'\(\)\*\+,\-\./:;&lt;=&gt;\?\[\\\]_\{\}\^&#xa3;&#x20ac;]*" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="YesNoType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="yes" />
+			<xsd:enumeration value="no" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DateType">
+		<xsd:restriction base="xsd:date" />
+	</xsd:simpleType>
+	<xsd:simpleType name="MaritalStatusType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="s" />
+			<xsd:enumeration value="m" />
+			<xsd:enumeration value="d" />
+			<xsd:enumeration value="w" />
+			<xsd:enumeration value="n" />
+			<xsd:enumeration value="p" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LanguageType">
+		<xsd:annotation>
+			<xsd:documentation>A Common DataType Values from the ISO standard for 2 character language codes (ISO 639:1988 Code for the representation of names of languages).  </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[A-Za-z]{2}" />
+			<xsd:enumeration value="en" />
+			<xsd:enumeration value="cy" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="EmailAddressType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern
+				value="[0-9A-Za-z'\.\-_]{1,127}@[0-9A-Za-z'\.\-_]{1,127}" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="TelCountryCodeType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{1,3}" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="TelephoneNumberType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9 \-]{1,20}" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="TelephoneExtensionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{1,6}" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="WorkHomeType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="work" />
+			<xsd:enumeration value="home" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="NationalInsuranceNumberType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern
+				value="[A-CEGHJ-NOPR-TW-Z]{2}[0-9]{6}[ABCD\s]{1}" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="VerificationLevelType">
+		<xsd:restriction base="RestrictedStringType">
+			<xsd:enumeration value="Level 0" />
+			<xsd:enumeration value="Level 1" />
+			<xsd:enumeration value="Level 2" />
+			<xsd:enumeration value="Level 3" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="TelephoneStructure">
+		<xsd:sequence>
+			<xsd:element name="TelNationalNumber"
+				type="TelephoneNumberType" />
+			<xsd:element name="TelExtensionNumber"
+				type="TelephoneExtensionType" minOccurs="0" />
+			<xsd:element name="TelCountryCode" type="TelCountryCodeType"
+				minOccurs="0" />
+		</xsd:sequence>
+		<xsd:attribute name="TelUse" type="WorkHomeType" />
+		<xsd:attribute name="TelMobile" type="YesNoType" />
+		<xsd:attribute name="TelPreferred" type="YesNoType" />
+	</xsd:complexType>
+	<xsd:complexType name="FaxStructure">
+		<xsd:sequence>
+			<xsd:element name="FaxNationalNumber"
+				type="TelephoneNumberType" />
+			<xsd:element name="FaxExtensionNumber"
+				type="TelephoneExtensionType" minOccurs="0" />
+			<xsd:element name="FaxCountryCode" type="TelCountryCodeType"
+				minOccurs="0" />
+		</xsd:sequence>
+		<xsd:attribute name="FaxUse" type="WorkHomeType" />
+		<xsd:attribute name="FaxMobile" type="YesNoType" />
+		<xsd:attribute name="FaxPreferred" type="YesNoType" />
+	</xsd:complexType>
+	<xsd:complexType name="EmailStructure">
+		<xsd:sequence>
+			<xsd:element name="EmailAddress" type="EmailAddressType" />
+		</xsd:sequence>
+		<xsd:attribute name="EmailUse" type="WorkHomeType" />
+		<xsd:attribute name="EmailPreferred" type="YesNoType" />
+	</xsd:complexType>
+	<xsd:complexType name="PersonContactDetailsStructure">
+		<xsd:sequence>
+			<xsd:element name="PreferredLanguages" type="LanguageType"
+				minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="Email" type="EmailStructure"
+				minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="Telephone" type="TelephoneStructure"
+				minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="Fax" type="FaxStructure" minOccurs="0"
+				maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="PersonBirthDateStructure">
+		<xsd:sequence>
+			<xsd:element name="PersonBirthDate" type="DateType" />
+			<xsd:element name="VerificationLevel"
+				type="VerificationLevelType" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="PersonDeathDateStructure">
+		<xsd:sequence>
+			<xsd:element name="PersonDeathDate" type="DateType" />
+			<xsd:element name="VerificationLevel"
+				type="VerificationLevelType" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="PersonMaritalStatusStructure">
+		<xsd:sequence>
+			<xsd:element name="MaritalStatus" type="MaritalStatusType" />
+			<xsd:element name="VerificationLevel"
+				type="VerificationLevelType" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="GenderAtRegistrationType">
+		<xsd:restriction base="xsd:byte">
+			<xsd:pattern value="1" />
+			<xsd:pattern value="2" />
+			<xsd:pattern value="9" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="GenderCurrentType">
+		<xsd:restriction base="xsd:byte">
+			<xsd:pattern value="0" />
+			<xsd:pattern value="1" />
+			<xsd:pattern value="2" />
+			<xsd:pattern value="9" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PersonNameSuffixType">
+		<xsd:restriction base="RestrictedStringType">
+			<xsd:minLength value="1" />
+			<xsd:maxLength value="35" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PersonRequestedNameType">
+		<xsd:restriction base="RestrictedStringType">
+			<xsd:minLength value="1" />
+			<xsd:maxLength value="70" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PersonGivenNameType">
+		<xsd:restriction base="RestrictedStringType">
+			<xsd:minLength value="1" />
+			<xsd:maxLength value="35" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PersonFamilyNameType">
+		<xsd:restriction base="RestrictedStringType">
+			<xsd:minLength value="1" />
+			<xsd:maxLength value="35" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PersonNameTitleType">
+		<xsd:restriction base="RestrictedStringType">
+			<xsd:minLength value="1" />
+			<xsd:maxLength value="35" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="PersonNameStructure">
+		<xsd:annotation>
+			<xsd:documentation>This mirrors the CitizenNameStructure in the AddressAndPersonalDetails namespace and supersedes it.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="PersonNameTitle"
+				type="PersonNameTitleType" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="PersonGivenName"
+				type="PersonGivenNameType" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="PersonFamilyName"
+				type="PersonFamilyNameType" />
+			<xsd:element name="PersonNameSuffix"
+				type="PersonNameSuffixType" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="PersonRequestedName"
+				type="PersonRequestedNameType" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="AddressLineType">
+		<xsd:restriction base="RestrictedStringType">
+			<xsd:minLength value="1" />
+			<xsd:maxLength value="35" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PostCodeType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern
+				value="[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][A-Z-[CIKMOV]]{2}" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="UKPostalAddressStructure">
+		<xsd:sequence>
+			<xsd:element name="Line" type="AddressLineType"
+				minOccurs="2" maxOccurs="5" />
+			<xsd:element name="PostCode" type="PostCodeType"
+				minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="CountryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[A-Z]{2}" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="ValidateClaim">
+		<xsd:sequence>
+			<xsd:element name="piid" type="xsd:string" minOccurs="0" />
+			<xsd:element name="newClaimantData" type="xsd:boolean" />
+			<xsd:element ref="ClaimantData" minOccurs="0" />
+			<xsd:element name="newClaimData" type="xsd:boolean" />
+			<xsd:element ref="ClaimData" minOccurs="0" />
+			<xsd:element name="newPartnerData" type="xsd:boolean" />
+			<xsd:element ref="PartnerData" minOccurs="0" />
+			<xsd:element name="newDependantData" type="xsd:boolean" />
+			<xsd:element ref="DependantData" minOccurs="0" />
+			<xsd:element ref="ResponseData" />
+			<xsd:element minOccurs="0" name="dataCompleteAndCorrect"
+				type="xsd:boolean">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:element name="ClaimantData">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="ClaimantNINO"
+					type="NationalInsuranceNumberType" />
+				<xsd:element name="ClaimantNameDetails"
+					type="PersonNameStructure" />
+				<xsd:element name="ClaimantBirthDate"
+					type="PersonBirthDateStructure" />
+				<xsd:element name="ClaimantDeathDate"
+					type="PersonDeathDateStructure" minOccurs="0" />
+				<xsd:element name="ClaimantMaritalStatus"
+					type="PersonMaritalStatusStructure" />
+				<xsd:element name="ClaimantGenderAtRegistration"
+					type="GenderAtRegistrationType" />
+				<xsd:element name="ClaimantGenderCurrent"
+					type="GenderCurrentType" />
+				<xsd:element name="ClaimantNationality"
+					type="CountryType" />
+				<xsd:element name="ClaimantContactDetailsStructure"
+					type="PersonContactDetailsStructure" />
+				<xsd:element name="ClaimantAddress"
+					type="UKPostalAddressStructure" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="ClaimData">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="ClaimStartDate" type="DateType" />
+				<xsd:element name="ClaimNinoKnown" type="YesNoType" />
+				<xsd:element name="ClaimPrevious" type="YesNoType" />
+				<xsd:element name="ClaimPreviousDate" type="DateType"
+					minOccurs="0" />
+				<xsd:element name="ClaimPreviousPaid" type="YesNoType"
+					minOccurs="0" />
+				<xsd:element name="ClaimOverseas" type="YesNoType" />
+				<xsd:element name="ClaimEUArea" type="YesNoType" />
+				<xsd:element name="ClaimEUDependantChildren"
+					type="YesNoType" />
+				<xsd:element name="ClaimAlwaysUK" type="YesNoType" />
+				<xsd:element name="ClaimWhereNotUK"
+					type="PopulatedStringType" minOccurs="0" />
+				<xsd:element name="ClaimCurrentResidentUK"
+					type="YesNoType" />
+				<xsd:element name="ClaimArrivedUK" type="DateType"
+					minOccurs="0" />
+				<xsd:element name="ClaimArrivedFrom" type="CountryType"
+					minOccurs="0" />
+				<xsd:element name="ClaimPlannedReturn" type="YesNoType"
+					minOccurs="0" />
+				<xsd:element name="ClaimPlannedReturnDate"
+					type="DateType" minOccurs="0" />
+				<xsd:element name="ClaimPlannedReturnVisa"
+					type="PopulatedStringType" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="PartnerData">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="PartnerNINO"
+					type="NationalInsuranceNumberType" />
+				<xsd:element name="PartnerNameDetails"
+					type="PersonNameStructure" />
+				<xsd:element name="PartnerBirthDate"
+					type="PersonBirthDateStructure" />
+				<xsd:element name="PartnerDeathDate"
+					type="PersonDeathDateStructure" minOccurs="0" />
+				<xsd:element name="PartnerMaritalStatus"
+					type="PersonMaritalStatusStructure" />
+				<xsd:element name="PartnerGenderAtRegistration"
+					type="GenderAtRegistrationType" />
+				<xsd:element name="PartnerGenderCurrent"
+					type="GenderCurrentType" />
+				<xsd:element name="PartnerNationality"
+					type="CountryType" />
+				<xsd:element name="PartnerContactDetailsStructure"
+					type="PersonContactDetailsStructure" />
+				<xsd:element name="PartnerAddress"
+					type="UKPostalAddressStructure" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="DependantData">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="DependantNINO"
+					type="NationalInsuranceNumberType" />
+				<xsd:element name="DependantNameDetails"
+					type="PersonNameStructure" />
+				<xsd:element name="DependantBirthDate"
+					type="PersonBirthDateStructure" />
+				<xsd:element name="DependantDeathDate"
+					type="PersonDeathDateStructure" minOccurs="0" />
+				<xsd:element name="DependantMaritalStatus"
+					type="PersonMaritalStatusStructure" />
+				<xsd:element name="DependantGenderAtRegistration"
+					type="GenderAtRegistrationType" />
+				<xsd:element name="DependantGenderCurrent"
+					type="GenderCurrentType" />
+				<xsd:element name="DependantNationality"
+					type="CountryType" />
+				<xsd:element name="DependantContactDetailsStructure"
+					type="PersonContactDetailsStructure" />
+				<xsd:element name="DependantAddress"
+					type="UKPostalAddressStructure" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:simpleType name="MessageIDType">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:maxLength value="6" />
+			<xsd:pattern value="CA{2}[0-9]{4}" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="MessageStatusType">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:maxLength value="7" />
+			<xsd:enumeration value="ERROR" />
+			<xsd:enumeration value="WARNING" />
+			<xsd:enumeration value="INFO" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="MessageContentType">
+		<xsd:restriction base="RestrictedStringType">
+			<xsd:minLength value="1" />
+			<xsd:maxLength value="35" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="MessageStructure">
+		<xsd:sequence>
+			<xsd:element name="MessageID" type="MessageIDType" />
+			<xsd:element name="MessageStatus" type="MessageStatusType" />
+			<xsd:element name="MessageContent"
+				type="MessageContentType" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="ActionIDType">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:maxLength value="6" />
+			<xsd:enumeration value="AUDIT" />
+			<xsd:enumeration value="CAM" />
+			<xsd:enumeration value="OMS" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="AUDITActionStructure">
+		<xsd:sequence>
+			<xsd:element name="AuditNINO"
+				type="NationalInsuranceNumberType" />
+			<xsd:element name="AuditString" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CAMActionStructure">
+		<xsd:sequence>
+			<xsd:element name="piid" type="xsd:string" minOccurs="0" />
+			<xsd:element name="ActionNINO"
+				type="NationalInsuranceNumberType" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OMSActionStructure">
+		<xsd:sequence>
+			<xsd:element name="OMS" type="xsd:string" />
+			<xsd:element name="Form" type="xsd:string" />
+			<xsd:element name="ReplaceText" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ActionStructure">
+		<xsd:sequence>
+			<xsd:element name="ActionID" type="ActionIDType" />
+			<xsd:choice>
+				<xsd:element name="AUDITAction"
+					type="AUDITActionStructure" />
+				<xsd:element name="CAMAction" type="CAMActionStructure" />
+				<xsd:element name="OMSAction" type="OMSActionStructure" />
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:element name="ResponseData">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="ResponseMessageList"
+					type="MessageStructure" minOccurs="0" maxOccurs="unbounded" />
+				<xsd:element name="ResponseActionList"
+					type="ActionStructure" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

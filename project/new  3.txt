@@ -1,0 +1,289 @@
+List: 0 index 0, 1
+List: 0 index 0, 1
+List: 1 index 1, 2
+List: 0 index 0, 1
+List: 1 index 1, 2
+List: 0 index 0, 1
+List: 1 index 1, 2
+List: 0 index 0, 1
+List: 0 index 0, 1
+List: 0 index 0, 1
+List: 1 index 0, 1
+List: 0 index 0, 1
+List: 0 index 0, 1
+List: 1 index 1, 2
+List: 0 index 0, 1
+List: 0 index 0, 1
+List: 1 index 0, 1
+org.autotdd.engine.ConstraintConflictException: if(UpdateFiles.this.becauseFileIsntInCache)
+ {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val result: org.autotdd.eclipse2.AppState = AppState.fileCacheL.add(as, fct);
+  val index: Int = AppState.fileCacheL.indexOf(result, f);
+  ac.insert(index, fct);
+  result
+}:When file Isn't In cache then add it to list[0]
+else
+ UpdateFiles.this.doNothing:
+
+if(UpdateFiles.this.becauseFileIsntInCache)
+ {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val result: org.autotdd.eclipse2.AppState = AppState.fileCacheL.add(as, fct);
+  val index: Int = AppState.fileCacheL.indexOf(result, f);
+  ac.insert(index, fct);
+  result
+}:When file Isn't In cache then add it to list[0]
+else
+ if(UpdateFiles.this.becauseFileHasChangedOnFileSystem)
+  {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}:When file has changed, and is not selected item, just update cache[0]
+ else
+  UpdateFiles.this.doNothing:
+
+Cannot differentiate between
+Existing: When file has changed, and is not selected item, just update cache[0]
+BeingAdded: When file has changed, and is  selected item, update cache and update text area[0]
+
+Details existing:
+Node(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem),List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Left(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List(Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem)))))),Left(CodeFn(<function3>,UpdateFiles.this.doNothing,List())),Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem))))
+Constraint:
+Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.and(UpdateFiles.this.becauseFileHasChangedOnFileSystem, UpdateFiles.this.becauseFileIsTheSelectedFile))))
+	at org.autotdd.engine.Engine$class.buildRoot(Engine.scala:274)
+	at org.autotdd.engine.Engine3.buildRoot(Engine.scala:388)
+	at org.autotdd.engine.Engine$class.$init$(Engine.scala:253)
+	at org.autotdd.engine.Engine3.<init>(Engine.scala:388)
+	at org.autotdd.eclipse2.UpdateFiles$class.$init$(AutoTddView.scala:63)
+	at org.autotdd.eclipse2.AutoTddView$$anon$5.<init>(AutoTddView.scala:175)
+	at org.autotdd.eclipse2.AutoTddView.createPartControl(AutoTddView.scala:175)
+	at org.eclipse.ui.internal.ViewReference.createPartHelper(ViewReference.java:375)
+	at org.eclipse.ui.internal.ViewReference.createPart(ViewReference.java:229)
+	at org.eclipse.ui.internal.WorkbenchPartReference.getPart(WorkbenchPartReference.java:595)
+	at org.eclipse.ui.internal.WorkbenchPage$ActivationList.setActive(WorkbenchPage.java:4317)
+	at org.eclipse.ui.internal.WorkbenchPage$18.runWithException(WorkbenchPage.java:3359)
+	at org.eclipse.ui.internal.StartupThreading$StartupRunnable.run(StartupThreading.java:31)
+	at org.eclipse.swt.widgets.RunnableLock.run(RunnableLock.java:35)
+	at org.eclipse.swt.widgets.Synchronizer.runAsyncMessages(Synchronizer.java:135)
+	at org.eclipse.swt.widgets.Display.runAsyncMessages(Display.java:4140)
+	at org.eclipse.swt.widgets.Display.readAndDispatch(Display.java:3757)
+	at org.eclipse.ui.application.WorkbenchAdvisor.openWindows(WorkbenchAdvisor.java:803)
+	at org.eclipse.ui.internal.Workbench$33.runWithException(Workbench.java:1600)
+	at org.eclipse.ui.internal.StartupThreading$StartupRunnable.run(StartupThreading.java:31)
+	at org.eclipse.swt.widgets.RunnableLock.run(RunnableLock.java:35)
+	at org.eclipse.swt.widgets.Synchronizer.runAsyncMessages(Synchronizer.java:135)
+	at org.eclipse.swt.widgets.Display.runAsyncMessages(Display.java:4140)
+	at org.eclipse.swt.widgets.Display.readAndDispatch(Display.java:3757)
+	at org.eclipse.ui.internal.Workbench.runUI(Workbench.java:2609)
+	at org.eclipse.ui.internal.Workbench.access$4(Workbench.java:2499)
+	at org.eclipse.ui.internal.Workbench$7.run(Workbench.java:679)
+	at org.eclipse.core.databinding.observable.Realm.runWithDefault(Realm.java:332)
+	at org.eclipse.ui.internal.Workbench.createAndRunWorkbench(Workbench.java:668)
+	at org.eclipse.ui.PlatformUI.createAndRunWorkbench(PlatformUI.java:149)
+	at org.eclipse.ui.internal.ide.application.IDEApplication.start(IDEApplication.java:123)
+	at org.eclipse.equinox.internal.app.EclipseAppHandle.run(EclipseAppHandle.java:196)
+	at org.eclipse.core.runtime.internal.adaptor.EclipseAppLauncher.runApplication(EclipseAppLauncher.java:110)
+	at org.eclipse.core.runtime.internal.adaptor.EclipseAppLauncher.start(EclipseAppLauncher.java:79)
+	at org.eclipse.core.runtime.adaptor.EclipseStarter.run(EclipseStarter.java:344)
+	at org.eclipse.core.runtime.adaptor.EclipseStarter.run(EclipseStarter.java:179)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.lang.reflect.Method.invoke(Unknown Source)
+	at org.eclipse.equinox.launcher.Main.invokeFramework(Main.java:622)
+	at org.eclipse.equinox.launcher.Main.basicRun(Main.java:577)
+	at org.eclipse.equinox.launcher.Main.run(Main.java:1410)
+	at org.eclipse.equinox.launcher.Main.main(Main.java:1386)
+Caused by: org.autotdd.engine.ConstraintConflictException: Cannot differentiate between
+Existing: When file has changed, and is not selected item, just update cache[0]
+BeingAdded: When file has changed, and is  selected item, update cache and update text area[0]
+
+Details existing:
+Node(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem),List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Left(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List(Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem)))))),Left(CodeFn(<function3>,UpdateFiles.this.doNothing,List())),Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem))))
+Constraint:
+Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.and(UpdateFiles.this.becauseFileHasChangedOnFileSystem, UpdateFiles.this.becauseFileIsTheSelectedFile))))
+	at org.autotdd.engine.BuildEngine$class.withConstraint(Engine.scala:161)
+	at org.autotdd.engine.BuildEngine$class.withConstraint(Engine.scala:200)
+	at org.autotdd.engine.BuildEngine$class.withConstraint(Engine.scala:201)
+	at org.autotdd.engine.BuildEngine$class.buildFromConstraints(Engine.scala:96)
+	at org.autotdd.engine.Engine3.buildFromConstraints(Engine.scala:388)
+	at org.autotdd.engine.BuildEngine$class.buildFromConstraints(Engine.scala:96)
+	at org.autotdd.engine.Engine3.buildFromConstraints(Engine.scala:388)
+	at org.autotdd.engine.BuildEngine$class.buildFromConstraints(Engine.scala:96)
+	at org.autotdd.engine.Engine3.buildFromConstraints(Engine.scala:388)
+	at org.autotdd.engine.Engine$class.buildRoot(Engine.scala:262)
+	... 43 more
+!SESSION 2013-06-18 23:23:35.051 -----------------------------------------------
+eclipse.buildId=3.0.0-vfinal-20130326-1146-Typesafe
+java.version=1.7.0_10
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_GB
+Framework arguments:  -product org.scala-ide.sdk.product
+Command-line arguments:  -product org.scala-ide.sdk.product -data C:\Users\Phil\workspaces\autoTdd/../runtime-EclipseApplication(1) -dev file:C:/Users/Phil/workspaces/autoTdd/.metadata/.plugins/org.eclipse.pde.core/Eclipse Application (1)/dev.properties -os win32 -ws win32 -arch x86_64 -consoleLog
+
+!ENTRY org.eclipse.ui.workbench 4 0 2013-06-18 23:23:42.041
+!MESSAGE Unable to create view ID org.autotdd.eclipse2.AutoTddView: if(UpdateFiles.this.becauseFileIsntInCache)
+ {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val result: org.autotdd.eclipse2.AppState = AppState.fileCacheL.add(as, fct);
+  val index: Int = AppState.fileCacheL.indexOf(result, f);
+  ac.insert(index, fct);
+  result
+}:When file Isn't In cache then add it to list[0]
+else
+ UpdateFiles.this.doNothing:
+
+if(UpdateFiles.this.becauseFileIsntInCache)
+ {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val result: org.autotdd.eclipse2.AppState = AppState.fileCacheL.add(as, fct);
+  val index: Int = AppState.fileCacheL.indexOf(result, f);
+  ac.insert(index, fct);
+  result
+}:When file Isn't In cache then add it to list[0]
+else
+ if(UpdateFiles.this.becauseFileHasChangedOnFileSystem)
+  {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}:When file has changed, and is not selected item, just update cache[0]
+ else
+  UpdateFiles.this.doNothing:
+
+Cannot differentiate between
+Existing: When file has changed, and is not selected item, just update cache[0]
+BeingAdded: When file has changed, and is  selected item, update cache and update text area[0]
+
+Details existing:
+Node(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem),List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Left(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List(Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem)))))),Left(CodeFn(<function3>,UpdateFiles.this.doNothing,List())),Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem))))
+Constraint:
+Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.and(UpdateFiles.this.becauseFileHasChangedOnFileSystem, UpdateFiles.this.becauseFileIsTheSelectedFile))))
+!STACK 0
+org.autotdd.engine.ConstraintConflictException: Cannot differentiate between
+Existing: When file has changed, and is not selected item, just update cache[0]
+BeingAdded: When file has changed, and is  selected item, update cache and update text area[0]
+
+Details existing:
+Node(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem),List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Left(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List(Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem)))))),Left(CodeFn(<function3>,UpdateFiles.this.doNothing,List())),Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.becauseFileHasChangedOnFileSystem))))
+Constraint:
+Constraint(List(1, AutoTddComposite(list=1,2,selected=1), AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,1), FileContentAndTime(2,contentf2,1)))),Some(AppState(org.autotdd.eclipse2.MockFileAccess@2a306cee,List(FileContentAndTime(1,contentf1,10), FileContentAndTime(2,contentf2,1)))),Some(CodeFn(<function3>,((f: java.io.File, ac: org.autotdd.eclipse2.AutoTddComposite, as: org.autotdd.eclipse2.AppState) => {
+  val fct: org.autotdd.eclipse2.FileContentAndTime = AppState.fileAccessL.apply(as).apply(f);
+  val index: Int = AppState.fileCacheL.indexOf(as, f);
+  AppState.fileCacheL.add(as, fct)
+}),List())),Some(Because(<function3>,UpdateFiles.this.and(UpdateFiles.this.becauseFileHasChangedOnFileSystem, UpdateFiles.this.becauseFileIsTheSelectedFile))))
+	at org.autotdd.engine.BuildEngine$class.withConstraint(Engine.scala:161)
+	at org.autotdd.engine.BuildEngine$class.withConstraint(Engine.scala:200)
+	at org.autotdd.engine.BuildEngine$class.withConstraint(Engine.scala:201)
+	at org.autotdd.engine.BuildEngine$class.buildFromConstraints(Engine.scala:96)
+	at org.autotdd.engine.Engine3.buildFromConstraints(Engine.scala:388)
+	at org.autotdd.engine.BuildEngine$class.buildFromConstraints(Engine.scala:96)
+	at org.autotdd.engine.Engine3.buildFromConstraints(Engine.scala:388)
+	at org.autotdd.engine.BuildEngine$class.buildFromConstraints(Engine.scala:96)
+	at org.autotdd.engine.Engine3.buildFromConstraints(Engine.scala:388)
+	at org.autotdd.engine.Engine$class.buildRoot(Engine.scala:262)
+	at org.autotdd.engine.Engine3.buildRoot(Engine.scala:388)
+	at org.autotdd.engine.Engine$class.$init$(Engine.scala:253)
+	at org.autotdd.engine.Engine3.<init>(Engine.scala:388)
+	at org.autotdd.eclipse2.UpdateFiles$class.$init$(AutoTddView.scala:63)
+	at org.autotdd.eclipse2.AutoTddView$$anon$5.<init>(AutoTddView.scala:175)
+	at org.autotdd.eclipse2.AutoTddView.createPartControl(AutoTddView.scala:175)
+	at org.eclipse.ui.internal.ViewReference.createPartHelper(ViewReference.java:375)
+	at org.eclipse.ui.internal.ViewReference.createPart(ViewReference.java:229)
+	at org.eclipse.ui.internal.WorkbenchPartReference.getPart(WorkbenchPartReference.java:595)
+	at org.eclipse.ui.internal.WorkbenchPage$ActivationList.setActive(WorkbenchPage.java:4317)
+	at org.eclipse.ui.internal.WorkbenchPage$18.runWithException(WorkbenchPage.java:3359)
+	at org.eclipse.ui.internal.StartupThreading$StartupRunnable.run(StartupThreading.java:31)
+	at org.eclipse.swt.widgets.RunnableLock.run(RunnableLock.java:35)
+	at org.eclipse.swt.widgets.Synchronizer.runAsyncMessages(Synchronizer.java:135)
+	at org.eclipse.swt.widgets.Display.runAsyncMessages(Display.java:4140)
+	at org.eclipse.swt.widgets.Display.readAndDispatch(Display.java:3757)
+	at org.eclipse.ui.application.WorkbenchAdvisor.openWindows(WorkbenchAdvisor.java:803)
+	at org.eclipse.ui.internal.Workbench$33.runWithException(Workbench.java:1600)
+	at org.eclipse.ui.internal.StartupThreading$StartupRunnable.run(StartupThreading.java:31)
+	at org.eclipse.swt.widgets.RunnableLock.run(RunnableLock.java:35)
+	at org.eclipse.swt.widgets.Synchronizer.runAsyncMessages(Synchronizer.java:135)
+	at org.eclipse.swt.widgets.Display.runAsyncMessages(Display.java:4140)
+	at org.eclipse.swt.widgets.Display.readAndDispatch(Display.java:3757)
+	at org.eclipse.ui.internal.Workbench.runUI(Workbench.java:2609)
+	at org.eclipse.ui.internal.Workbench.access$4(Workbench.java:2499)
+	at org.eclipse.ui.internal.Workbench$7.run(Workbench.java:679)
+	at org.eclipse.core.databinding.observable.Realm.runWithDefault(Realm.java:332)
+	at org.eclipse.ui.internal.Workbench.createAndRunWorkbench(Workbench.java:668)
+	at org.eclipse.ui.PlatformUI.createAndRunWorkbench(PlatformUI.java:149)
+	at org.eclipse.ui.internal.ide.application.IDEApplication.start(IDEApplication.java:123)
+	at org.eclipse.equinox.internal.app.EclipseAppHandle.run(EclipseAppHandle.java:196)
+	at org.eclipse.core.runtime.internal.adaptor.EclipseAppLauncher.runApplication(EclipseAppLauncher.java:110)
+	at org.eclipse.core.runtime.internal.adaptor.EclipseAppLauncher.start(EclipseAppLauncher.java:79)
+	at org.eclipse.core.runtime.adaptor.EclipseStarter.run(EclipseStarter.java:344)
+	at org.eclipse.core.runtime.adaptor.EclipseStarter.run(EclipseStarter.java:179)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.lang.reflect.Method.invoke(Unknown Source)
+	at org.eclipse.equinox.launcher.Main.invokeFramework(Main.java:622)
+	at org.eclipse.equinox.launcher.Main.basicRun(Main.java:577)
+	at org.eclipse.equinox.launcher.Main.run(Main.java:1410)
+	at org.eclipse.equinox.launcher.Main.main(Main.java:1386)
