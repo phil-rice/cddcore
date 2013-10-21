@@ -23,7 +23,7 @@ object TennisScorer1 {
   val lookup = Map(0 -> love, 1 -> s15, 2 -> s30, 3 -> s40)
 
   val scorer = Engine[Int, Int, (Score, Score)]().
-    withDescription("Tennis Kata specified by http://codingdojo.org/cgi-bin/wiki.pl?KataTennis").
+    description("Tennis Kata specified by http://codingdojo.org/cgi-bin/wiki.pl?KataTennis").
     withDefaultCode((l: Int, r: Int) => throw new IllegalStateException).
     useCase("A game is won by the first player to have won at least four points in total and at least two points more than the opponent.").
     scenario(4, 0).expected((won, lost)).because((l: Int, r: Int) => (l - r) >= 2 && l >= 4).

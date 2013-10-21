@@ -6,7 +6,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class ScenarioPrintTests extends EngineStringStringTests with JunitUniverse[String] {
 
-  val bldr = builder.withDescription("EngineDescription").useCase("uc1").
+  val bldr = builder.description("EngineDescription").useCase("uc1").
     scenario("s1_1").expected("a").scenario("s1_2").expected("b").
     useCase("uc2").scenario("s2_1").expected("c").scenario("s2_2").expected("d")
 
@@ -79,7 +79,7 @@ class ScenarioPrintTests extends EngineStringStringTests with JunitUniverse[Stri
   }
 
   it should "Produce a h1 with the engine description in it" in {
-    val bldr = builder.withDescription("descr").useCase("uc1").scenario("s1_1").expected("a").because((x: String) => true, "comment")
+    val bldr = builder.description("descr").useCase("uc1").scenario("s1_1").expected("a").because((x: String) => true, "comment")
     val manipulator = new JUnitTestManipulator()
     val visitor = new JunitScenarioReporter(manipulator, logger)
     bldr.walkScenarios(visitor, true);

@@ -16,7 +16,7 @@ case class Person(savings: GBP, ageInYears: Int) {
 object CategorisePerson {
   import GBP._
   val categorise = Engine[Person, String]().
-    withDescription("This engine works out what category of customer you are").
+    description("This engine works out what category of customer you are").
     withDefaultCode((p: Person) => throw new IllegalStateException).
 
     useCase("Young people are not eligable").expected("person.child").

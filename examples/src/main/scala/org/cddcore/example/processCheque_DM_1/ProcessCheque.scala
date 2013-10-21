@@ -61,7 +61,7 @@ object ProcessCheque {
   import ProcessChequeTestMother._
   import GBP._
   val processCheque = Engine[World, Cheque, ProcessChequeResult]().
-    withDescription("This engine works out whether to pay a cheque that has been presented to the bank specified in the world").
+    description("This engine works out whether to pay a cheque that has been presented to the bank specified in the world").
     withDefaultCode((w: World, c: Cheque) => ProcessChequeResult(false, "processCheque.defaultResult.shouldntHappen")).
 
     useCase("Cheques that are for a different bank should be rejected").

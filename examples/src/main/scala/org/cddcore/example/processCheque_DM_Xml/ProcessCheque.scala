@@ -138,7 +138,7 @@ object ProcessChequeXml {
 
   val processCheque = Engine[ChequeSituation, ProcessChequeResult]().
     withDefaultCode((s: ChequeSituation) => ProcessChequeResult(false, "processCheque.defaultResult.shouldntHappen")).
-    withDescription("This engine works out whether to pay a cheque that has been presented to the bank specified in the world").
+   description("This engine works out whether to pay a cheque that has been presented to the bank specified in the world").
 
     useCase("Cheques that are for a different bank should be rejected").
     scenario((world, cheque("1", richRogerAtHsbcId, richRogerId, today, 1000)), "One thousand pounds from rich roger at HSBC to rich roger at this bank. But the 'FromBank' isn't this bank").
