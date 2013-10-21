@@ -23,7 +23,7 @@ class ExceptionMessageTests extends EngineStringStringTests {
     val b = builderWithScenario.code("Z")
     val e = evaluating { b.build } should produce[NoExpectedException]
     assertEquals(b.scenariosForBuild(0), e.scenario)
-    assertEquals("No 'produces' in Scenario(UseCase1[0], W, because=, expected=<N/A>)\n" +
+    assertEquals("No expected in Scenario(UseCase1[0], W, because=, expected=<N/A>)\n" +
       "Detailed:\n" +
       "  List(W)", e.getMessage())
   }

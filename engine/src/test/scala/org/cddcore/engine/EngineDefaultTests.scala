@@ -26,7 +26,7 @@ class EngineDefaultTests extends EngineStringStringTests {
     evaluating { e("x") } should produce[UndecidedException]
 
     val s = e.scenarios(0)
-    assertEngineMatches(e, Right(Node(inputs = List("A"),
+    assertEngineMatches(e, Right(EngineNode(inputs = List("A"),
       because = List("A"),
       yes = Left(CodeAndScenarios(s.actualCode, List(s))),
       no = Left(CodeAndScenarios(e.defaultRoot.left.get, List(), true)),

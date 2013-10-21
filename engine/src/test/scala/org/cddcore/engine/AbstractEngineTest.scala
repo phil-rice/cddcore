@@ -1,6 +1,7 @@
 package org.cddcore.engine
 
 import scala.language.implicitConversions
+
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.FlatSpec
 import junit.framework.AssertionFailedError

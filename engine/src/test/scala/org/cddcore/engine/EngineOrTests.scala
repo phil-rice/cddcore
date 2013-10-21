@@ -15,7 +15,7 @@ class EngineOrTests extends EngineStringStringTests {
     val aScenario = e.scenarios(1)
     val abScenario = e.scenarios(2)
     assertEngineMatches(e,
-      Right(Node(List("B", "A"), inputs = List("A"), yes = Left(CodeAndScenarios("W", List(abScenario, aScenario))),
+      Right(EngineNode(List("B", "A"), inputs = List("A"), yes = Left(CodeAndScenarios("W", List(abScenario, aScenario))),
         no = Left(CodeAndScenarios("Z", List(wScenario))),
         scenarioThatCausedNode = aScenario)))
     assertEquals("W", e("A"))
@@ -46,7 +46,7 @@ class EngineOrTests extends EngineStringStringTests {
     val xBecauseB = e.scenarios(2); assertEquals("B", xBecauseB.becauseString)
 
     assertEngineMatches(e,
-      Right(Node(List("B", "A"), inputs = List("AB"), yes = Left(CodeAndScenarios("X", List(xBecauseB, xBecauseA))),
+      Right(EngineNode(List("B", "A"), inputs = List("AB"), yes = Left(CodeAndScenarios("X", List(xBecauseB, xBecauseA))),
         no = Left(CodeAndScenarios("Z", List(w))),
         scenarioThatCausedNode = xBecauseA)))
     assertEquals("X", e("A"))

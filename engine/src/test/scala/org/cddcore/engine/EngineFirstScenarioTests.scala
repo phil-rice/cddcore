@@ -21,7 +21,7 @@ class EngineFirstTwoScenarioTests extends EngineStringStringTests {
     assertEquals(2, e.scenarios.size)
     assertEquals(defaultScenario, e.scenarios(0))
     val bScenario = e.scenarios(1)
-    assertEngineMatches(e, Right(Node(because = List("B"), inputs = List("B"), yes = Left(CodeAndScenarios("X", List(bScenario))), no = Left(CodeAndScenarios("Z", List(defaultScenario))), scenarioThatCausedNode = bScenario)))
+    assertEngineMatches(e, Right(EngineNode(because = List("B"), inputs = List("B"), yes = Left(CodeAndScenarios("X", List(bScenario))), no = Left(CodeAndScenarios("Z", List(defaultScenario))), scenarioThatCausedNode = bScenario)))
   }
 
   it should "Throw ScenarioConflictingWithDefaultException if second scenario is assertion and comes to wrong result" in {

@@ -71,9 +71,9 @@ trait JunitUniverse[R] extends EngineUniverse[R] {
 
     def end = {}
 
-    def ifPrint: (String, Node) => String = ???
-    def elsePrint: (String, Node) => String = ???
-    def endPrint: (String, Node) => String = ???
+    def ifPrint: (String, EngineNode) => String = ???
+    def elsePrint: (String, EngineNode) => String = ???
+    def endPrint: (String, EngineNode) => String = ???
   }
 
 }  
