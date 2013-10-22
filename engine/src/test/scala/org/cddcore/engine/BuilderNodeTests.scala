@@ -114,8 +114,11 @@ class BuilderNodeTests extends EngineStringStringTests {
   }
 
   it should "allow references to be added" in {
-    val b1 = builder.useCase("one").scenario("x").description("one").code(c).expected("x").priority(2).reference("1.1")
-    val b2 = builder.useCase("two").scenario("x", "two").code(c).expectException(new RuntimeException).priority(2).reference("1.2", "x").reference("1.3");
+    val b1 = builder.useCase("one").
+      scenario("x").description("one").code(c).expected("x").priority(2).reference("1.1")
+    val b2 = builder.useCase("two").
+      scenario("x", "two").code(c).expectException(new RuntimeException).priority(2).
+      reference("1.2", "x").reference("1.3");
     val s1 = b1.useCases(0).scenarios(0);
     val s2 = b2.useCases(0).scenarios(0);
 

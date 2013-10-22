@@ -55,7 +55,7 @@ object Engine {
 trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
 
   trait ABuilder1 extends ScenarioBuilder {
-    def scenario(p: P, description: String = null) = newScenario(description, List(p))
+    def scenario(p: P, title: String = null) = newScenario(title, List(p))
     def build = new Engine(title, description, optCode, priority, references) with Function[P, R] {
       def useCases = useCasesForBuild
       def apply(p: P): R = {

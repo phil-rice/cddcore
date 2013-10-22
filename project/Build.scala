@@ -53,6 +53,7 @@ object BuildSettings {
     resolvers += Classpaths.typesafeResolver,
 // 
     libraryDependencies ++= Seq(
+    "org.antlr" % "stringtemplate" % "3.2.1",
 	  "org.scalaj" % "scalaj-time_2.10.2" % "0.7",
 	  "org.hsqldb" % "hsqldb" % "2.0.0",     
       "mysql" % "mysql-connector-java" % "5.1.6",            	  

@@ -3,13 +3,15 @@ package org.cddcore.example.tennisScore
 import org.cddcore.engine.Engine
 import org.junit.runner.RunWith
 import org.cddcore.engine.tests._
+import org.cddcore.engine.RequirementsPrinter
+import org.cddcore.engine.ResultAndIndent
 
 @RunWith(classOf[CddJunitRunner])
 object TennisScorer {
   val lookup = Map(0 -> "love", 1 -> "fifteen", 2 -> "thirty", 3 -> "forty")
 
-  val scorer = Engine[Int, Int, String]().
-   description("Tennis Kata specified by http://codingdojo.org/cgi-bin/wiki.pl?KataTennis").
+  val scorer = Engine[Int, Int, String]().title("Tennis Kata").
+    description("Specified by http://codingdojo.org/cgi-bin/wiki.pl?KataTennis").
     code((l: Int, r: Int) => "error").
     useCase("A game is won by the first player to have won at least four points in total and at least two points more than the opponent.").
     scenario(4, 0).expected("left won").because((l: Int, r: Int) => (l - r) >= 2 && l >= 4).
@@ -17,11 +19,11 @@ object TennisScorer {
     scenario(4, 2).expected("left won").
     scenario(5, 3).expected("left won").
 
-    scenario(0, 4).expected("left won").because((l: Int, r: Int) => (r - l) >= 2 && r >= 4).
-    scenario(1, 4).expected("left won").
-    scenario(2, 4).expected("left won").
-    scenario(3, 5).expected("left won").
-    scenario(40, 42).expected("left won").
+    scenario(0, 4).expected("right won").because((l: Int, r: Int) => (r - l) >= 2 && r >= 4).
+    scenario(1, 4).expected("right won").
+    scenario(2, 4).expected("right won").
+    scenario(3, 5).expected("right won").
+    scenario(40, 42).expected("right won").
 
     useCase("The running score of each game is described in a manner peculiar to tennis: scores from zero to three points are described as 'love', 'fifteen', 'thirty', and 'forty' respectively.").
     scenario(2, 3).expected("thirty, forty").because((l: Int, r: Int) => l < 4 && r < 4).code((l: Int, r: Int) => s"${lookup(l)}, ${lookup(r)}").
@@ -46,5 +48,11 @@ object TennisScorer {
     scenario(3, 4).expected("advantage right").
 
     build
+
+  def main(args: Array[String]) {
+    val printer = RequirementsPrinter.html
+    val result = scorer.fold(ResultAndIndent())(printer)
+    println(result)
+  }
 }
 

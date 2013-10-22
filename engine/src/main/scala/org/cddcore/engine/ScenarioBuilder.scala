@@ -262,7 +262,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     assertions: List[Assertion[A]] = List(),
     configuration: Option[CfgFn] = None,
     priority: Int = 0,
-    references: List[Reference] = List()) extends BuilderNode {
+    references: List[Reference] = List()) extends BuilderNode with Requirement with Test {
 
     def configure = if (configuration.isDefined) makeClosureForCfg(params)(configuration.get)
     lazy val actualCode: CodeFn[B, RFn, R] = optCode.getOrElse({
@@ -275,7 +275,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     })
     def becauseString = because match { case Some(b) => b.description; case _ => "" }
-    def titleString = title.getOrElse(paramString)
+    override def titleString = title.getOrElse(paramString)
     lazy val paramString = params.map(paramPrinter).mkString(",")
     override def toString =
       s"Scenario(${title.getOrElse("")}, ${paramString}, because=${becauseString}, expected=${logger(expected.getOrElse("<N/A>"))})"
@@ -322,7 +322,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     def useCases: List[UseCase]
     def children = useCases
-    
+    override def templateName = "builder"
     def set[X](x: X, bFn: (RealScenarioBuilder, X) => RealScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) = {
       useCases match {
         case Nil =>
@@ -798,14 +798,15 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
   }
 
-  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference]) extends BuildEngine with ScenarioWalker with RequirementHolder{
+  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference]) extends BuildEngine with ScenarioWalker with RequirementHolder {
     def defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>
         new UndecidedException)), List(), true))
     }
+    override def templateName="builder"
     def useCases: List[UseCase];
-    def children=useCases
+    def children = useCases
     lazy val scenarios: List[Scenario] = useCases.flatMap(_.scenarios)
 
     private val rootAndExceptionMap = buildRoot(defaultRoot, scenarios)
