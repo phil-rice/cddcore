@@ -60,11 +60,11 @@ trait CddRunner extends Runner with JunitUniverse[Any] with NotActuallyFactory[A
     engineMap = engineMap + (engineDescription -> engine)
 
     for (u <- engine.useCases) yield {
-      val useCaseDescription = Description.createSuiteDescription(Strings.clean(u.description.getOrElse("")))
+      val useCaseDescription = Description.createSuiteDescription(Strings.clean(u.title.getOrElse("")))
       engineDescription.addChild(useCaseDescription)
 
       for (s <- u.scenarios) yield {
-        val name = s.description.getOrElse(s.params.map(logger).mkString(",")) + " => " + logger(s.expected.getOrElse("")) + " " + s.becauseString
+        val name = s.titleString + " => " + logger(s.expected.getOrElse("")) + " " + s.becauseString
         val cleanedName = Strings.clean(name)
         println("   " + cleanedName)
         val scenarioDescription = Description.createSuiteDescription(cleanedName)

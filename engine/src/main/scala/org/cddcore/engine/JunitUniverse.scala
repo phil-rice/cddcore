@@ -37,7 +37,7 @@ trait JunitUniverse[R] extends EngineUniverse[R] {
     }
 
     def visitUseCase(ui: Int, u: UseCase) {
-      val text = <h2>Usecase { ui }: { u.description.getOrElse("") }</h2>.mkString;
+      val text = <h2>Usecase { ui }: { u.title.getOrElse("") }</h2>.mkString;
       manipulator.append(text)
     }
 
@@ -47,7 +47,7 @@ trait JunitUniverse[R] extends EngineUniverse[R] {
     def visitScenario(useCaseindex: Int, u: UseCase, scenarioIndex: Int, s: Scenario) {
       val paramsString = s.params.mkString("<br />,")
       val text =
-        <h3>{ scenarioIndex }{ s.description.collect { case d => ": " + d } getOrElse ("") }</h3>
+        <h3>{ scenarioIndex }{ s.title.collect { case d => ": " + d } getOrElse ("") }</h3>
         <table>
           <tr><td>Parameters</td><td><pre>{ s.params.map(displayProcessor).mkString(", ") }</pre></td></tr>
           <tr><td>Expected</td><td><pre>{ s.expected.getOrElse("Not Defined") }</pre></td></tr>

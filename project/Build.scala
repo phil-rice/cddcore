@@ -42,7 +42,7 @@ object BuildSettings {
         </developer>
       </developers>),
 
-    organization := "org.corecdd",
+    organization := "org.cddcore",
     //version := "1.4.0-SNAPSHOT",
     version := "1.4.0",
     scalacOptions ++= Seq(),
@@ -64,8 +64,6 @@ object BuildSettings {
       "org.scalatest" % "scalatest_2.10" % "1.9.1",
       "log4j" % "log4j" % "1.2.17",
       "junit" % "junit" % "4.8.2"))
-
-
 	  
   val eclipseSettings = buildSettings ++ Seq(
     resolvers += "eclipse-repo" at "https://swt-repo.googlecode.com/svn/repo/",
@@ -77,7 +75,6 @@ object BuildSettings {
       "org.eclipse.ui" % "org.eclipse.ui.workbench" % "3.7.1.v20120104-1859",
       "org.eclipse.swt.win32.win32" % "x86" % "3.3.0-v3346",
       "org.eclipse.core" % "org.eclipse.core.runtime" % "3.6.0.v20100505"))
-	  
 	  
   val javanetDeps = "javanetDeps" at "http://download.java.net/maven/2/"
  

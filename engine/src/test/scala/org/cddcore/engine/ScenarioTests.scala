@@ -28,7 +28,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   }
 
   "The ScenarioBuilder" should "allow the scenario lens to set /get the scenario" in {
-    val expected = new Scenario(None, List(), logger)
+    val expected = new Scenario(None, None, List(), logger)
     val newBuilder = scenarioLens.set(builderWithScenario, expected);
     assert(List(expected) == newBuilder.useCases.head.scenarios, newBuilder.useCases.head.scenarios) //i.e. this has replaced the head scenario
     assert(expected == scenarioLens.get(newBuilder), scenarioLens.get(newBuilder))
@@ -77,7 +77,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
     val b = builderWithScenario.expected(firstResult)
     val engine = build(b)
     assertEquals("UseCases", b.useCasesForBuild, engine.useCases)
-    val expectedScenario = Scenario(None, firstParams, logger, Some(ROrException[R](firstResult)));
+    val expectedScenario = Scenario(None, None, firstParams, logger, Some(ROrException[R](firstResult)));
     assertEquals(List(expectedScenario), engine.scenarios)
   }
 
@@ -115,7 +115,6 @@ class Scenario1Tests extends FirstScenario1Test[Int, Int] with AbstractScenarioT
     assertEquals("((x: Int) => x.>(2))", secondScenaro.becauseString)
     assertEquals(Some(ROrException[Int](7)), secondScenaro.expected)
   }
-
 
 }
 @RunWith(classOf[JUnitRunner])

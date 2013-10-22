@@ -18,9 +18,9 @@ class ScenarioPrintTests extends EngineStringStringTests with JunitUniverse[Stri
     var started = false
     var ended = false;
     def start(engineDescription: Option[String]) = actualDescription = engineDescription; if (actualUseCaseStrings ::: actualEndUseCaseStrings ::: actualScenarioStrings != List()) throw new IllegalStateException; started = true; if (ended) throw new IllegalStateException
-    def visitUseCase(ui: Int, u: UseCase) = actualUseCaseStrings = (ui + "/" + u.description.get) :: actualUseCaseStrings; if (ended) throw new IllegalStateException
-    def visitUseCaseEnd(u: UseCase) = actualEndUseCaseStrings = u.description.get :: actualEndUseCaseStrings; if (ended) throw new IllegalStateException
-    def visitScenario(ui: Int, u: UseCase, si: Int, s: Scenario) = actualScenarioStrings = (ui + "/" + u.description.get + "/" + si + "/" + s.expected.getOrElse("<N/A>")) :: actualScenarioStrings; if (ended) throw new IllegalStateException
+    def visitUseCase(ui: Int, u: UseCase) = actualUseCaseStrings = (ui + "/" + u.title.get) :: actualUseCaseStrings; if (ended) throw new IllegalStateException
+    def visitUseCaseEnd(u: UseCase) = actualEndUseCaseStrings = u.title.get :: actualEndUseCaseStrings; if (ended) throw new IllegalStateException
+    def visitScenario(ui: Int, u: UseCase, si: Int, s: Scenario) = actualScenarioStrings = (ui + "/" + u.title.get + "/" + si + "/" + s.expected.getOrElse("<N/A>")) :: actualScenarioStrings; if (ended) throw new IllegalStateException
     def end = ended = true
   }
 

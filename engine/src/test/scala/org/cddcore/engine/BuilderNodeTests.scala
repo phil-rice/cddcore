@@ -9,8 +9,9 @@ class BuilderNodeTests extends EngineStringStringTests {
   val c: Code = (s: String) => "x"
 
   "A builder" should "have its builder nodes setable" in {
-    val b1 = builder.description("a description").code(c).expected("x").priority(2);
+    val b1 = builder.title("title").description("a description").code(c).expected("x").priority(2);
     val b2 = builder.description("a description").code(c).expectException(new RuntimeException).priority(2);
+    assertEquals(Some("title"), b1.title);
     assertEquals(Some("a description"), b1.description);
     assertEquals(Some(c), b1.optCode);
     assertEquals(Some(ROrException[String]("x")), b1.expected);
@@ -19,13 +20,16 @@ class BuilderNodeTests extends EngineStringStringTests {
   }
 
   it should "throw exceptions if values are set twice" in {
-    val b1 = builder.description("a description").code(c).expected("x").priority(2);
-    val b2 = builder.description("a description").code(c).expectException(new RuntimeException).priority(2);
+    val b1 = builder.title("title").description("a description").code(c).expected("x").priority(2);
+    val b2 = builder.title("title").description("a description").code(c).expectException(new RuntimeException).priority(2);
 
+    evaluating { b1.title("again") } should produce[CannotDefineTitleTwiceException]
     evaluating { b1.description("again") } should produce[CannotDefineDescriptionTwiceException]
     evaluating { b1.code(c) } should produce[CannotDefineCodeTwiceException]
     evaluating { b1.expected("again") } should produce[CannotDefineExpectedTwiceException]
     evaluating { b1.expectException(new RuntimeException) } should produce[CannotDefineExpectedTwiceException]
+    evaluating { b2.expected("again") } should produce[CannotDefineExpectedTwiceException]
+    evaluating { b2.expectException(new RuntimeException) } should produce[CannotDefineExpectedTwiceException]
   }
 
   it should "allow references to be added" in {
@@ -37,11 +41,12 @@ class BuilderNodeTests extends EngineStringStringTests {
   }
 
   "A use case" should "have its builder nodes setable" in {
-    val b1 = builder.useCase("one").code(c).expected("x").priority(2);
-    val b2 = builder.useCase("two").code(c).expectException(new RuntimeException).priority(2);
+    val b1 = builder.useCase("one").description("d1").code(c).expected("x").priority(2);
+    val b2 = builder.useCase("two").description("d2").code(c).expectException(new RuntimeException).priority(2);
     val uc1 = b1.useCases(0);
     val uc2 = b2.useCases(0);
-    assertEquals(Some("one"), uc1.description);
+    assertEquals(Some("one"), uc1.title);
+    assertEquals(Some("d1"), uc1.description);
     assertEquals(Some(c), uc1.optCode);
     assertEquals(Some(ROrException[String]("x")), uc1.expected);
     assertEquals(Some(ROrException[String](new RuntimeException)), uc2.expected);
@@ -55,14 +60,17 @@ class BuilderNodeTests extends EngineStringStringTests {
   }
 
   it should "throw exceptions if values are set twice" in {
-    val b1 = builder.useCase("one").code(c).expected("x").priority(2);
-    val b2 = builder.useCase("two").code(c).expectException(new RuntimeException).priority(2);
+    val b1 = builder.useCase("one").description("d").code(c).expected("x").priority(2);
+    val b2 = builder.useCase("two").description("d").code(c).expectException(new RuntimeException).priority(2);
 
     evaluating { b1.description("again") } should produce[CannotDefineDescriptionTwiceException]
     evaluating { b1.code(c) } should produce[CannotDefineCodeTwiceException]
     evaluating { b1.expected("again") } should produce[CannotDefineExpectedTwiceException]
     evaluating { b1.expectException(new RuntimeException) } should produce[CannotDefineExpectedTwiceException]
+    evaluating { b2.expected("again") } should produce[CannotDefineExpectedTwiceException]
+    evaluating { b2.expectException(new RuntimeException) } should produce[CannotDefineExpectedTwiceException]
   }
+
   it should "allow references to be added" in {
     val b1 = builder.useCase("one").code(c).expected("x").priority(2).reference("1.1")
     val b2 = builder.useCase("two").code(c).expectException(new RuntimeException).priority(2).reference("1.2", "x").reference("1.3");
@@ -72,13 +80,15 @@ class BuilderNodeTests extends EngineStringStringTests {
     assertEquals(List(Reference("1.1")), uc1.references);
     assertEquals(List(Reference("1.3"), Reference("1.2", "x")), uc2.references);
   }
+
   "A scenario" should "have its builder nodes setable" in {
-    val b1 = builder.useCase("one").scenario("x").description("one").code(c).expected("x").priority(2);
+    val b1 = builder.useCase("one").scenario("x").title("one").description("d").code(c).expected("x").priority(2);
     val b2 = builder.useCase("two").scenario("x", "two").code(c).expectException(new RuntimeException).priority(2);
     val s1 = b1.useCases(0).scenarios(0);
     val s2 = b2.useCases(0).scenarios(0);
-    assertEquals(Some("one"), s1.description);
-    assertEquals(Some("two"), s2.description);
+    assertEquals(Some("one"), s1.title);
+    assertEquals(Some("two"), s2.title);
+    assertEquals(Some("d"), s1.description);
     assertEquals(Some(c), s1.optCode);
     assertEquals(Some(ROrException[String]("x")), s1.expected);
     assertEquals(Some(ROrException[String](new RuntimeException)), s2.expected);
@@ -92,16 +102,17 @@ class BuilderNodeTests extends EngineStringStringTests {
   }
 
   it should "throw exceptions if values are set twice" in {
-    val b1 = builder.useCase("one").scenario("x").description("one").code(c).expected("x").priority(2);
+    val b1 = builder.useCase("one").scenario("x").title("one").description("d").code(c).expected("x").priority(2);
     val b2 = builder.useCase("two").scenario("x", "two").code(c).expectException(new RuntimeException).priority(2);
 
+    evaluating { b1.title("again") } should produce[CannotDefineTitleTwiceException]
+    evaluating { b2.title("again") } should produce[CannotDefineTitleTwiceException]
     evaluating { b1.description("again") } should produce[CannotDefineDescriptionTwiceException]
-    evaluating { b2.description("again") } should produce[CannotDefineDescriptionTwiceException]
     evaluating { b1.code(c) } should produce[CannotDefineCodeTwiceException]
     evaluating { b1.expected("again") } should produce[CannotDefineExpectedTwiceException]
     evaluating { b1.expectException(new RuntimeException) } should produce[CannotDefineExpectedTwiceException]
   }
-  
+
   it should "allow references to be added" in {
     val b1 = builder.useCase("one").scenario("x").description("one").code(c).expected("x").priority(2).reference("1.1")
     val b2 = builder.useCase("two").scenario("x", "two").code(c).expectException(new RuntimeException).priority(2).reference("1.2", "x").reference("1.3");
@@ -110,6 +121,13 @@ class BuilderNodeTests extends EngineStringStringTests {
 
     assertEquals(List(Reference("1.1")), s1.references);
     assertEquals(List(Reference("1.3"), Reference("1.2", "x")), s2.references);
+  }
+
+  "An engine" should "inherit the properties of the builder" in {
+    val e = builder.title("title").description("a description").code(c).expected("x").priority(2).build;
+    assertEquals(Some("title"), e.title);
+    assertEquals(Some("a description"), e.description);
+    assertEquals(2, e.priority);
   }
 
 }
