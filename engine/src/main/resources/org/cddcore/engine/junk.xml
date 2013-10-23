@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Static</title>
+		<style>html {
+			font-family: Arial, Helvetica, sans-serif;
+			vertical-align: top;
+			}
+
+			div {
+			position: relative;
+			padding: 5px;
+			}
+
+			.report {
+			position: relative;
+			margin: 6px;
+			padding: 0px;
+			}
+
+			.reportTopBox {
+			position: relative;
+			width: 40%;
+			border: 1px solid gray;
+			padding: 0px;
+			margin: 4px;
+			}
+
+			.reportTitle {
+			background-color: #b29f8c;
+			padding: 0px;
+			}
+
+			.reportText {
+			padding: 2px;
+			}
+
+			.topRightBox {
+			position: relative;
+			left: 200px;
+			width: 40%;
+			border: 1px solid gray;
+			}
+
+			.project {
+			position: relative;
+			margin: 4px;
+			padding: 0px;
+			border: 1px solid gray;
+			}
+
+			.projectText {
+			background-color: #b29f8c;
+			padding: 2px;
+			}
+
+			.engine {
+			position: relative;
+			margin: 6px;
+			padding: 0px;
+			border: 1px solid gray;
+			}
+
+			.engineText {
+			background-color: #d6c6c4;
+			padding: 2px;
+			}
+
+			.usecase {
+			position: relative;
+			margin: 6px;
+			padding: 0px;
+			border: 1px solid gray;
+			}
+
+			.usecaseText {
+			background-color: #cbc8be;
+			border: 0px;
+			position: relative;
+			margin: 0px;
+			padding: 2px;
+			}
+
+			.scenario {
+			position: relative;
+			padding: 0px;
+			margin: 6px;
+			border: 1px solid gray;
+			}
+
+			.scenarioText {
+			background-color: #d1c2a4;
+			border: 1px;
+			margin: 0px;
+			padding: 2px;
+			}
+
+			.scenarioTable {
+			width: 100%;
+			background-color: #ffffff;
+			position: relative;
+			border-collapse: collapse;
+			margin: 0px;
+			padding: 4px;
+			border: 0px;
+			}
+
+			.scenarioValue {
+			background-color: #d0efd0;
+			width: 100%;
+			margin: 10px;
+			}
+
+			td {
+			vertical-align: top;
+			margin: 0px;
+			padding: 0px;
+			border: 1px solid black
+			}
+
+			.title {
+			width: 125px;
+			}
+
+			.value {
+
+			}
+
+			hr {
+			margin: 0px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class='report'>
+			<div class='reportTopBox'>
+				<div class='reportTitle'>Report name</div>
+				<div class='reportText'>Report: Static </div>
+				<div class='reportTitle'>Report date</div>
+				<div class='reportText'>Date: 2013-10-23</div>
+			</div>
+			<div class='topRightBox'>The Agile Consultancy</div>
+			<div class='project'>
+				<div class='projectText'>
+					<b>Project: Example</b>
+				</div>
+				<div class='engine'>
+					<div class='engineText'>
+						<p>This engine works out what category of customer you are</p>
+					</div>
+					<div class='usecase'>
+						<div class='usecaseText'>Young people are not eligable </div>
+						<div class='scenario'>
+							<div class='scenarioText'>Child aged 10 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>Person(GBP(10000,0),10)</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>person.child</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((p:
+										org.cddcore.example.customerCategorisation.Person) =>
+										p.tooYoung)</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>Child aged 15 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>Person(GBP(10000,0),15)</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>person.child</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>Poor people </div>
+						<div class='scenario'>
+							<div class='scenarioText'>Very poor person </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>Person(GBP(50,0),20)</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>person.poor</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((p:
+										org.cddcore.example.customerCategorisation.Person) =>
+										p.hasEnoughSavings.unary_!)</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>Only just poor person </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>Person(GBP(999,0),20)</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>person.poor</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>Rich people </div>
+						<div class='scenario'>
+							<div class='scenarioText'>Rich person </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>Person(GBP(1050,0),20)</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>person.rich</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((p:
+										org.cddcore.example.customerCategorisation.Person) =>
+										p.hasEnoughSavings)</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+				</div> <!-- Engine -->
+				<div class='engine'>
+					<div class='engineText'>
+						<p>This engine works out whether to pay a cheque that has been
+							presented to the bank specified in the world</p>
+					</div>
+					<div class='usecase'>
+						<div class='usecaseText'>Cheques that are for a different bank should be
+							rejected </div>
+						<div class='scenario'>
+							<div class='scenarioText'>One thousand pounds from rich roger at HSBC to
+								rich roger at this bank. But the 'FromBank' isn't this bank
+							</div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>(World(2013-09-01, Cheque(1,
+										from=CustomerId(HSBC/34), to=CustomerId(this/34), 2013-09-01,
+										amount=GBP(1000,0))</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(false,Message(processCheque.reject.fromBankNotThisBank,WrappedArray()))
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((s:
+										org.cddcore.example.processCheque_DM_2.ChequeSituation) =>
+										s.cheque.from.bank.!=(s.world.thisBank))</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>Cheques that are to a bank not on the white list
+							should be rejected </div>
+						<div class='scenario'>
+							<div class='scenarioText'>Dodgy Dave is moving half his funds to a bank that
+								isn't on the accepted list </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>(World(2013-09-01, Cheque(1,
+										from=CustomerId(this/12), to=CustomerId(DodgyBank/12),
+										2013-09-01, amount=GBP(50,0))</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(false,Message(processCheque.reject.toBank.notInWhiteList,WrappedArray(BankId(DodgyBank))))
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((s:
+										org.cddcore.example.processCheque_DM_2.ChequeSituation) =>
+										s.world.acceptedBanks.contains(s.cheque.to.bank).unary_!)</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>Cheques that will take the customer over the
+							overdraft limit will should be rejected </div>
+						<div class='scenario'>
+							<div class='scenarioText'>Dodgy Dave sending more money than he has </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>(World(2013-09-01, Cheque(1,
+										from=CustomerId(this/12), to=CustomerId(this/34), 2013-09-01,
+										amount=GBP(110,0))</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(false,Message(processCheque.reject.noOverdraft,WrappedArray()))
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((s:
+										org.cddcore.example.processCheque_DM_2.ChequeSituation) =>
+										s.customerWouldBeOverDrawn.&amp;&amp;(s.customerHasNoOverdraftLimit))
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>Rich Roger sending more money than he has, taking
+								him over his limit </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>(World(2013-09-01, Cheque(1,
+										from=CustomerId(this/34), to=CustomerId(HSBC/34), 2013-09-01,
+										amount=GBP(15000,0))</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(false,Message(processCheque.reject.exceedsOverdraftLimit,WrappedArray()))
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((s:
+										org.cddcore.example.processCheque_DM_2.ChequeSituation) =>
+										s.customerWouldExceedOverdraftLimit)</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>Cheques that are to to customers in an accepted
+							bank, when the cheque writer has sufficient funds, should be
+							allowed </div>
+						<div class='scenario'>
+							<div class='scenarioText'>Dodgy Dave sending an OK cheque to someone in this
+								bank </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>(World(2013-09-01, Cheque(1,
+										from=CustomerId(this/12), to=CustomerId(this/34), 2013-09-01,
+										amount=GBP(50,0))</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(true,Message(processCheque.accept,WrappedArray()))
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((s:
+										org.cddcore.example.processCheque_DM_2.ChequeSituation) =>
+										s.world.acceptedBanks.contains(s.cheque.to.bank))</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>Dodgy Dave sending an OK cheque to someone in an
+								accepted bank </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>(World(2013-09-01, Cheque(1,
+										from=CustomerId(this/12), to=CustomerId(HSBC/34), 2013-09-01,
+										amount=GBP(50,0))</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(true,Message(processCheque.accept,WrappedArray()))
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+				</div> <!-- Engine -->
+				<div class='engine'>
+					<div class='engineText'>
+						<p>This engine works out whether to pay a cheque that has been
+							presented to the bank specified in the world</p>
+					</div>
+					<div class='usecase'>
+						<div class='usecaseText'>Cheques that are for a different bank should be
+							rejected </div>
+						<div class='scenario'>
+							<div class='scenarioText'>One thousand pounds from rich roger at HSBC to
+								rich roger at this bank. But the 'FromBank' isn't this bank
+							</div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>
+										ChequeSituation(
+										<br />
+										chequeAmount = GBP(1000,0)
+										<br />
+										chequeToId = 34
+										<br />
+										chequeToBank = BankId(this)
+										<br />
+										chequeFromBank = BankId(HSBC)
+										<br />
+										customerBalance = NumberFormatException empty String
+										<br />
+										customerOverdraftLimit = NumberFormatException empty String
+										<br />
+										chequeFromId = 123
+										<br />
+										Xml: cheque &lt;cheque>
+										&lt;From>&lt;Bank>HSBC&lt;/Bank>&lt;Id>123&lt;/Id>&lt;/From>
+										&lt;To>&lt;Bank>this&lt;/Bank>&lt;Id>34&lt;/Id>&lt;/To>
+										&lt;Amount> 1000.0&lt;/Amount> &lt;Date>2013-09-01&lt;/Date>
+										&lt;/cheque>
+										<br />
+										\From
+										<br />
+										\From\Id = 123
+										<br />
+										\From\Bank = BankId(HSBC)
+										<br />
+										\To
+										<br />
+										\To\Id = 34
+										<br />
+										\To\Bank = BankId(this)
+										<br />
+										\Amount = GBP(1000,0)
+										<br />
+										<br />
+										Xml: customer &lt;NoCustomerRecord/>
+										<br />
+										\Balance = NumberFormatException empty String
+										<br />
+										\OverdraftLimit = NumberFormatException empty String
+										<br />
+										)
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(false,Message(processCheque.reject.fromBankNotThisBank,WrappedArray()))
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((s:
+										org.cddcore.example.processCheque_DM_Xml.ChequeSituation) =>
+										s.chequeFromBank.apply().!=(s.world.thisBank))</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>Cheques that are to a bank not on the white list
+							should be rejected </div>
+						<div class='scenario'>
+							<div class='scenarioText'>Dodgy Dave is moving half his funds to a bank that
+								isn't on the accepted list </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>
+										ChequeSituation(
+										<br />
+										chequeToId = 12
+										<br />
+										chequeAmount = GBP(50,0)
+										<br />
+										customerOverdraftLimit = GBP(0,0)
+										<br />
+										chequeToBank = BankId(DodgyBank)
+										<br />
+										chequeFromId = 12
+										<br />
+										chequeFromBank = BankId(this)
+										<br />
+										customerBalance = GBP(100,0)
+										<br />
+										Xml: customer &lt;Customer> &lt;Id>12&lt;/Id>
+										&lt;Bank>this&lt;/Bank> &lt;Balance>100.0&lt;/Balance>
+										&lt;OverdraftLimit>0&lt;/OverdraftLimit>
+										&lt;PremiumCustomer>false&lt;/PremiumCustomer> &lt;/Customer>
+										<br />
+										\Balance = GBP(100,0)
+										<br />
+										\OverdraftLimit = GBP(0,0)
+										<br />
+										<br />
+										Xml: cheque &lt;cheque>
+										&lt;From>&lt;Bank>this&lt;/Bank>&lt;Id>12&lt;/Id>&lt;/From>
+										&lt;To>&lt;Bank>DodgyBank&lt;/Bank>&lt;Id>12&lt;/Id>&lt;/To>
+										&lt;Amount> 50.0&lt;/Amount> &lt;Date>2013-09-01&lt;/Date>
+										&lt;/cheque>
+										<br />
+										\From
+										<br />
+										\From\Id = 12
+										<br />
+										\From\Bank = BankId(this)
+										<br />
+										\To
+										<br />
+										\To\Id = 12
+										<br />
+										\To\Bank = BankId(DodgyBank)
+										<br />
+										\Amount = GBP(50,0)
+										<br />
+										)
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(false,Message(processCheque.reject.toBank.notInWhiteList,WrappedArray(BankId(DodgyBank))))
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>
+										((s: org.cddcore.example.processCheque_DM_Xml.ChequeSituation)
+										=> {
+										<br />
+										val c: org.cddcore.example.processCheque_DM_Xml.BankId =
+										s.chequeToBank.apply();
+										<br />
+										s.world.acceptedBanks.contains(c).unary_!
+										<br />
+										})
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>Cheques that will take the customer over the
+							overdraft limit will should be rejected </div>
+						<div class='scenario'>
+							<div class='scenarioText'>Dodgy Dave sending more money than he has </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>
+										ChequeSituation(
+										<br />
+										chequeToId = 34
+										<br />
+										chequeAmount = GBP(110,0)
+										<br />
+										customerOverdraftLimit = GBP(0,0)
+										<br />
+										chequeToBank = BankId(this)
+										<br />
+										chequeFromId = 12
+										<br />
+										chequeFromBank = BankId(this)
+										<br />
+										customerBalance = GBP(100,0)
+										<br />
+										Xml: customer &lt;Customer> &lt;Id>12&lt;/Id>
+										&lt;Bank>this&lt;/Bank> &lt;Balance>100.0&lt;/Balance>
+										&lt;OverdraftLimit>0&lt;/OverdraftLimit>
+										&lt;PremiumCustomer>false&lt;/PremiumCustomer> &lt;/Customer>
+										<br />
+										\Balance = GBP(100,0)
+										<br />
+										\OverdraftLimit = GBP(0,0)
+										<br />
+										<br />
+										Xml: cheque &lt;cheque>
+										&lt;From>&lt;Bank>this&lt;/Bank>&lt;Id>12&lt;/Id>&lt;/From>
+										&lt;To>&lt;Bank>this&lt;/Bank>&lt;Id>34&lt;/Id>&lt;/To>
+										&lt;Amount> 110.0&lt;/Amount> &lt;Date>2013-09-01&lt;/Date>
+										&lt;/cheque>
+										<br />
+										\From
+										<br />
+										\From\Id = 12
+										<br />
+										\From\Bank = BankId(this)
+										<br />
+										\To
+										<br />
+										\To\Id = 34
+										<br />
+										\To\Bank = BankId(this)
+										<br />
+										\Amount = GBP(110,0)
+										<br />
+										)
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(false,Message(processCheque.reject.noOverdraft,WrappedArray()))
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((s:
+										org.cddcore.example.processCheque_DM_Xml.ChequeSituation) =>
+										s.customerWouldBeOverDrawn.&amp;&amp;(s.customerHasNoOverdraftLimit))
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>Rich Roger sending more money than he has, taking
+								him over his limit </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>
+										ChequeSituation(
+										<br />
+										customerOverdraftLimit = GBP(4000,0)
+										<br />
+										chequeToBank = BankId(HSBC)
+										<br />
+										customerBalance = GBP(10000,0)
+										<br />
+										chequeFromBank = BankId(this)
+										<br />
+										chequeAmount = GBP(15000,0)
+										<br />
+										chequeFromId = 34
+										<br />
+										chequeToId = 123
+										<br />
+										Xml: customer &lt;Customer> &lt;Id>34&lt;/Id>
+										&lt;Bank>this&lt;/Bank> &lt;Balance>10000.0&lt;/Balance>
+										&lt;OverdraftLimit>4000.0&lt;/OverdraftLimit>
+										&lt;PremiumCustomer>true&lt;/PremiumCustomer> &lt;/Customer>
+										<br />
+										\Balance = GBP(10000,0)
+										<br />
+										\OverdraftLimit = GBP(4000,0)
+										<br />
+										<br />
+										Xml: cheque &lt;cheque>
+										&lt;From>&lt;Bank>this&lt;/Bank>&lt;Id>34&lt;/Id>&lt;/From>
+										&lt;To>&lt;Bank>HSBC&lt;/Bank>&lt;Id>123&lt;/Id>&lt;/To>
+										&lt;Amount> 15000.0&lt;/Amount> &lt;Date>2013-09-01&lt;/Date>
+										&lt;/cheque>
+										<br />
+										\From
+										<br />
+										\From\Id = 34
+										<br />
+										\From\Bank = BankId(this)
+										<br />
+										\To
+										<br />
+										\To\Id = 123
+										<br />
+										\To\Bank = BankId(HSBC)
+										<br />
+										\Amount = GBP(15000,0)
+										<br />
+										)
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(false,Message(processCheque.reject.exceedsOverdraftLimit,WrappedArray()))
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((s:
+										org.cddcore.example.processCheque_DM_Xml.ChequeSituation) =>
+										s.customerWouldExceedOverdraftLimit)</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>Cheques that are to to customers in an accepted
+							bank, when the cheque writer has sufficient funds, should be
+							allowed </div>
+						<div class='scenario'>
+							<div class='scenarioText'>Dodgy Dave sending an OK cheque to someone in this
+								bank </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>
+										ChequeSituation(
+										<br />
+										chequeAmount = GBP(50,0)
+										<br />
+										chequeToId = 34
+										<br />
+										customerOverdraftLimit = GBP(0,0)
+										<br />
+										chequeToBank = BankId(this)
+										<br />
+										chequeFromId = 12
+										<br />
+										chequeFromBank = BankId(this)
+										<br />
+										customerBalance = GBP(100,0)
+										<br />
+										Xml: cheque &lt;cheque>
+										&lt;From>&lt;Bank>this&lt;/Bank>&lt;Id>12&lt;/Id>&lt;/From>
+										&lt;To>&lt;Bank>this&lt;/Bank>&lt;Id>34&lt;/Id>&lt;/To>
+										&lt;Amount> 50.0&lt;/Amount> &lt;Date>2013-09-01&lt;/Date>
+										&lt;/cheque>
+										<br />
+										\From
+										<br />
+										\From\Id = 12
+										<br />
+										\From\Bank = BankId(this)
+										<br />
+										\To
+										<br />
+										\To\Id = 34
+										<br />
+										\To\Bank = BankId(this)
+										<br />
+										\Amount = GBP(50,0)
+										<br />
+										<br />
+										Xml: customer &lt;Customer> &lt;Id>12&lt;/Id>
+										&lt;Bank>this&lt;/Bank> &lt;Balance>100.0&lt;/Balance>
+										&lt;OverdraftLimit>0&lt;/OverdraftLimit>
+										&lt;PremiumCustomer>false&lt;/PremiumCustomer> &lt;/Customer>
+										<br />
+										\Balance = GBP(100,0)
+										<br />
+										\OverdraftLimit = GBP(0,0)
+										<br />
+										)
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(true,Message(processCheque.accept,WrappedArray()))
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((s:
+										org.cddcore.example.processCheque_DM_Xml.ChequeSituation) =>
+										s.world.acceptedBanks.contains(s.chequeToBank.apply()))</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>Dodgy Dave sending an OK cheque to someone in an
+								accepted bank </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>
+										ChequeSituation(
+										<br />
+										chequeToBank = BankId(HSBC)
+										<br />
+										chequeAmount = GBP(50,0)
+										<br />
+										customerOverdraftLimit = GBP(0,0)
+										<br />
+										chequeFromId = 12
+										<br />
+										chequeFromBank = BankId(this)
+										<br />
+										customerBalance = GBP(100,0)
+										<br />
+										chequeToId = 123
+										<br />
+										Xml: cheque &lt;cheque>
+										&lt;From>&lt;Bank>this&lt;/Bank>&lt;Id>12&lt;/Id>&lt;/From>
+										&lt;To>&lt;Bank>HSBC&lt;/Bank>&lt;Id>123&lt;/Id>&lt;/To>
+										&lt;Amount> 50.0&lt;/Amount> &lt;Date>2013-09-01&lt;/Date>
+										&lt;/cheque>
+										<br />
+										\From
+										<br />
+										\From\Id = 12
+										<br />
+										\From\Bank = BankId(this)
+										<br />
+										\To
+										<br />
+										\To\Id = 123
+										<br />
+										\To\Bank = BankId(HSBC)
+										<br />
+										\Amount = GBP(50,0)
+										<br />
+										<br />
+										Xml: customer &lt;Customer> &lt;Id>12&lt;/Id>
+										&lt;Bank>this&lt;/Bank> &lt;Balance>100.0&lt;/Balance>
+										&lt;OverdraftLimit>0&lt;/OverdraftLimit>
+										&lt;PremiumCustomer>false&lt;/PremiumCustomer> &lt;/Customer>
+										<br />
+										\Balance = GBP(100,0)
+										<br />
+										\OverdraftLimit = GBP(0,0)
+										<br />
+										)
+									</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>ProcessChequeResult(true,Message(processCheque.accept,WrappedArray()))
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+				</div> <!-- Engine -->
+				<div class='engine'>
+					<div class='engineText'>
+						Tennis Kata
+						<p>Specified by http://codingdojo.org/cgi-bin/wiki.pl?KataTennis
+						</p>
+					</div>
+					<div class='usecase'>
+						<div class='usecaseText'>A game is won by the first player to have won at
+							least four points in total and at least two points more than the
+							opponent. </div>
+						<div class='scenario'>
+							<div class='scenarioText'>4,0 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>4&lt;hr />0</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>left won</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((l: Int, r: Int) =>
+										l.-(r).>=(2).&amp;&amp;(l.>=(4)))</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>4,1 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>4&lt;hr />1</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>left won</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>4,2 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>4&lt;hr />2</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>left won</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>5,3 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>5&lt;hr />3</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>left won</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>0,4 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>0&lt;hr />4</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>right won</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((l: Int, r: Int) =>
+										r.-(l).>=(2).&amp;&amp;(r.>=(4)))</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>1,4 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>1&lt;hr />4</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>right won</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>2,4 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>2&lt;hr />4</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>right won</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>3,5 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>3&lt;hr />5</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>right won</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>40,42 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>40&lt;hr />42</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>right won</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>The running score of each game is described in a
+							manner peculiar to tennis: scores from zero to three points are
+							described as 'love', 'fifteen', 'thirty', and 'forty'
+							respectively. </div>
+						<div class='scenario'>
+							<div class='scenarioText'>2,3 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>2&lt;hr />3</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>thirty, forty</td>
+								</tr>
+								<tr>
+									<td class='title'>Code</td>
+									<td class='value'>((l: Int, r: Int) =>
+										scala.StringContext.apply(&quot;&quot;, &quot;, &quot;,
+										&quot;&quot;).s(TennisScorer.this.lookup.apply(l),
+										TennisScorer.this.lookup.apply(r)))</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((l: Int, r: Int) =>
+										l.&lt;(4).&amp;&amp;(r.&lt;(4)))</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>2,1 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>2&lt;hr />1</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>thirty, fifteen</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>The running score, if both scores are the same, is
+							called xx all </div>
+						<div class='scenario'>
+							<div class='scenarioText'>0,0 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>0&lt;hr />0</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>love all</td>
+								</tr>
+								<tr>
+									<td class='title'>Code</td>
+									<td class='value'>((l: Int, r: Int) =>
+										scala.StringContext.apply(&quot;&quot;, &quot;
+										all&quot;).s(TennisScorer.this.lookup.apply(l)))</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((l: Int, r: Int) =>
+										l.==(r).&amp;&amp;(l.&lt;(3)))</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>2,2 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>2&lt;hr />2</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>thirty all</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>If at least three points have been scored by each
+							player, and the scores are equal, the score is 'deuce'. </div>
+						<div class='scenario'>
+							<div class='scenarioText'>3,3 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>3&lt;hr />3</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>deuce</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((l: Int, r: Int) =>
+										l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r)))</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>4,4 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>4&lt;hr />4</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>deuce</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>6,6 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>6&lt;hr />6</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>deuce</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+					<div class='usecase'>
+						<div class='usecaseText'>If at least three points have been scored by each
+							side and a player has one more point than his opponent, the score
+							of the game is 'advantage' for the player in the lead. </div>
+						<div class='scenario'>
+							<div class='scenarioText'>5,4 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>5&lt;hr />4</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>advantage left</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((l: Int, r: Int) =>
+										l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r.+(1))))</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>6,5 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>6&lt;hr />5</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>advantage left</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>4,3 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>4&lt;hr />3</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>advantage left</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>4,5 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>4&lt;hr />5</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>advantage right</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>((l: Int, r: Int) =>
+										l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(r.==(l.+(1))))</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>5,6 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>5&lt;hr />6</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>advantage right</td>
+								</tr>
+							</table>
+						</div>
+						<div class='scenario'>
+							<div class='scenarioText'>3,4 </div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>3&lt;hr />4</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>advantage right</td>
+								</tr>
+							</table>
+						</div>
+					</div> <!-- UseCase -->
+				</div> <!-- Engine -->
+			</div> <!-- Project -->
+		</div>
+	</body>
+</html>

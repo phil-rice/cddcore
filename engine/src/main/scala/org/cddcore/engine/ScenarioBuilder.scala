@@ -11,7 +11,8 @@ import java.lang.IllegalStateException
 class NeedUseCaseException extends Exception
 class NeedScenarioException extends Exception
 class UndecidedException extends Exception
-
+class CanOnlyAddDocumentToBuilderException extends Exception
+class CannotFindDocumentException(msg: String) extends Exception(msg)
 class ExceptionAddingScenario(msg: String, t: Throwable) extends EngineException(msg, t)
 
 //TODO Very unhappy with EngineTest. It's a global variable. I don't know how else to interact with Junit though
@@ -320,13 +321,14 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     }
 
+    def documents: List[Document]
     def useCases: List[UseCase]
     def children = useCases
-    override def templateName = "builder"
-    def set[X](x: X, bFn: (RealScenarioBuilder, X) => RealScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) = {
+    override def templateName = "Engine"
+    def set[X](x: X, bFn: (RealScenarioBuilder, X) => ScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) = {
       useCases match {
         case Nil =>
-          checkFn(thisAsBuilder, x); bFn(thisAsBuilder, x)
+          checkFn(thisAsBuilder, x); bFn(thisAsBuilder, x).asInstanceOf[RealScenarioBuilder]
         case h :: tail =>
           val newHead = h.scenarios match {
             case Nil =>
@@ -343,41 +345,52 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       optCode: Option[Code] = this.optCode,
       expected: Option[ROrException[R]] = expected,
       priority: Int = priority,
-      references: List[Reference] = references): RealScenarioBuilder;
+      references: List[Reference] = references,
+      documents:List[Document] = documents): RealScenarioBuilder;
 
     def thisAsBuilder: RealScenarioBuilder
 
+    def document(documents: Document*) = {
+      set[List[Document]](documents.toList ++ this.documents,
+        (b, d) => 
+          b.withCases(documents = d),
+        (u, d) => throw new CanOnlyAddDocumentToBuilderException,
+        (s, d) => throw new CanOnlyAddDocumentToBuilderException,
+        (n, d) => {});
+        
+      
+    }
     def title(title: String): RealScenarioBuilder =
       set[Option[String]](Some(title),
-        (b, title) => withCases(title = title),
+        (b, title) => b.withCases(title = title),
         (u, title) => u.copy(title = title),
         (s, title) => s.copy(title = title),
         (n, title) => if (n.title.isDefined) throw CannotDefineTitleTwiceException(n.title.get, title.get))
 
     def description(description: String): RealScenarioBuilder =
       set[Option[String]](Some(description),
-        (b, description) => withCases(description = description),
+        (b, description) => b.withCases(description = description),
         (u, description) => u.copy(description = description),
         (s, description) => s.copy(description = description),
         (n, description) => if (n.description.isDefined) throw CannotDefineDescriptionTwiceException(n.description.get, description.get))
 
     def expectException[E <: Throwable](e: E, comment: String = "") =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
-        (b, newE) => withCases(expected = newE),
+        (b, newE) => b.withCases(expected = newE),
         (u, newE) => u.copy(expected = newE),
         (s, newE) => s.copy(expected = newE),
         (n, newE) => if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newE.get))
 
     def expected(e: R): RealScenarioBuilder =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
-        (b, newExpected) => withCases(expected = newExpected),
+        (b, newExpected) => b.withCases(expected = newExpected),
         (u, newExpected) => u.copy(expected = newExpected),
         (s, newExpected) => s.copy(expected = newExpected),
         (n, newExpected) => if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newExpected.get))
 
     def code(c: Code, comment: String = "") =
       set[Option[Code]](Some(c),
-        (b, newCode) => withCases(optCode = newCode),
+        (b, newCode) => b.withCases(optCode = newCode),
         (u, newCode) => u.copy(optCode = newCode),
         (s, newCode) => s.copy(optCode = newCode),
         (n, newCode) => if (n.optCode.isDefined) throw CannotDefineCodeTwiceException(n.optCode.get, newCode.get))
@@ -389,9 +402,17 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (u, priority) => u.copy(priority = priority),
         (s, priority) => s.copy(priority = priority))
 
-    def reference(locator: String, document: String = "") =
+    def findDocument(documentName: String) = documents.find((d) => d.name == Some(documentName)) match {
+      case Some(d) => d
+      case None => throw new CannotFindDocumentException(documentName);
+    }
+
+    def reference(ref: String, documentName: String): RealScenarioBuilder = reference(ref, findDocument(documentName))
+    def reference(ref: String, document: Document): RealScenarioBuilder = reference(ref, Some(document))
+
+    def reference(ref: String, document: Option[Document] = None): RealScenarioBuilder =
       set[Reference](
-        Reference(locator, document),
+        Reference(ref, document),
         (b, r) => withCases(references = r :: b.references),
         (u, r) => u.copy(references = r :: u.references),
         (s, r) => s.copy(references = r :: s.references))
@@ -798,13 +819,13 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
   }
 
-  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference]) extends BuildEngine with ScenarioWalker with RequirementHolder {
+  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document]) extends BuildEngine with ScenarioWalker with RequirementHolder with org.cddcore.engine.Engine {
     def defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>
         new UndecidedException)), List(), true))
     }
-    override def templateName="builder"
+    override def templateName = "Engine"
     def useCases: List[UseCase];
     def children = useCases
     lazy val scenarios: List[Scenario] = useCases.flatMap(_.scenarios)

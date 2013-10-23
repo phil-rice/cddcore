@@ -1,0 +1,126 @@
+html {
+	font-family: Arial, Helvetica, sans-serif;
+	vertical-align: top;
+}
+
+div {
+	position: relative;
+	padding: 5px;
+}
+
+.report {
+	position: relative;
+	margin: 6px;
+	padding: 0px;
+}
+
+.reportTopBox {
+	position: relative;
+	width: 40%;
+	border: 1px solid gray;
+	padding: 0px;
+	margin: 4px;
+}
+
+.reportTitle {
+	background-color: #b29f8c;
+	padding: 0px;
+}
+
+.reportText {
+	padding: 2px;
+}
+
+.topRightBox {
+	position: relative;
+	float: right;
+	align: right;
+}
+
+.project {
+	position: relative;
+	margin: 4px;
+	padding: 0px;
+	border: 1px solid gray;
+}
+
+.projectText {
+	background-color: #b29f8c;
+	padding: 2px;
+}
+
+.engine {
+	position: relative;
+	margin: 6px;
+	padding: 0px;
+	border: 1px solid gray;
+}
+
+.engineText {
+	background-color: #d6c6c4;
+	padding: 2px;
+}
+
+.usecase {
+	position: relative;
+	margin: 6px;
+	padding: 0px;
+	border: 1px solid gray;
+}
+
+.usecaseText {
+	background-color: #cbc8be;
+	border: 0px;
+	position: relative;
+	margin: 0px;
+	padding: 2px;
+}
+
+.scenario {
+	position: relative;
+	padding: 0px;
+	margin: 6px;
+	border: 1px solid gray;
+}
+
+.scenarioText {
+	background-color: #d1c2a4;
+	border: 1px;
+	margin: 0px;
+	padding: 2px;
+}
+
+.scenarioTable {
+	width: 100%;
+	background-color: #ffffff;
+	position: relative;
+	border-collapse: collapse;
+	margin: 0px;
+	padding: 4px;
+	border: 0px;
+}
+
+.scenarioValue {
+	background-color: #d0efd0;
+	width: 100%;
+	margin: 10px;
+}
+
+td {
+	vertical-align: top;
+	margin: 0px;
+	padding: 0px;
+	border: 1px solid black
+}
+
+.title {
+	width: 125px;
+}
+
+.value {
+	
+}
+
+hr {
+	margin: 0px;
+}

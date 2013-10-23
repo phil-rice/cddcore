@@ -1,6 +1,6 @@
 package org.cddcore.engine
 
-case class Reference(ref: String = "", document: String = "")
+
 
 trait Requirement {
   def title: Option[String]

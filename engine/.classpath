@@ -4,6 +4,7 @@
 	<classpathentry kind="src" output="bin" path="src/main/java"/>
 	<classpathentry kind="src" output="bin" path="src/test/scala"/>
 	<classpathentry kind="src" output="bin" path="src/test/java"/>
+	<classpathentry kind="src" path="src/main/resources"/>
 	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
 	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/org.clapper/grizzled-scala_2.10/jars/grizzled-scala_2.10-1.1.2.jar" sourcepath="C:/Users/Phil/.ivy2/cache/org.clapper/grizzled-scala_2.10/srcs/grizzled-scala_2.10-1.1.2-sources.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/jline/jline/jars/jline-2.6.jar" sourcepath="C:/Users/Phil/.ivy2/cache/jline/jline/srcs/jline-2.6-sources.jar"/>

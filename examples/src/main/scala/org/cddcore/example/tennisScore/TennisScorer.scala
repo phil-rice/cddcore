@@ -5,6 +5,7 @@ import org.junit.runner.RunWith
 import org.cddcore.engine.tests._
 import org.cddcore.engine.RequirementsPrinter
 import org.cddcore.engine.ResultAndIndent
+import org.cddcore.engine.Report
 
 @RunWith(classOf[CddJunitRunner])
 object TennisScorer {
@@ -50,9 +51,7 @@ object TennisScorer {
     build
 
   def main(args: Array[String]) {
-    val printer = RequirementsPrinter.html
-    val result = scorer.fold(ResultAndIndent())(printer)
-    println(result)
+    println(Report("Tennis Scorer", "23rd October 2013", scorer).html)
   }
 }
 

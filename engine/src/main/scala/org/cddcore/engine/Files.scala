@@ -1,6 +1,7 @@
 package org.cddcore.engine
 
 import java.io.FileOutputStream
+import scala.io.Source
 
 object Files {
 
@@ -12,4 +13,7 @@ object Files {
 	  val p = new java.io.PrintWriter(new FileOutputStream(f, true))
 	  try { op(p) } finally { p.close() }
   }
+  
+  def getFromClassPath(clazz: Class[_], name: String) =
+    Source.fromInputStream(clazz.getClassLoader().getResourceAsStream(clazz.getPackage().getName().replace('.','/') +"/" + name)).mkString
 }
