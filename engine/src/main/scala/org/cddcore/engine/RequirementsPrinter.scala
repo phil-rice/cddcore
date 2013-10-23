@@ -152,10 +152,10 @@ class StRequirementsPrinter(nameToTemplate: Map[String, String], startPattern: S
       case r: Report =>
         template.setAttribute("reportDate", formatter.print(System.currentTimeMillis()))
       case t: Test =>
-        template.setAttribute("code", ValueForRender(t.optCode.collect { case c => c.description } getOrElse (null)))
+        template.setAttribute("code", ValueForRender(t.optCode.collect { case c => c.pretty } getOrElse (null)))
         template.setAttribute("expected", ValueForRender(t.expected.getOrElse("")))
         template.setAttribute("paramCount", t.params.size)
-        template.setAttribute("because", ValueForRender(t.because.collect { case c => c.description } getOrElse (null)))
+        template.setAttribute("because", ValueForRender(t.because.collect { case c => c.pretty } getOrElse (null)))
         for (p <- t.params)
           template.setAttribute("params", ValueForRender(t.paramPrinter(p)))
       case _ =>
@@ -171,8 +171,12 @@ class StRequirementsPrinter(nameToTemplate: Map[String, String], startPattern: S
 
 }
 
-case class ValueForRender(value: Any) {
+ class ValueForRender(value: Any) {
   override def toString = if (value == null) "" else value.toString
+}
+
+object ValueForRender{
+  def apply(o: Object) = if (o==null) null else new ValueForRender(o)
 }
 
 class Renderer extends AttributeRenderer {

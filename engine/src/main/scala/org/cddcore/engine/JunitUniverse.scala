@@ -11,8 +11,10 @@ trait JunitUniverse[R] extends EngineUniverse[R] {
   }
 
   class JunitFileManipulator(val file: File) extends JUnitManipulator {
-    def nuke =
+    def nuke ={
       file.delete()
+      file.getParentFile().mkdirs()
+    }
     def append(s: String) =
       Files.appendToFile(file)((pw) => pw.append(s))
   }

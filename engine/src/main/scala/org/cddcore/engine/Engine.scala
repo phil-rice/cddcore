@@ -3,16 +3,23 @@ package org.cddcore.engine
 trait Engine extends RequirementHolder {
   def documents: List[Document]
   def decisionTreeNodes: Int
+  def root: Either[Conclusion, Decision]
+  def toStringWith(printer: IfThenPrinter): String = toStringWith("", root, printer)
+  def toStringWith(indent: String, root: Either[Conclusion, Decision], printer: IfThenPrinter): String
 }
 
 trait Decision {
-  def because: Option[CodeHolder]
+  def because: List[CodeHolder]
+  def yes: Either[Conclusion, Decision]
+  def no: Either[Conclusion, Decision]
+  def prettyString: String
 }
 
 trait Conclusion {
-  def optCode: Option[CodeHolder]
-  def expected: Option[ROrException[_]]
+  def code: CodeHolder
+  def scenarios: List[Test]
 }
+
 
 trait Engine1Types[P, R] extends EngineTypes[R] {
   type A = (P, ROrException[R]) => Boolean

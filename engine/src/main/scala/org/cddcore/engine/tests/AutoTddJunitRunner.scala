@@ -77,10 +77,9 @@ trait CddRunner extends Runner with JunitUniverse[Any] with NotActuallyFactory[A
 
   def fileFor(clazz: Class[Any], ed: Description, extension: String) = new File(CddRunner.directory, clazz.getName() + "." + ed.getDisplayName() + "." + extension)
 
-  def saveResults(clazz: Class[Any], ed: Description, e: Any) {
+  def saveResults(clazz: Class[Any], ed: Description, e: Engine) {
     import Files._
-    CddRunner.directory.mkdirs()
-    printToFile(fileFor(clazz, ed, "attd"))((pw) => pw.write(e.toString))
+    printToFile(fileFor(clazz, ed, "dt.html"))((pw) => pw.write(e.toStringWith(new HtmlIfThenPrinter)))
     //        new File(AutoTddRunner.directory, clazz.getName() + "." + ed.getDisplayName() + ".attd"))((pw) => pw.write(e.toString))
   }
 
@@ -201,11 +200,9 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
 
   def recordEngine(clazz: Class[Any], engineDescription: Description, engine: Engine) {
     val file = fileFor(clazz, engineDescription, "html")
-    val manipulator = new JunitFileManipulator(file)
-    val reporter = scenarioReporter(file)
-    engine.walkScenarios(reporter, true);
-    manipulator.append("\n\n" + <pre>{ engine.constructionString }</pre>)
-    saveResults(clazz, engineDescription, engine)
+    file.delete();
+    Files.appendToFile(file)((p)=> p.append(Report("Junit Result", engine).html))
+   
   }
 
   trait SomeTrait { def someMethod: String }

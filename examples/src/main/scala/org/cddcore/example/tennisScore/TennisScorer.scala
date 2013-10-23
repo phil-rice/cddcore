@@ -54,7 +54,7 @@ object TennisScorer {
 
   def main(args: Array[String]) {
     val e = scorer.references
-    println(Report("Tennis Scorer", "23rd October 2013", scorer).html)
+    println(Report("Tennis Scorer", scorer).html)
   }
 }
 

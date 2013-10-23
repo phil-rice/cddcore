@@ -216,7 +216,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     implicit def delegate_to[B, RFn, R](c: CodeAndScenarios) = c.code
   }
 
-  case class CodeAndScenarios(val code: Code, val scenarios: List[Scenario] = List(), default: Boolean = false)  {
+  case class CodeAndScenarios(val code: Code, val scenarios: List[Scenario] = List(), default: Boolean = false) extends Conclusion {
 
     def addedBy = scenarios match {
       case Nil => None
@@ -228,7 +228,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
   }
 
-  case class EngineNode(val because: List[Because[B]], inputs: List[Any], yes: RorN, no: RorN, scenarioThatCausedNode: Scenario) {
+  case class EngineNode(val because: List[Because[B]], inputs: List[Any], yes: RorN, no: RorN, scenarioThatCausedNode: Scenario) extends Decision {
     def allScenarios = scenarios(Right(this))
     def becauseString = because.map(_.description).mkString(" or ")
     def prettyString = because.map(_.pretty).mkString(" or ")
@@ -451,14 +451,6 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
   }
 
-  trait IfThenPrinter {
-    def resultPrint: (String, CodeAndScenarios) => String
-    def ifPrint: (String, EngineNode) => String
-    def elsePrint: (String, EngineNode) => String
-    def endPrint: (String, EngineNode) => String
-    def titlePrint: (String, Scenario) => String
-  }
-
   trait ScenarioVisitor {
     def start(engineDescription: Option[String])
     def visitUseCase(useCaseindex: Int, u: UseCase)
@@ -506,15 +498,14 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
   }
   trait EngineToString {
-    def root: RorN
-    def buildRoot(root: RorN, scenarios: List[Scenario]): (RorN, ScenarioExceptionMap)
+    def root: Either[Conclusion, Decision]
 
-    def toString(indent: String, root: RorN): String = {
+    def toString(indent: String, root: Either[Conclusion, Decision]): String = {
       root match {
         case null => indent + "null"
-        case Left(result) => indent + result.pretty + "\n"
+        case Left(result) => indent + result.code.pretty + "\n"
         case Right(node) =>
-          indent + "if(" + node.because.pretty + ")\n" +
+          indent + "if(" + node.prettyString + ")\n" +
             toString(indent + " ", node.yes) +
             indent + "else\n" +
             toString(indent + " ", node.no)
@@ -530,42 +521,26 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         case _ => List(List(c))
       }))
 
-    class DefaultIfThenPrinter extends IfThenPrinter {
-      def resultPrint = (indent, result) => indent + result.pretty + ":" + result.scenarios.map((s) => s.titleString).mkString(",") + "\n"
-      def ifPrint = (indent, node) => indent + "if(" + node.prettyString + ")\n"
-      def elsePrint = (indent, node) => indent + "else\n";
-      def endPrint = (indent, node) => "";
-      def titlePrint: (String, Scenario) => String = (indent, scenario) => "";
-    }
-
-    def toStringWith(indent: String, root: RorN, printer: IfThenPrinter): String = {
+    def titleString: String
+    def toStringWith(indent: String, root: Either[Conclusion, Decision], printer: IfThenPrinter): String =
+      printer.start(titleString) + toStringPrimWith(indent, root, printer) + printer.end
+    private def toStringPrimWith(indent: String, root: Either[Conclusion, Decision], printer: IfThenPrinter): String = {
       root match {
         case null => "Could not toString as root as null. Possibly because of earlier exceptions"
         case Left(result) => printer.resultPrint(indent, result)
         case Right(node) =>
           val ifString = printer.ifPrint(indent, node)
-          val yesString = toStringWith(indent + " ", node.yes, printer)
+          val yesString = toStringPrimWith(indent + printer.incIndent, node.yes, printer)
           val elseString = printer.elsePrint(indent, node)
-          val noString = toStringWith(indent + " ", node.no, printer)
+          val noString = toStringPrimWith(indent + printer.incIndent, node.no, printer)
           val endString = printer.endPrint(indent, node)
           val result = ifString + yesString + elseString + noString + endString
           return result
       }
     }
 
-    def toStringWithScenarios(indent: String, root: RorN): String =
+    def toStringWithScenarios(indent: String, root: Either[Conclusion, Decision]): String =
       toStringWith(indent, root, new DefaultIfThenPrinter())
-
-    def constructionString(root: RorN, cs: List[Scenario], printer: IfThenPrinter) =
-      increasingScenariosList(cs).reverse.map((cs) =>
-        try {
-          val c = cs.head
-          val title = printer.titlePrint("", c)
-          val (r, s) = buildRoot(root, cs.reverse)
-          title + toStringWith("", r, printer)
-        } catch {
-          case e: Throwable => e.getClass() + "\n" + e.getMessage()
-        }).mkString("\n")
   }
 
   trait BuildEngine extends EvaluateEngine with EngineToString {
@@ -815,9 +790,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
       result
     }
-
   }
-
   abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document]) extends BuildEngine with ScenarioWalker with RequirementHolder with org.cddcore.engine.Engine {
     def defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
@@ -855,6 +828,17 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       logger.result(result)
       result
     }
+
+    def constructionString(root: RorN, cs: List[Scenario], printer: IfThenPrinter) =
+      increasingScenariosList(cs).reverse.map((cs) =>
+        try {
+          val c = cs.head
+          val title = printer.titlePrint("", c)
+          val (r, s) = buildRoot(root, cs.reverse)
+          title + toStringWith("", r, printer)
+        } catch {
+          case e: Throwable => e.getClass() + "\n" + e.getMessage()
+        }).mkString("\n")
 
     def buildRoot(root: RorN, scenarios: List[Scenario]): (RorN, ScenarioExceptionMap) = {
       scenarios match {

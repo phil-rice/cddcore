@@ -9,6 +9,7 @@ import scala.concurrent.stm._
 import org.junit.runner.RunWith
 import org.cddcore.engine.tests.CddJunitRunner
 import org.cddcore.engine._
+import java.io.File
 
 case class CarersXmlSituation(w: World, e: Elem) extends XmlSituation {
   import Xml._
@@ -33,8 +34,8 @@ case class CarersXmlSituation(w: World, e: Elem) extends XmlSituation {
   lazy val expenses = Expenses.expenses(w, e)
   lazy val income = Income.income(w, e)
 
-//  lazy val howLongHasClaimBeenActiveInWeeks = 
-  
+  //  lazy val howLongHasClaimBeenActiveInWeeks = 
+
   lazy val nettIncome: Option[Double] =
     for (e <- expenses.amount; i <- income.amount)
       yield i - e
@@ -122,18 +123,24 @@ object Carers {
     scenario((World("2010-3-1"), "CL100116A"), "CL116A-income from renting").
     expected(ReasonAndAmount("carers.income.rental", None)).
 
-//    useCase("Customer receiving certain other benefits at a rate lower than the rate of CA will reduce the payable amount of CA.").
-//    scenario((World("2010-3-1"), "CL100117A"), "CL117A-income from renting - pension from 10/4/2010. Date is before the pension started.").
-//    scenario((World("2010-5-1"), "CL100117A"), "CL117A-income from renting - pension from 10/4/2010. Date is after the pension started.").
+    //    useCase("Customer receiving certain other benefits at a rate lower than the rate of CA will reduce the payable amount of CA.").
+    //    scenario((World("2010-3-1"), "CL100117A"), "CL117A-income from renting - pension from 10/4/2010. Date is before the pension started.").
+    //    scenario((World("2010-5-1"), "CL100117A"), "CL117A-income from renting - pension from 10/4/2010. Date is after the pension started.").
 
     useCase("Customer receiving certain other benefits at a rate lower than the rate of CA will reduce the payable amount of CA.").
-    
-    
+
     build
 
   def main(args: Array[String]) {
     val situation: CarersXmlSituation = (World("2010-6-1"), "CL800119A")
     println(situation)
+    val file = new File("C:/Users/Phil/Desktop/stuff.html")
+    file.delete()
+
+    Files.appendToFile(file)((p) =>
+      //      p.append(html)
+      p.append(engine.toStringWith(new HtmlIfThenPrinter)))
+    println(engine.toStringWith(new HtmlIfThenPrinter))
   }
 
 }

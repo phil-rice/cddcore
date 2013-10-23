@@ -13,18 +13,18 @@ class InvalidBecauseException(msg: String) extends EngineException(msg, null)
 case class Configurator[K](item: K, fn: (K) => Unit);
 
 object RfnMaker {
-  def rfn1ConstantMaker[P, R] = (e: Either[()=>Exception, R]) => e match { case Left(e) => (p: P) => throw e(); case Right(r) => (p: P) => r }
-  def rfn2ConstantMaker[P1, P2, R] = (e: Either[()=>Exception, R]) => e match { case Left(e) => (p1: P1, p2: P2) =>  throw e(); case Right(r) => (p1: P1, p2: P2) => r }
-  def rfn3ConstantMaker[P1, P2, P3, R] = (e: Either[()=>Exception, R]) => e match { case Left(e) => (p1: P1, p2: P2, p3: P3) => throw e(); case Right(r) => (p1: P1, p2: P2, p3: P3) => r }
+  def rfn1ConstantMaker[P, R] = (e: Either[() => Exception, R]) => e match { case Left(e) => (p: P) => throw e(); case Right(r) => (p: P) => r }
+  def rfn2ConstantMaker[P1, P2, R] = (e: Either[() => Exception, R]) => e match { case Left(e) => (p1: P1, p2: P2) => throw e(); case Right(r) => (p1: P1, p2: P2) => r }
+  def rfn3ConstantMaker[P1, P2, P3, R] = (e: Either[() => Exception, R]) => e match { case Left(e) => (p1: P1, p2: P2, p3: P3) => throw e(); case Right(r) => (p1: P1, p2: P2, p3: P3) => r }
 
 }
 
 abstract class CodeHolder(val description: String, val comment: String) {
   private val index = description.indexOf("=>");
-  val pretty = index match {
+  lazy val pretty = (index match {
     case -1 => description
     case i => description.substring(index + 3, description.length - 1)
-  }
+  }).replace(".this.", ".").replace(".apply(", "(")
   //TODO Need better extraction of parameters as the parameters could be functions
   val parameters = index match {
     case -1 => description

@@ -12,8 +12,11 @@ trait Requirement {
   def templateName: String = getClass.getSimpleName()
 }
 
-trait Test extends Requirement with Decision with Conclusion{
-
+trait Test extends Requirement {
+  def optCode: Option[CodeHolder]
+  def expected: Option[ROrException[_]]
+  def because: Option[CodeHolder]
+  
   def params: List[Any]
   def paramPrinter: LoggerDisplayProcessor
 }
