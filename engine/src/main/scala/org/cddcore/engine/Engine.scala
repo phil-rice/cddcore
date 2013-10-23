@@ -2,6 +2,16 @@ package org.cddcore.engine
 
 trait Engine extends RequirementHolder {
   def documents: List[Document]
+  def decisionTreeNodes: Int
+}
+
+trait Decision {
+  def because: Option[CodeHolder]
+}
+
+trait Conclusion {
+  def optCode: Option[CodeHolder]
+  def expected: Option[ROrException[_]]
 }
 
 trait Engine1Types[P, R] extends EngineTypes[R] {
@@ -103,7 +113,7 @@ class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.noLo
 
   class Builder2(val title: Option[String] = None, val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int = 0, val references: List[Reference] = List(), val documents: List[Document] = List()) extends ABuilder2 {
     def thisAsBuilder = this
-    def withCases(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference] , documents: List[Document]) =
+    def withCases(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference], documents: List[Document]) =
       new Builder2(title, description, useCases, optCode, expected, priority, references, documents)
   }
 }

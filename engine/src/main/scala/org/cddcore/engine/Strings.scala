@@ -18,6 +18,7 @@ object Strings {
   def bracketsToKvs(left: String, right: String) = left.zip(right).toList
 
   def oneLine(s: String) = s.replace('\n', ' ')
+  def htmlEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;").replace("&gt;", ">").replace("\n", "<br />")
 }
 
 class StringCleaner(map: Map[Char, Char] = Map()) {

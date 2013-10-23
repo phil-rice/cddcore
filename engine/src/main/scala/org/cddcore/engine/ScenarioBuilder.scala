@@ -216,7 +216,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     implicit def delegate_to[B, RFn, R](c: CodeAndScenarios) = c.code
   }
 
-  case class CodeAndScenarios(val code: Code, val scenarios: List[Scenario] = List(), default: Boolean = false) {
+  case class CodeAndScenarios(val code: Code, val scenarios: List[Scenario] = List(), default: Boolean = false)  {
 
     def addedBy = scenarios match {
       case Nil => None
@@ -346,19 +346,18 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       expected: Option[ROrException[R]] = expected,
       priority: Int = priority,
       references: List[Reference] = references,
-      documents:List[Document] = documents): RealScenarioBuilder;
+      documents: List[Document] = documents): RealScenarioBuilder;
 
     def thisAsBuilder: RealScenarioBuilder
 
     def document(documents: Document*) = {
       set[List[Document]](documents.toList ++ this.documents,
-        (b, d) => 
+        (b, d) =>
           b.withCases(documents = d),
         (u, d) => throw new CanOnlyAddDocumentToBuilderException,
         (s, d) => throw new CanOnlyAddDocumentToBuilderException,
         (n, d) => {});
-        
-      
+
     }
     def title(title: String): RealScenarioBuilder =
       set[Option[String]](Some(title),
@@ -833,6 +832,12 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     private val rootAndExceptionMap = buildRoot(defaultRoot, scenarios)
     val root: RorN = rootAndExceptionMap._1
     val scenarioExceptionMap: ScenarioExceptionMap = rootAndExceptionMap._2
+    lazy val decisionTreeNodes = countDecisionTreeNodes(root, 0)
+    def countDecisionTreeNodes(n: RorN, sum: Int): Int =
+      n match {
+        case Left(c) => sum + 1
+        case Right(n) => sum + countDecisionTreeNodes(n.yes, 0) + countDecisionTreeNodes(n.no, 0) + 1
+      }
 
     if (!EngineTest.testing)
       validateScenarios(root, scenarios)

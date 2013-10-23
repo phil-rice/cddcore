@@ -11,8 +11,8 @@ import org.cddcore.engine.Document
 @RunWith(classOf[CddJunitRunner])
 object TennisScorer {
   val lookup = Map(0 -> "love", 1 -> "fifteen", 2 -> "thirty", 3 -> "forty")
-  val definition = Document(url = Some("http://codingdojo.org/cgi-bin/wiki.pl?KataTennis"))
-  val wikipedia = Document(url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
+  val definition = Document(name=Some("CodingDojo"),url = Some("http://codingdojo.org/cgi-bin/wiki.pl?KataTennis"))
+  val wikipedia = Document(name=Some("Wikipedia"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
   
   val scorer = Engine[Int, Int, String]().title("Tennis Kata").reference("Game_score", wikipedia).reference("", definition).
     code((l: Int, r: Int) => "error").

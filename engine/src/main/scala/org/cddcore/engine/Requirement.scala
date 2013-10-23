@@ -12,13 +12,13 @@ trait Requirement {
   def templateName: String = getClass.getSimpleName()
 }
 
-trait Test extends Requirement {
-  def optCode: Option[CodeHolder]
-  def because: Option[CodeHolder]
-  def expected: Option[ROrException[_]]
+trait Test extends Requirement with Decision with Conclusion{
+
   def params: List[Any]
   def paramPrinter: LoggerDisplayProcessor
 }
+
+
 
 object RequirementsVisitor {
   implicit def tupleToVisitor(t: Tuple3[(RequirementHolder) => _, (Requirement) => _, (RequirementHolder) => _]) =
