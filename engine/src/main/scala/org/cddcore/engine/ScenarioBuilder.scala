@@ -398,7 +398,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def priority(priority: Int): RealScenarioBuilder =
       set[Int](
         priority,
-        (b, priority) => withCases(priority = priority),
+        (b, priority) => b.withCases(priority = priority),
         (u, priority) => u.copy(priority = priority),
         (s, priority) => s.copy(priority = priority))
 
@@ -413,7 +413,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def reference(ref: String, document: Option[Document] = None): RealScenarioBuilder =
       set[Reference](
         Reference(ref, document),
-        (b, r) => withCases(references = r :: b.references),
+        (b, r) => b.withCases(references = r :: b.references),
         (u, r) => u.copy(references = r :: u.references),
         (s, r) => s.copy(references = r :: s.references))
 

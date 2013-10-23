@@ -7,8 +7,8 @@ import org.cddcore.engine._
 @RunWith(classOf[JUnitRunner])
 class BuilderNodeTests extends EngineStringStringTests {
   val c: Code = (s: String) => "x"
-    
-    val doc1 = Document(name=Some("x"))
+
+  val doc1 = Document(name = Some("x"))
 
   "A builder" should "have its builder nodes setable" in {
     val b1 = builder.document(doc1).title("title").description("a description").code(c).expected("x").priority(2);
@@ -40,6 +40,11 @@ class BuilderNodeTests extends EngineStringStringTests {
 
     assertEquals(List(Reference("1.1")), b1.references);
     assertEquals(List(Reference("1.3"), Reference("1.2", Some(doc1))), b2.references);
+  }
+  it should "allow references to be added even after other stuff added" in {
+    val b1 = builder.document(doc1).reference("1.1").useCase("")
+
+    assertEquals(List(Reference("1.1")), b1.references);
   }
 
   "A use case" should "have its builder nodes setable" in {

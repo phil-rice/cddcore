@@ -103,7 +103,7 @@ class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.noLo
 
   class Builder2(val title: Option[String] = None, val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int = 0, val references: List[Reference] = List(), val documents: List[Document] = List()) extends ABuilder2 {
     def thisAsBuilder = this
-    def withCases(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference] = List(), documents: List[Document]) =
+    def withCases(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference] , documents: List[Document]) =
       new Builder2(title, description, useCases, optCode, expected, priority, references, documents)
   }
 }

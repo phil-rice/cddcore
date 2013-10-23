@@ -1,9 +1,12 @@
 package org.cddcore.engine
 
-case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, url: Option[String] = None)
+case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, url: Option[String] = None){
+  def titleString = name.getOrElse(title.getOrElse(url.getOrElse(description.getOrElse(""))))
+}
 
 case class Reference(ref: String = "", document: Option[Document] = None) extends Comparable[Reference] {
 
+  def titleString = document.collect { case d => d.titleString + " " }.getOrElse("") + ref
   def compareTo(other: Reference): Int = {
     val left = ref.split("\\.")
     val right = other.ref.split("\\.")
@@ -31,7 +34,7 @@ case class Project(projectTitle: String, engines: Engine*) extends RequirementHo
     engines.foldLeft(List[(Reference, Requirement)]())((acc, e) => acc ++
       e.flatMap(_.references.map((_, e))) ++
       e.references.map((_, e))).toMap
-      
+
   val title = Some(projectTitle)
   val children = engines.toList
   def description = None

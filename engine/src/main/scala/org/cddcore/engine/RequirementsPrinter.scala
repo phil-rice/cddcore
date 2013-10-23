@@ -44,29 +44,32 @@ class HtmlRequirementsPrinterTemplate extends RequirementsPrinterTemplate {
   private val expectedRow = "<tr><td class='title'>Expected</td><td class='value'>$if(expected)$$expected$$endif$</td></tr>"
   private val codeRow = "$if(code)$<tr><td class='title'>Code</td><td class='value'>$code$</td></tr>$endif$"
   private val becauseRow = "$if(because)$<tr><td class='title'>Because</td><td class='value'>$because$</td></tr>$endif$"
-  private val paramsRow = "<tr><td class='title'>Parameter</td><td class='value'>$params: {p|$p$}; separator=\"<hr />\"$</td></tr>"
+  private val paramsRow = "<tr><td class='title'>Parameter</td><td class='value'>$params: {p|$p$}; separator=\", \"$</td></tr>"
+  private val refsRow = "<tr><td class='title'>References</td><td class='value'>$references: {r|$r$}; separator=\", \"$</td></tr>"
 
   def reportStart =
     "<!DOCTYPE html><html><head><title>CDD Report: $title$</title><style>" + Files.getFromClassPath(getClass, "cdd.css") + "\n</style></head>\n" +
       "<body>" +
       "<div class='report'>" +
-      "<div class='topRightBox'>"+Files.getFromClassPath(getClass, "OurAdvert.xml") + "</div>" +
+      "<div class='topRightBox'>" + Files.getFromClassPath(getClass, "OurAdvert.xml") + "</div>" +
       "<div class='reportTopBox'>" +
       "<div class='reportTitle'>Report name</div>" +
       "<div class='reportText'>" + title + " " + description + "</div>" +
       "<div class='reportTitle'>Report date</div>" +
       "<div class='reportText'>$reportDate$</div></div>" +
       "\n"
+  def table(clazz: String, rows: String*) =
+    s"<table class='$clazz'>${rows.mkString("")}</table>"
   def projectStart = "<div class='project'><div class='projectText'><b>Project: $title$</b> " + description + "</div>\n"
-  def engineStart = "<div class='engine'>" + titleAndDescription("engineText") + "\n"
-  def useCaseStart = "<div class='usecase'>" + titleAndDescription("usecaseText") + "\n"
+  def engineStart = "<div class='engine'>" + titleAndDescription("engineText") + table("engineTable", refsRow) + "\n"
+  def useCaseStart = "<div class='usecase'>" + titleAndDescription("usecaseText") + table("usecaseTable", refsRow) + "\n"
   def scenario = "<div class='scenario'>" + titleAndDescription("scenarioText") +
-    "<table class='scenarioTable'>" +
-    paramsRow +
-    expectedRow +
-    codeRow +
-    becauseRow +
-    "</table></div>\n"
+    table("scenarioTable",
+      refsRow,
+      paramsRow,
+      expectedRow,
+      codeRow,
+      becauseRow) + "</div>\n"
   def useCaseEnd = "</div> <!-- UseCase -->\n"
   def engineEnd = "</div> <!-- Engine -->\n"
   def projectEnd = "</div> <!-- Project -->\n"
@@ -125,6 +128,9 @@ class StRequirementsPrinter(nameToTemplate: Map[String, String], startPattern: S
     template.setAttribute("indent", Integer.toString(preIndent))
     template.setAttribute("description", r.description.getOrElse(null))
     template.setAttribute("title", r.titleString)
+    for (ref <- r.references)
+    	template.setAttribute("references", ref.titleString)
+      
     r match {
       case r: Report =>
         template.setAttribute("reportDate", formatter.print(System.currentTimeMillis()))

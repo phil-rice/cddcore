@@ -15,7 +15,7 @@ case class Person(savings: GBP, ageInYears: Int) {
 @RunWith(classOf[CddJunitRunner])
 object CategorisePerson {
   import GBP._
-  val categorise = Engine[Person, String]().
+  val categorise = Engine[Person, String]().reference("1.1").
     description("This engine works out what category of customer you are").
     code((p: Person) => throw new IllegalStateException).
 

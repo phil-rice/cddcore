@@ -8,6 +8,16 @@ div {
 	padding: 5px;
 }
 
+table {
+	width: 100%;
+	background-color: #ffffff;
+	position: relative;
+	border-collapse: collapse;
+	margin: 0px;
+	padding: 4px;
+	border: 0px;
+}
+
 .report {
 	position: relative;
 	margin: 6px;
@@ -90,7 +100,7 @@ div {
 	padding: 2px;
 }
 
-.scenarioTable {
+table {
 	width: 100%;
 	background-color: #ffffff;
 	position: relative;

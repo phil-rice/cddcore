@@ -17,7 +17,7 @@ object Reports {
       ProcessCheque.processCheque,
       ProcessChequeXml.processCheque,
       TennisScorer.scorer)
-
+    val e = TennisScorer.scorer.references;
     val html = Report("Static", "23rd October 2013", project).html
     println(html)
     val file = new File("C:/Users/Phil/Desktop/stuff.html")
