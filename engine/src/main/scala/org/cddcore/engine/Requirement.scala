@@ -1,7 +1,5 @@
 package org.cddcore.engine
 
-
-
 trait Requirement {
   def title: Option[String]
   def titleString = title.getOrElse("")
@@ -17,28 +15,10 @@ trait Test extends Requirement {
   def optCode: Option[CodeHolder]
   def expected: Option[ROrException[_]]
   def because: Option[CodeHolder]
-  
+
   def params: List[Any]
   def paramPrinter: LoggerDisplayProcessor
 }
-
-
-
-object RequirementsVisitor {
-  implicit def tupleToVisitor(t: Tuple3[(RequirementHolder) => _, (Requirement) => _, (RequirementHolder) => _]) =
-    RequirementsVisitor(t._1, t._2, t._3)
-}
-case class RequirementsVisitor(holderFnStart: (RequirementHolder) => _, childFn: (Requirement) => _, holderFnEnd: (RequirementHolder) => _)
-
-trait RequirementsFolder[Acc] {
-  def holderFnStart: (Acc, RequirementHolder) => Acc
-  def childFn: (Acc, Requirement) => Acc
-  def holderFnEnd: (Acc, RequirementHolder) => Acc
-}
-object RequirementsFolder {
-  implicit def tupleToFolder[Acc](t: Tuple3[(Acc, RequirementHolder) => Acc, (Acc, Requirement) => Acc, (Acc, RequirementHolder) => Acc]) = SimpleRequirementsFolder(t._1, t._2, t._3)
-}
-case class SimpleRequirementsFolder[Acc](holderFnStart: (Acc, RequirementHolder) => Acc, childFn: (Acc, Requirement) => Acc, holderFnEnd: (Acc, RequirementHolder) => Acc) extends RequirementsFolder[Acc]
 
 trait RequirementHolder extends Requirement with Traversable[Requirement] {
   def children: List[Requirement]
@@ -70,5 +50,42 @@ trait RequirementHolder extends Requirement with Traversable[Requirement] {
     val result: Acc = folder.holderFnEnd(acc, this)
     result
   }
+  def foldWithPath[Acc](initial: Acc)(folder: RequirementsFolderWithPath[Acc]):  Acc = foldWithPath((List(), initial))(folder)._2
+  def foldWithPath[Acc](initial: (List[Requirement], Acc))(folder: RequirementsFolderWithPath[Acc]): (List[Requirement], Acc) = {
+    //I could do this functionally, but I'm not sure it would be any cleaner
+    val initialPath = initial._1
+    var acc: (List[Requirement], Acc) = folder.holderFnStart(initial, this)
+    for (c <- children)
+      c match {
+        case holder: RequirementHolder =>
+          acc = holder.foldWithPath((this :: initialPath, acc._2))(folder);
+        case _ => acc = folder.childFn((initialPath, acc._2), c)
+      }
+    val result: (List[Requirement], Acc) = folder.holderFnEnd((initialPath, acc._2), this)
+    (initialPath, result._2)
+  }
 }
 
+object RequirementsVisitor {
+  implicit def tupleToVisitor(t: Tuple3[(RequirementHolder) => _, (Requirement) => _, (RequirementHolder) => _]) =
+    RequirementsVisitor(t._1, t._2, t._3)
+}
+case class RequirementsVisitor(holderFnStart: (RequirementHolder) => _, childFn: (Requirement) => _, holderFnEnd: (RequirementHolder) => _)
+
+trait RequirementsFolder[Acc] {
+  def holderFnStart: (Acc, RequirementHolder) => Acc
+  def childFn: (Acc, Requirement) => Acc
+  def holderFnEnd: (Acc, RequirementHolder) => Acc
+}
+
+object RequirementsFolder {
+  implicit def tupleToFolder[Acc](t: Tuple3[(Acc, RequirementHolder) => Acc, (Acc, Requirement) => Acc, (Acc, RequirementHolder) => Acc]) = SimpleRequirementsFolder(t._1, t._2, t._3)
+}
+case class SimpleRequirementsFolder[Acc](holderFnStart: (Acc, RequirementHolder) => Acc, childFn: (Acc, Requirement) => Acc, holderFnEnd: (Acc, RequirementHolder) => Acc) extends RequirementsFolder[Acc]
+
+trait RequirementsFolderWithPath[Acc] {
+  def holderFnStart: ((List[Requirement], Acc), RequirementHolder) => (List[Requirement], Acc)
+  def childFn: ((List[Requirement], Acc), Requirement) => (List[Requirement], Acc)
+  def holderFnEnd: ((List[Requirement], Acc), RequirementHolder) => (List[Requirement], Acc)
+
+}

@@ -6,7 +6,7 @@ import org.cddcore.engine._
 object CarersMain {
   def main(args: Array[String]) {
       val printer = RequirementsPrinter.html
-      val result = Carers.engine.fold(ResultAndIndent())(printer)
+      val result = Carers.engine.foldWithPath(ResultAndIndent())(printer)
       println(result)
   }
 }

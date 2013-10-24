@@ -84,12 +84,13 @@ class RequirementTests extends AbstractTest {
   }
   def checkStPrinter(holder: RequirementHolder, expected: String) = {
     val classPathPattern = getClass.getPackage().getName().replace('.', '/') + "/RequirementTestTemplate"
+    import RequirementsPrinter._
     val printer = new StRequirementsPrinter(Map(
       "RequirementHolderForTest_start" -> "Start $indent$/$title$/$description$\n",
       "RequirementForTest" -> "Requirement $indent$/$title$/$description$\n",
       "RequirementForTestNoDesc" -> "RequirementNoDesc $indent$/$title$/$description$\n",
       "RequirementHolderForTest_end" -> "End $indent$/$title$/$description$\n"))
-    val result = holder.fold(ResultAndIndent())(printer)
+    val result = holder.foldWithPath(ResultAndIndent())(printer)
     assertEquals(ResultAndIndent(1, expected), result)
   }
 
@@ -106,6 +107,5 @@ class RequirementTests extends AbstractTest {
         "Requirement 2/Title_3/desc_3\r\n" +
         "End 1/Title_holder2_123/desc_holder2_123\r\n")
   }
-
 
 }

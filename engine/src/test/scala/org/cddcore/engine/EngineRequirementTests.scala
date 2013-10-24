@@ -2,16 +2,17 @@ package org.cddcore.engine
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-
+import RequirementsPrinter._
 @RunWith(classOf[JUnitRunner])
 class EngineRequirementTests extends EngineStringStringTests {
   def checkBuilderPrinter(holder: RequirementHolder, expected: String) {
+    import Renderer._
     val printer = RequirementsPrinter("+B $indent$/$title$/$description$\n",
       "+UC $indent$/$title$/$description$\n",
       "S $indent$/$title$/$description$\n",
       "-UC $indent$/$title$/$description$\n",
       "-B $indent$/$title$/$description$\n")
-    val result = holder.fold(ResultAndIndent())(printer)
+    val result = holder.foldWithPath( ResultAndIndent())(printer)
     assertEquals(ResultAndIndent(1, expected), result)
 
   }
@@ -34,7 +35,7 @@ class EngineRequirementTests extends EngineStringStringTests {
   }
   def checkHtmlPrinter(holder: RequirementHolder, expected: String) {
     val printer = RequirementsPrinter.html
-    val result = holder.fold(ResultAndIndent())(printer)
+    val result = holder.foldWithPath( ResultAndIndent())(printer)
     assertEquals(ResultAndIndent(1, expected), result)
   }
 

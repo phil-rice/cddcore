@@ -11,7 +11,7 @@ case class Report(reportTitle: String, requirements: Requirement*) extends Requi
   def description = None
   def priority = 0
   def references = List[Reference]()
-  def html = fold(ResultAndIndent())(RequirementsPrinter.html).result
+  def html = foldWithPath(ResultAndIndent())(RequirementsPrinter.html).result
 }
 trait NameForRequirement {
   def apply(r: Requirement): String
@@ -46,15 +46,15 @@ class CachedNameForRequirement extends NameForRequirement {
 
 class WebPagesCreator(project: Project, dir: File = CddRunner.directory, nameForRequirement: NameForRequirement = new CachedNameForRequirement) {
 
-  def junitHtml(r: Report) = r.fold(ResultAndIndent())(RequirementsPrinter.html).result
+  def junitHtml(r: Report) = r.foldWithPath(ResultAndIndent())(RequirementsPrinter.html).result
   def decisionTreeHtml(e: Engine, ifThenPrinter: IfThenPrinter) = e.toStringWith(ifThenPrinter)
 
   def createJunitReport(r: Requirement*) = {
     val last = r.last
-    val name="JUnit for " + last.templateName + " " + last.titleString
+    val name = "JUnit for " + last.templateName + " " + last.titleString
     val report = Report(name.trim, last)
-   
-    Files.printToFile(nameForRequirement.file(dir, "html",  (r :+ report):_*))((p) => p.append(junitHtml(report)))
+
+    Files.printToFile(nameForRequirement.file(dir, "html", (r :+ report): _*))((p) => p.append(junitHtml(report)))
   }
 
   def createEngineReport(e: Engine) = createJunitReport(e)
@@ -62,18 +62,33 @@ class WebPagesCreator(project: Project, dir: File = CddRunner.directory, nameFor
   def createDecisionTreeReports =
     for (e: Engine <- project.children) {
       var file = nameForRequirement.file(dir, "html", project, e, "decisionTree")
-      Files.printToFile(file)((p) => p.append(decisionTreeHtml(e, new HtmlIfThenPrinter)))
+      Files.printToFile(file)((p) => p.append {
+        val report = Report("Decision Tree for " + nameForRequirement(e), e)
+        val s = report.foldWithPath(ResultAndIndent())(RequirementsPrinter.decisionTree()).result
+        s
+      })
     }
   def createScenarioReports =
-    for (e <- project.children )
-      e.collect { case test: Test => Files.printToFile(nameForRequirement.file(dir, "scenario.html", project, e, test))((p) => 
-        p.append(decisionTreeHtml(e, new HtmlWithTestIfThenPrinter(test, nameForRequirement)))) }
+    for (e <- project.children)
+      e.collect {
+        case test: Test =>
+          val file = nameForRequirement.file(dir, "scenario.html", project, e, test)
+
+          Files.printToFile(file)((p) => p.append {
+            val report = Report("Decision Tree for " + nameForRequirement(e), e)
+            val s = report.foldWithPath(ResultAndIndent())(RequirementsPrinter.decisionTree(Some(test))).result
+            s
+          })
+
+        //          Files.printToFile(file)((p) =>
+        //            p.append(decisionTreeHtml(e, new HtmlWithTestIfThenPrinter(test, nameForRequirement))))
+      }
 
   def create {
     createJunitReport(project);
     createDecisionTreeReports
     for (e <- project.children)
-      createJunitReport(project,e)
+      createJunitReport(project, e)
     createScenarioReports
   }
 
