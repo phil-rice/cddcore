@@ -72,7 +72,7 @@ class RequirementTests extends AbstractTest {
     check(holder3_2_123_and_3_12, "+holder3_2_123_and_3_12", "+holder2_123", ".1", ".2", ".3", "-holder2_123", "+holder3_12", ".1", ".2", "-holder3_12", "-holder3_2_123_and_3_12")
   }
 
-  def checkPrinter(holder: RequirementHolder, expected: String) = assertEquals(ResultAndIndent(1, expected), holder.fold(ResultAndIndent())(new SimpleRequirementsPrinter))
+  def checkPrinter(holder: RequirementHolder, expected: String) = assertEquals(ReqPrintContext(1, expected,new NoNameForRequirement), holder.fold(ReqPrintContext())(new SimpleRequirementsPrinter))
 
   "A Simple Requirement Printer" should "Have a title and description only for an empty list" in {
     checkPrinter(new RequirementHolderForTest("holder", List()), "<h1>Title_holder</h1>\n<p>desc_holder</p>\n")
@@ -90,8 +90,8 @@ class RequirementTests extends AbstractTest {
       "RequirementForTest" -> "Requirement $indent$/$title$/$description$\n",
       "RequirementForTestNoDesc" -> "RequirementNoDesc $indent$/$title$/$description$\n",
       "RequirementHolderForTest_end" -> "End $indent$/$title$/$description$\n"))
-    val result = holder.foldWithPath(ResultAndIndent())(printer)
-    assertEquals(ResultAndIndent(1, expected), result)
+    val result = holder.foldWithPath(ReqPrintContext())(printer)
+    assertEquals(ReqPrintContext(1, expected, new NoNameForRequirement), result)
   }
 
   "A StPrinter" should "print holders and requirements using the relevant template" in {

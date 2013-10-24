@@ -11,7 +11,7 @@ case class Report(reportTitle: String, requirements: Requirement*) extends Requi
   def description = None
   def priority = 0
   def references = List[Reference]()
-  def html = foldWithPath(ResultAndIndent())(RequirementsPrinter.html).result
+  def html = foldWithPath(ReqPrintContext())(RequirementsPrinter.html).result
 }
 trait NameForRequirement {
   def apply(r: Requirement): String
@@ -26,6 +26,12 @@ trait NameForRequirement {
 
   def dir(file: File, stringOrRequirements: Any*): File = new File(file, apply(stringOrRequirements: _*))
   def file(file: File, ext: String, stringOrRequirements: Any*): File = new File(file, apply(stringOrRequirements: _*) + "." + ext)
+}
+
+class NoNameForRequirement extends NameForRequirement {
+   def apply(r: Requirement): String = throw new IllegalStateException
+   override def hashCode = 0
+   override def equals(other: Any) = other.isInstanceOf[NoNameForRequirement]
 }
 
 class CachedNameForRequirement extends NameForRequirement {
@@ -46,7 +52,7 @@ class CachedNameForRequirement extends NameForRequirement {
 
 class WebPagesCreator(project: Project, dir: File = CddRunner.directory, nameForRequirement: NameForRequirement = new CachedNameForRequirement) {
 
-  def junitHtml(r: Report) = r.foldWithPath(ResultAndIndent())(RequirementsPrinter.html).result
+  def junitHtml(r: Report) = r.foldWithPath(ReqPrintContext(nameForRequirement))(RequirementsPrinter.html).result
   def decisionTreeHtml(e: Engine, ifThenPrinter: IfThenPrinter) = e.toStringWith(ifThenPrinter)
 
   def createJunitReport(r: Requirement*) = {
@@ -64,7 +70,7 @@ class WebPagesCreator(project: Project, dir: File = CddRunner.directory, nameFor
       var file = nameForRequirement.file(dir, "html", project, e, "decisionTree")
       Files.printToFile(file)((p) => p.append {
         val report = Report("Decision Tree for " + nameForRequirement(e), e)
-        val s = report.foldWithPath(ResultAndIndent())(RequirementsPrinter.decisionTree()).result
+        val s = report.foldWithPath(ReqPrintContext(nameForRequirement))(RequirementsPrinter.decisionTree()).result
         s
       })
     }
@@ -73,15 +79,13 @@ class WebPagesCreator(project: Project, dir: File = CddRunner.directory, nameFor
       e.collect {
         case test: Test =>
           val file = nameForRequirement.file(dir, "scenario.html", project, e, test)
-
+ 
           Files.printToFile(file)((p) => p.append {
             val report = Report("Decision Tree for " + nameForRequirement(e), e)
-            val s = report.foldWithPath(ResultAndIndent())(RequirementsPrinter.decisionTree(Some(test))).result
+            val s = report.foldWithPath(ReqPrintContext(nameForRequirement))(RequirementsPrinter.decisionTree(Some(test))).result
             s
           })
 
-        //          Files.printToFile(file)((p) =>
-        //            p.append(decisionTreeHtml(e, new HtmlWithTestIfThenPrinter(test, nameForRequirement))))
       }
 
   def create {

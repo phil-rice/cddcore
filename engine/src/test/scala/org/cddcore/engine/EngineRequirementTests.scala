@@ -12,8 +12,8 @@ class EngineRequirementTests extends EngineStringStringTests {
       "S $indent$/$title$/$description$\n",
       "-UC $indent$/$title$/$description$\n",
       "-B $indent$/$title$/$description$\n")
-    val result = holder.foldWithPath( ResultAndIndent())(printer)
-    assertEquals(ResultAndIndent(1, expected), result)
+    val result = holder.foldWithPath( ReqPrintContext())(printer)
+    assertEquals(ReqPrintContext(1, expected, new NoNameForRequirement), result)
 
   }
 
@@ -35,8 +35,8 @@ class EngineRequirementTests extends EngineStringStringTests {
   }
   def checkHtmlPrinter(holder: RequirementHolder, expected: String) {
     val printer = RequirementsPrinter.html
-    val result = holder.foldWithPath( ResultAndIndent())(printer)
-    assertEquals(ResultAndIndent(1, expected), result)
+    val result = holder.foldWithPath( ReqPrintContext())(printer)
+    assertEquals(ReqPrintContext(1, expected, new NoNameForRequirement), result)
   }
 
   def paramHtml(p: String)="<tr><td rowspan='1'>Parameter</td><td>"+p+"</td></tr>"

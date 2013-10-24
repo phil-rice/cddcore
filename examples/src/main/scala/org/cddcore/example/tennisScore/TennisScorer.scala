@@ -4,7 +4,6 @@ import org.cddcore.engine.Engine
 import org.junit.runner.RunWith
 import org.cddcore.engine.tests._
 import org.cddcore.engine.RequirementsPrinter
-import org.cddcore.engine.ResultAndIndent
 import org.cddcore.engine.Report
 import org.cddcore.engine.Document
 
