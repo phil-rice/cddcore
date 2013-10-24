@@ -5,6 +5,7 @@ package org.cddcore.engine
 trait Requirement {
   def title: Option[String]
   def titleString = title.getOrElse("")
+  def titleOrDescription(default: String): String = title.getOrElse(description.getOrElse(default))
 
   def description: Option[String]
   def priority: Int

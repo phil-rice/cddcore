@@ -6,8 +6,9 @@ import scala.io.Source
 object Files {
 
   def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
-    val p = new java.io.PrintWriter(f)
-    try { op(p) } finally { p.close() }
+    f.delete
+    f.getParentFile().mkdirs()
+    appendToFile(f)(op)
   }
   def appendToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
     val p = new java.io.PrintWriter(new FileOutputStream(f, true))

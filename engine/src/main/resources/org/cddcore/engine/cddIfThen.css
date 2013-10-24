@@ -26,12 +26,13 @@ br {
 
 .keyword {
 	font-weight: 900;
-	color: #ff0080;
+	color: #7f0055;
 	float: left;
 }
 
 .if {
 	width: 100%;
+	margin: 2px;
 }
 
 .because {
@@ -41,10 +42,18 @@ br {
 	float: left;
 }
 
+.becauseTrue {
+	border: 2px solid green;
+	width: 70%;
+	float: left;
+}
+
 .result {
+	margin: 2px;
 	float: left;
 	width: 100%;
 }
+
 
 .conclusion {
 	float: left;
@@ -53,7 +62,14 @@ br {
 	width: 70%;
 }
 
+.conclusionWithTest {
+	float: left;
+	border: 2px solid green;
+	width: 70%;
+}
+
 .else {
+		margin: 2px;
 	
 }
 

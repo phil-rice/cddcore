@@ -24,7 +24,7 @@ object CddRunner {
 trait NotActuallyFactory[R] extends EngineUniverse[R] {
   def builder: RealScenarioBuilder = ???
   def logger: org.cddcore.engine.TddLogger = TddLogger.noLogger
-  def rfnMaker: scala.util.Either[()=>Exception, Any] => RFn = ???
+  def rfnMaker: scala.util.Either[() => Exception, Any] => RFn = ???
   def makeClosureForBecause(params: List[Any]) = ???
   def makeClosureForCfg(params: List[Any]) = ???
   def makeClosureForResult(params: List[Any]) = ???
@@ -32,13 +32,11 @@ trait NotActuallyFactory[R] extends EngineUniverse[R] {
 
 }
 
-trait CddRunner extends Runner with JunitUniverse[Any] with NotActuallyFactory[Any] {
+trait CddRunner extends Runner with EngineUniverse[Any] with NotActuallyFactory[Any] {
 
   var engineMap: Map[Description, Engine] = Map()
   var ScenarioMap: Map[Description, Scenario] = Map()
   var exceptionMap: Map[Description, Throwable] = Map()
-
-  def scenarioReporter(f: File) = new JunitScenarioReporter(new JunitFileManipulator(f), logger)
 
   def addEngineForTest(name: String, engine: Any) = addEngine(name, engine.asInstanceOf[Engine])
 
@@ -114,7 +112,7 @@ trait CddRunner extends Runner with JunitUniverse[Any] with NotActuallyFactory[A
                     log("notifier.fireTestFinished(sd)" + sd)
                     notifier.fireTestFinished(sd)
                   } else
-                    throw new AssertionFailedError("Expected:\n" + scenario.expected + "\nActual:\n" + actual+"\n" + scenario)
+                    throw new AssertionFailedError("Expected:\n" + scenario.expected + "\nActual:\n" + actual + "\n" + scenario)
                 } catch {
                   //                  case e: AssertionFailedError => 
                   case e: Throwable =>
@@ -201,8 +199,8 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
   def recordEngine(clazz: Class[Any], engineDescription: Description, engine: Engine) {
     val file = fileFor(clazz, engineDescription, "html")
     file.delete();
-    Files.appendToFile(file)((p)=> p.append(Report("Junit Result", engine).html))
-   
+    Files.appendToFile(file)((p) => p.append(Report("Junit Result", engine).html))
+
   }
 
   trait SomeTrait { def someMethod: String }

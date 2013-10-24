@@ -94,11 +94,11 @@ object RequirementsPrinter {
       "Report_end" -> reportEnd))
   def apply(builderStart: String, useCaseStart: String, scenario: String, useCaseEnd: String, builderEnd: String): RequirementsFolder[ResultAndIndent] =
     new StRequirementsPrinter(Map(
-      "engine_start" -> builderStart,
+      "Engine_start" -> builderStart,
       "UseCase_start" -> useCaseStart,
       "Scenario" -> scenario,
       "UseCase_end" -> useCaseEnd,
-      "engine_end" -> builderEnd))
+      "Engine_end" -> builderEnd))
 
   private lazy val htmlTemplate = new HtmlRequirementsPrinterTemplate
   def html = apply(htmlTemplate)

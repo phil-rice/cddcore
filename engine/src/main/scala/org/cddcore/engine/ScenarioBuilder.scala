@@ -240,7 +240,8 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
     def evaluateBecause(fn: BecauseClosure): Boolean = {
       for (b <- because)
-        if (fn(b.because)) return true
+        if (fn(b.because)) 
+          return true
       false
 
     }
@@ -309,7 +310,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def children = scenarios
   }
 
-  trait ScenarioBuilder extends ScenarioWalker with BuilderNode with RequirementHolder {
+  trait ScenarioBuilder extends BuilderNode with RequirementHolder {
 
     def validateBecause(s: Scenario) = {
       s.configure
@@ -451,30 +452,6 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
   }
 
-  trait ScenarioVisitor {
-    def start(engineDescription: Option[String])
-    def visitUseCase(useCaseindex: Int, u: UseCase)
-    def visitScenario(useCaseindex: Int, u: UseCase, scenarioIndex: Int, s: Scenario)
-    def visitUseCaseEnd(u: UseCase)
-    def end
-  }
-
-  trait ScenarioWalker {
-    def useCases: List[UseCase];
-    def description: Option[String]
-    def walkScenarios(v: ScenarioVisitor, reverse: Boolean) {
-      def actual[X](list: List[X]) = if (reverse) list.reverse else list;
-      v.start(description)
-      for ((u, ui) <- actual(useCases).zipWithIndex) {
-        v.visitUseCase(ui, u)
-        for ((s, si) <- actual(u.scenarios).zipWithIndex)
-          v.visitScenario(ui, u, si, s)
-        v.visitUseCaseEnd(u)
-      }
-      v.end
-    }
-  }
-
   trait EvaluateEngine {
 
     def evaluate(fn: BecauseClosure, n: RorN, log: Boolean = true): RFn = {
@@ -497,7 +474,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     }
   }
-  trait EngineToString {
+  trait EngineToString extends org.cddcore.engine.Engine {
     def root: Either[Conclusion, Decision]
 
     def toString(indent: String, root: Either[Conclusion, Decision]): String = {
@@ -523,17 +500,17 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     def titleString: String
     def toStringWith(indent: String, root: Either[Conclusion, Decision], printer: IfThenPrinter): String =
-      printer.start(titleString) + toStringPrimWith(indent, root, printer) + printer.end
+      printer.start(this) + toStringPrimWith(indent, root, printer) + printer.end
     private def toStringPrimWith(indent: String, root: Either[Conclusion, Decision], printer: IfThenPrinter): String = {
       root match {
         case null => "Could not toString as root as null. Possibly because of earlier exceptions"
-        case Left(result) => printer.resultPrint(indent, result)
+        case Left(result) => printer.resultPrint(this, indent, result)
         case Right(node) =>
-          val ifString = printer.ifPrint(indent, node)
+          val ifString = printer.ifPrint(this, indent, node)
           val yesString = toStringPrimWith(indent + printer.incIndent, node.yes, printer)
-          val elseString = printer.elsePrint(indent, node)
+          val elseString = printer.elsePrint(this, indent, node)
           val noString = toStringPrimWith(indent + printer.incIndent, node.no, printer)
-          val endString = printer.endPrint(indent, node)
+          val endString = printer.endPrint(this, indent, node)
           val result = ifString + yesString + elseString + noString + endString
           return result
       }
@@ -627,7 +604,12 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         }
       }
     }
-
+    def evaluateBecauseForDecision(decision: Decision, params: List[Any])= {
+      decision match {
+        case e: EngineNode =>
+          e.evaluateBecause(makeClosureForBecause(params))
+      }
+    }
     def evaluateBecauseForScenario(c: Scenario, params: List[Any]) = {
       val fn = makeClosureForBecause(params)
       //    c.configure
@@ -791,7 +773,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       result
     }
   }
-  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document]) extends BuildEngine with ScenarioWalker with RequirementHolder with org.cddcore.engine.Engine {
+  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document]) extends BuildEngine with RequirementHolder with org.cddcore.engine.Engine {
     def defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>
@@ -817,7 +799,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     def constructionString: String =
       constructionString(defaultRoot, scenarios, new DefaultIfThenPrinter {
-        override def titlePrint = (indent, scenario) => s"${indent}Adding ${scenario}\n";
+        def titlePrint(e: Engine, indent: String, decision: Decision): String = s"${indent}Adding ${decision}\n";
       })
 
     def logParams(p: Any*) =
@@ -833,7 +815,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       increasingScenariosList(cs).reverse.map((cs) =>
         try {
           val c = cs.head
-          val title = printer.titlePrint("", c)
+          val title = printer.titlePrint(this, "", c)
           val (r, s) = buildRoot(root, cs.reverse)
           title + toStringWith("", r, printer)
         } catch {

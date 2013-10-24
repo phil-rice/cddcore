@@ -6,6 +6,7 @@ trait Engine extends RequirementHolder {
   def root: Either[Conclusion, Decision]
   def toStringWith(printer: IfThenPrinter): String = toStringWith("", root, printer)
   def toStringWith(indent: String, root: Either[Conclusion, Decision], printer: IfThenPrinter): String
+  def evaluateBecauseForDecision(decision: Decision, params: List[Any]): Boolean
 }
 
 trait Decision {
