@@ -27,14 +27,16 @@
 			max-width: 100%;
 			background-color: #ffffff;
 			position: relative;
-			border-collapse: collapse;
+			border-collapse:
+			collapse;
 			margin: 0px;
 			padding: 4px;
 			border: 0px;
 			}
 
 			td {
-			vertical-align: top;
+			vertical-align:
+			top;
 			margin: 0px;
 			padding: 0px;
 			border: 1px solid black
@@ -51,7 +53,8 @@
 			.report {
 			width: 100%;
 			position: relative;
-			margin: 6px;
+			margin:
+			6px;
 			padding: 0px;
 			position: relative;
 			}
@@ -94,7 +97,8 @@
 			}
 
 			.project {
-			position: relative;
+			position:
+			relative;
 			margin: 4px;
 			padding: 0px;
 			border: 1px solid gray;
@@ -122,12 +126,14 @@
 			position: relative;
 			margin: 6px;
 			padding: 0px;
-			border: 1px solid gray;
+			border: 1px
+			solid gray;
 			position: relative;
 			}
 
 			.usecaseText {
-			background-color: #cbc8be;
+			background-color:
+			#cbc8be;
 			border: 0px;
 			position: relative;
 			margin: 0px;
@@ -138,7 +144,8 @@
 			max-width: 100%;
 			position: relative;
 			padding: 0px;
-			margin: 6px;
+			margin:
+			6px;
 			border: 1px solid gray;
 			position: relative;
 			}
@@ -183,7 +190,8 @@
 			}
 
 			.because {
-			border: 1px solid gray;
+			border: 1px solid
+			gray;
 			background-color: #dfdfdf;
 			width: 70%;
 			float: left;
@@ -204,7 +212,8 @@
 
 			.conclusion {
 			width: 80%;
-			float: left;
+			float:
+			left;
 			border: 1px solid gray;
 			background-color: #efefef;
 			float: left;
@@ -273,8 +282,8 @@
 					<div class='indent'></div>
 					<span class='keyword'>if&nbsp;
 					</span>
-					<div class='becauseTrue'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r)))</div><!-- 
-						becauseTrue -->
+					<div class='becauseTrue'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r)))
+					</div><!-- becauseTrue -->
 				</div><!-- if -->
 				<div class='result'>
 					<div class='indent'>&nbsp;&nbsp;
@@ -471,8 +480,8 @@
 			</div>
 			<span class='keyword'>if&nbsp;
 			</span>
-			<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r.+(1))))</div><!-- 
-				because -->
+			<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r.+(1))))
+			</div><!-- because -->
 		</div><!-- if -->
 		<div class='result'>
 			<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -510,8 +519,8 @@
 			</div>
 			<span class='keyword'>if&nbsp;
 			</span>
-			<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(r.==(l.+(1))))</div><!-- 
-				because -->
+			<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(r.==(l.+(1))))
+			</div><!-- because -->
 		</div><!-- if -->
 		<div class='result'>
 			<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -555,7 +564,8 @@
 		<div class='useCaseAndScenario'>
 			<div class='usecase'>
 				<div class='usecaseText'>Use Case: If at least three points have been scored
-					by each player, and the scores are equal, the score is 'deuce'. </div>
+					by each player, and the scores are equal, the score is 'deuce'.
+				</div>
 				<table class='usecaseTable'>
 					<tr>
 						<td class='title'>Scenarios</td>

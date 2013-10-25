@@ -34,6 +34,7 @@ class FullHtmlPage(delegate: IfThenPrinter) extends IfThenPrinter {
   def endPrint(e: Engine, indent: String, decision: Decision): String = delegate.endPrint(e, indent, decision)
   def titlePrint(e: Engine, indent: String, test: Test): String = delegate.titlePrint(e, indent, test)
   def end: String = "</body></html>"
+
 }
 
 trait HtmlForIfThenPrinter extends IfThenPrinter {
@@ -44,14 +45,21 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   val incIndent = "  "
   def nbsp(i: String) = "<div class='indent'>" + i.replace(" ", "&nbsp;") + "</div>"
 
+  def highlightedScenarioIcon = "http://img513.imageshack.us/img513/2553/4ddq.png"
+  def normalScenarioIcon = "http://img201.imageshack.us/img201/1442/a9t.png"
+
+  def scenarioIconLink(s: Test) = normalScenarioIcon
+
+  def scenarioLink(s: Test) = {
+    val name = nameForRequirement(s) + ".scenario.html"
+    s"<a class='scenarioLink' href='$name' ><img height='15' width='15' src='${scenarioIconLink(s)}' title='${htmlEscape(s.titleString)}' alt='Test' /></a>"
+  }
+
   def ifPrint(e: Engine, indent: String, decision: Decision, becauseClassName: String) =
     s"<div class='if'>${nbsp(indent)}<span class='keyword'>if&nbsp;</span> <div class='$becauseClassName'>(${htmlEscape(decision.prettyString)})</div><!-- $becauseClassName --></div><!-- if -->\n"
 
   def resultPrint(e: Engine, indent: String, conclusion: Conclusion, conclusionClassName: String) = {
-    val scenarioHtml = conclusion.scenarios.map((s) => {
-      val name = nameForRequirement(s) + ".scenario.html"
-      s"<a class='scenarioLink' href='$name' ><img height='15' width='15' src='http://img546.imageshack.us/img546/6186/d6qt.png' title='${htmlEscape(s.titleString)}' alt='Test' /></a>"
-    }).mkString
+    val scenarioHtml = conclusion.scenarios.map(scenarioLink(_)).mkString
     s"<div class='result'>${nbsp(indent)}<span class='keyword'>then&nbsp;</span>$scenarioHtml<div class='$conclusionClassName'>${htmlEscape(conclusion.code.pretty)}</div></div><!-- result -->\n"
   }
 
@@ -78,6 +86,8 @@ class HtmlWithTestIfThenPrinter(test: Test, val nameForRequirement: NameForRequi
         t.printStackTrace()
         ifPrint(e, indent, decision, "because")
     }
+
+ override def scenarioIconLink(s: Test) = if (s == test) highlightedScenarioIcon else normalScenarioIcon
   def resultPrint(e: Engine, indent: String, conclusion: Conclusion): String =
     if (conclusion.scenarios.contains(test))
       resultPrint(e, indent, conclusion, "conclusionWithTest")
