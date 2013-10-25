@@ -2,186 +2,517 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>CDD Report: JUnit for Engine</title>
+		<title>CDD Report: Decision Tree for Tennis_Kata</title>
+		<style>html {
+			font-family: Arial, Helvetica, sans-serif;
+			vertical-align: top;
+			word-wrap: break-word;
+			}
+
+			div {
+			position: relative;
+			padding: 5px;
+			width: inherit;
+			overflow: auto;
+			}
+
+			span {
+			position: relative;
+			padding: 0px;
+			margin: 0px;
+			}
+
+			table {
+			table-layout: fixed;
+			width: 100%;
+			background-color: #ffffff;
+			position: relative;
+			border-collapse: collapse;
+			margin: 0px;
+			padding: 4px;
+			border: 0px;
+			background-color: #ffffff;
+			}
+
+			td {
+			vertical-align: top;
+			margin: 0px;
+			padding: 0px;
+			border: 1px solid black
+			}
+
+			hr {
+			margin: 0px;
+			}
+
+			br {
+			clear: both;
+			}
+
+			.report {
+			margin: 6px;
+			padding: 0px;
+			}
+
+			.topLine {
+			padding: 0px;
+			}
+
+			.cddLogo{
+			position: relative;
+			float: left;
+			}
+			.advertBox {
+			width: 25%;
+			position: relative;
+			float: left;
+			}
+
+			.reportTopBox {
+			position: relative;
+			width: 50%;
+			border: 1px solid gray;
+			padding: 0px;
+			margin: 4px;
+			float: right;
+			}
+
+			.reportTitle {
+
+			}
+
+			.reportText {
+
+			}
+
+			.reportTitle {
+			width: 100%;
+			background-color: #b29f8c;
+			padding: 0px;
+			background-color: #b29f8c;
+			}
+
+			.reportText {
+			padding: 2px;
+			}
+
+			.decisionTree {
+			clear: both;
+			width: 48%;
+			margin: 5px;
+			height: 100%;
+			float: left;
+			border: 1px solid gray;
+			float: left;
+			}
+
+			.project {
+			position: relative;
+			margin: 4px;
+			padding: 0px;
+			border: 1px solid gray;
+			}
+
+			.projectText {
+			background-color: #b29f8c;
+			padding: 2px;
+			}
+
+			.engine {
+			width: auto;
+			margin: 6px;
+			padding: 0px;
+			border: 1px solid gray;
+			margin: 6px;
+			}
+
+			.engineText {
+			background-color: #d6c6c4;
+			padding: 2px;
+			}
+
+			.usecase {
+			position: relative;
+			margin: 6px;
+			padding: 0px;
+			border: 1px solid gray;
+			position: relative;
+			}
+
+			.usecaseText {
+			background-color: #cbc8be;
+			border: 0px;
+			margin: 0px;
+			padding: 2px;
+			}
+
+			.scenario {
+			padding: 0px;
+			margin: 6px;
+			border: 1px solid gray;
+			position: relative;
+			}
+
+			.scenarioText {
+			background-color: #d1c2a4;
+			border: 1px;
+			margin: 0px;
+			padding: 2px;
+			}
+
+			.scenarioValue {
+			background-color: #d0efd0;
+			margin: 10px;
+			}
+
+			.title {
+			width: 125px;
+			}
+
+			.value {
+
+			}
+
+			.indent {
+			float: left;
+			width: auto;
+			}
+
+			.keyword {
+			font-weight: 900;
+			color: #7f0055;
+			float: left;
+			width: auto;
+			}
+
+			.if {
+			padding: 0px;
+			width: 100%;
+			clear: both;
+			width: 100%;
+			}
+
+			.because {
+			border: 1px solid gray;
+			background-color: #dfdfdf;
+			width: 70%;
+			float: left;
+			}
+
+			.becauseTrue {
+			border: 1px solid green;
+			width: 70%;
+			float: left;
+			}
+
+			.result {
+			padding: 0px;
+			width: 100%;
+			clear: both;
+			}
+
+			.conclusion {
+			width: 80%;
+			float: left;
+			border: 1px solid gray;
+			background-color: #efefef;
+			float: left;
+			}
+
+			.conclusionWithTest {
+			width: 80%;
+			float: left;
+			border: 1px solid green;
+			width: 80%;
+			}
+
+			.else {
+			margin: 2px;
+			clear: both;
+			}
+
+			.tests {
+			float: left;
+			width: auto;
+			}
+
+			.scenarioLink {
+			float: left;
+			}
+
+			.useCaseAndScenario {
+			border: 1px solid gray;
+			padding: 0px;
+			margin: 5px;
+			width: 48%;
+			height: 100%;
+			float: right;
+			}
+		</style>
 	</head>
 	<body>
 		<div class='report'>
 			<div class='topLine'>
+				<div class='cddLogo'>
+					<img src='http://img24.imageshack.us/img24/4325/gp9j.png' alt='CDD' />
+				</div>
 				<div class='advertBox'>
-					<a href="http://www.theagileconsultancy.com/" alt="The Agile Consultancy">
-						<img src="http://img842.imageshack.us/img842/4620/v2g2.png" />
+					Kindly supported by
+					<br />
+					<a href="http://www.theagileconsultancy.com/">
+						<img src="http://img542.imageshack.us/img542/850/74ja.png" alt="The Agile Consultancy" />
 					</a>
 					<br />
-					<a href="http://www.codelmark.co.uk/" alt="Codel">
-						<img src="http://img853.imageshack.us/img853/5959/erzj.png" />
+					<a href="http://www.codelmark.co.uk/">
+						<img src="http://img36.imageshack.us/img36/9968/oc7t.png" alt="Codel" />
 					</a>
-					<a href="http://autotdd.org" alt="CDD">
-						<img src="http://img546.imageshack.us/img546/6186/d6qt.png" />
-					</a>
-					<a href="http://atos.net" alt="Atos">
-						<img src="http://img571.imageshack.us/img571/4236/im7n.png" />
+					<a href="http://atos.net">
+						<img src="http://img42.imageshack.us/img42/3820/uic1.png" alt="Atos" />
 					</a>
 				</div>
 				<div class='reportTopBox'>
 					<div class='reportTitle'>Report name</div>
-					<div class='reportText'>JUnit for Engine </div>
+					<div class='reportText'>Decision Tree for Tennis_Kata </div>
 					<div class='reportTitle'>Report date</div>
-					<div class='reportText'>08:10 Fri Oct 25 2013</div>
+					<div class='reportText'>10:11 Fri Oct 25 2013</div>
 				</div>
 			</div>
-			<div class='engine'>
-				<div class='engineText'>Engine: This engine works out what category of customer you are</div>
-				<table class='engineTable'>
-					<tr>
-						<td class='title'>References</td>
-						<td class='value'>
-							<a href='http://www.autotdd.com/wiki/Comparison_with_JBoss_/_Drools'>Function Spec</a>
-							, 1.1
-						</td>
-					</tr>
-					<tr>
-						<td class='title'>Usecases</td>
-						<td class='value'>3</td>
-					</tr>
-					<tr>
-						<td class='title'>Nodes</td>
-						<td class='value'>7</td>
-					</tr>
-				</table>
-				<div class='usecase'>
-					<div class='usecaseText'>Use Case: Rich people </div>
-					<table class='usecaseTable'>
+			<div class='decisionTree'>
+				<div class='if'>
+					<div class='indent'></div>
+					<span class='keyword'>if&nbsp;
+					</span>
+					<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r)))</div><!-- because -->
+				</div><!-- if -->
+				<div class='result'>
+					<div class='indent'>&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>then&nbsp;
+					</span>
+					<a class='scenarioLink' href='Scenario24.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='6,6' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario25.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,4' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario26.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='3,3' alt='Test' />
+					</a>
+					<div class='result'>deuce</div>
+				</div><!-- result -->
+				<div class='else'>
+					<div class='indent'></div>
+					<span class='keyword'>else&nbsp;
+					</span>
+				</div>
+				<div class='if'>
+					<div class='indent'>&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>if&nbsp;
+					</span>
+					<div class='because'>(l.-(r).>=(2).&amp;&amp;(l.>=(4)))</div><!-- because -->
+				</div><!-- if -->
+				<div class='result'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>then&nbsp;
+					</span>
+					<a class='scenarioLink' href='Scenario27.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='5,3' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario28.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,2' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario29.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,1' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario30.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,0' alt='Test' />
+					</a>
+					<div class='result'>left won</div>
+				</div><!-- result -->
+				<div class='else'>
+					<div class='indent'>&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>else&nbsp;
+					</span>
+				</div>
+				<div class='if'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>if&nbsp;
+					</span>
+					<div class='because'>(r.-(l).>=(2).&amp;&amp;(r.>=(4)))</div><!-- because -->
+				</div><!-- if -->
+				<div class='result'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>then&nbsp;
+					</span>
+					<a class='scenarioLink' href='Scenario31.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='40,42' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario32.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='3,5' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario33.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='2,4' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario34.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='1,4' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario35.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='0,4' alt='Test' />
+					</a>
+					<div class='result'>right won</div>
+				</div><!-- result -->
+				<div class='else'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>else&nbsp;
+					</span>
+				</div>
+				<div class='if'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>if&nbsp;
+					</span>
+					<div class='because'>(l.&lt;(4).&amp;&amp;(r.&lt;(4)))</div><!-- because -->
+				</div><!-- if -->
+				<div class='if'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>if&nbsp;
+					</span>
+					<div class='because'>(l.==(r).&amp;&amp;(l.&lt;(3)))</div><!-- because -->
+				</div><!-- if -->
+				<div class='result'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>then&nbsp;
+					</span>
+					<a class='scenarioLink' href='Scenario36.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='2,2' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario37.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='0,0' alt='Test' />
+					</a>
+					<div class='result'>scala.StringContext(&quot;&quot;, &quot; all&quot;).s(TennisScorer.lookup(l))</div>
+				</div><!-- result -->
+				<div class='else'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>else&nbsp;
+					</span>
+				</div>
+				<div class='result'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>then&nbsp;
+					</span>
+					<a class='scenarioLink' href='Scenario38.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='2,1' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario39.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='2,3' alt='Test' />
+					</a>
+					<div class='result'>scala.StringContext(&quot;&quot;, &quot;, &quot;, &quot;&quot;).s(TennisScorer.lookup(l), TennisScorer.lookup(r))</div>
+				</div><!-- result -->
+				<div class='else'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>else&nbsp;
+					</span>
+				</div>
+				<div class='if'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>if&nbsp;
+					</span>
+					<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r.+(1))))</div><!-- because -->
+				</div><!-- if -->
+				<div class='result'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>then&nbsp;
+					</span>
+					<a class='scenarioLink' href='Scenario40.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,3' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario41.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='6,5' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario42.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='5,4' alt='Test' />
+					</a>
+					<div class='result'>advantage left</div>
+				</div><!-- result -->
+				<div class='else'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>else&nbsp;
+					</span>
+				</div>
+				<div class='if'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>if&nbsp;
+					</span>
+					<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(r.==(l.+(1))))</div><!-- because -->
+				</div><!-- if -->
+				<div class='result'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>then&nbsp;
+					</span>
+					<a class='scenarioLink' href='Scenario43.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='3,4' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario44.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='5,6' alt='Test' />
+					</a>
+					<a class='scenarioLink' href='Scenario45.scenario.html'>
+						<img height='15' width='15' src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,5' alt='Test' />
+					</a>
+					<div class='result'>advantage right</div>
+				</div><!-- result -->
+				<div class='else'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>else&nbsp;
+					</span>
+				</div>
+				<div class='result'>
+					<div class='indent'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					</div>
+					<span class='keyword'>then&nbsp;
+					</span>
+					<div class='result'>&quot;error&quot;</div>
+				</div><!-- result -->
+			</div><!--decisionTree -->
+			<div class='useCaseAndScenario'>
+				<div class='engine'>
+					<div class='engineText'>Engine: Tennis Kata </div>
+					<table class='engineTable'>
 						<tr>
 							<td class='title'>References</td>
 							<td class='value'>
-								2.1,
-								<a href='http://www.autotdd.com/wiki/Comparison_with_JBoss_/_Drools'>Function Spec</a>
+								<a href='http://codingdojo.org/cgi-bin/wiki.pl?KataTennis'>CodingDojo</a>
+								,
+								<a href='http://en.wikipedia.org/wiki/Tennis_score'>Wikipedia</a>
 							</td>
 						</tr>
 						<tr>
-							<td class='title'>Scenarios</td>
-							<td class='value'>1</td>
-						</tr>
-					</table>
-					<div class='scenario'>
-						<div class='scenarioText'>Rich person </div>
-						<table class='scenarioTable'>
-							<tr>
-								<td class='title'>References</td>
-								<td class='value'>2.1.1</td>
-							</tr>
-							<tr>
-								<td class='title'>Parameter</td>
-								<td class='value'>Person(GBP(1050,0),20)</td>
-							</tr>
-							<tr>
-								<td class='title'>Expected</td>
-								<td class='value'>person.rich</td>
-							</tr>
-							<tr>
-								<td class='title'>Because</td>
-								<td class='value'>p.hasEnoughSavings</td>
-							</tr>
-						</table>
-					</div><!-- scenario -->
-				</div> <!-- UseCase -->
-				<div class='usecase'>
-					<div class='usecaseText'>Use Case: Young people are not eligable </div>
-					<table class='usecaseTable'>
-						<tr>
-							<td class='title'>References</td>
-							<td class='value'>
-								<a href='http://www.autotdd.com/wiki/Comparison_with_JBoss_/_Drools'>Function Spec</a>
-							</td>
+							<td class='title'>Usecases</td>
+							<td class='value'>5</td>
 						</tr>
 						<tr>
-							<td class='title'>Scenarios</td>
-							<td class='value'>2</td>
+							<td class='title'>Nodes</td>
+							<td class='value'>15</td>
 						</tr>
 					</table>
-					<div class='scenario'>
-						<div class='scenarioText'>Child aged 10 </div>
-						<table class='scenarioTable'>
-							<tr>
-								<td class='title'>Parameter</td>
-								<td class='value'>Person(GBP(10000,0),10)</td>
-							</tr>
-							<tr>
-								<td class='title'>Expected</td>
-								<td class='value'>person.child</td>
-							</tr>
-							<tr>
-								<td class='title'>Because</td>
-								<td class='value'>p.tooYoung</td>
-							</tr>
-						</table>
-					</div><!-- scenario -->
-					<div class='scenario'>
-						<div class='scenarioText'>Child aged 15 </div>
-						<table class='scenarioTable'>
-							<tr>
-								<td class='title'>References</td>
-								<td class='value'>
-									<a href='http://www.autotdd.com/wiki/Comparison_with_JBoss_/_Drools'>Function Spec</a>
-								</td>
-							</tr>
-							<tr>
-								<td class='title'>Parameter</td>
-								<td class='value'>Person(GBP(10000,0),15)</td>
-							</tr>
-							<tr>
-								<td class='title'>Expected</td>
-								<td class='value'>person.child</td>
-							</tr>
-						</table>
-					</div><!-- scenario -->
-				</div> <!-- UseCase -->
-				<div class='usecase'>
-					<div class='usecaseText'>Use Case: Poor people </div>
-					<table class='usecaseTable'>
-						<tr>
-							<td class='title'>Scenarios</td>
-							<td class='value'>2</td>
-						</tr>
-					</table>
-					<div class='scenario'>
-						<div class='scenarioText'>Very poor person </div>
-						<table class='scenarioTable'>
-							<tr>
-								<td class='title'>References</td>
-								<td class='value'>
-									<a href='http://www.autotdd.com/wiki/Comparison_with_JBoss_/_Drools'>Function Spec</a>
-								</td>
-							</tr>
-							<tr>
-								<td class='title'>Parameter</td>
-								<td class='value'>Person(GBP(50,0),20)</td>
-							</tr>
-							<tr>
-								<td class='title'>Expected</td>
-								<td class='value'>person.poor</td>
-							</tr>
-							<tr>
-								<td class='title'>Because</td>
-								<td class='value'>p.hasEnoughSavings.unary_!</td>
-							</tr>
-						</table>
-					</div><!-- scenario -->
-					<div class='scenario'>
-						<div class='scenarioText'>Only just poor person </div>
-						<table class='scenarioTable'>
-							<tr>
-								<td class='title'>Parameter</td>
-								<td class='value'>Person(GBP(999,0),20)</td>
-							</tr>
-							<tr>
-								<td class='title'>Expected</td>
-								<td class='value'>person.poor</td>
-							</tr>
-						</table>
-					</div><!-- scenario -->
-				</div> <!-- UseCase -->
-			</div> <!-- Engine -->
+				</div><!-- engine -->
+			</div><!--useCaseAndScenario -->
 		</div><!-- report -->
 	</body>
 </html>

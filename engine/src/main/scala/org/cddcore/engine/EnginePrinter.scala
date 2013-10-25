@@ -45,7 +45,7 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   val incIndent = "  "
   def nbsp(i: String) = "<div class='indent'>" + i.replace(" ", "&nbsp;") + "</div>"
 
-  def highlightedScenarioIcon = "http://img513.imageshack.us/img513/2553/4ddq.png"
+  def highlightedScenarioIcon = "http://img407.imageshack.us/img407/3948/o96r.png"
   def normalScenarioIcon = "http://img201.imageshack.us/img201/1442/a9t.png"
 
   def scenarioIconLink(s: Test) = normalScenarioIcon
@@ -71,7 +71,7 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
 
 class HtmlIfThenPrinter(val nameForRequirement: NameForRequirement = new CachedNameForRequirement, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
   def ifPrint(e: Engine, indent: String, decision: Decision): String = ifPrint(e, indent, decision, "because")
-  def resultPrint(e: Engine, indent: String, conclusion: Conclusion): String = resultPrint(e, indent, conclusion, "result")
+  def resultPrint(e: Engine, indent: String, conclusion: Conclusion): String = resultPrint(e, indent, conclusion, "conclusion")
 }
 
 class HtmlWithTestIfThenPrinter(test: Test, val nameForRequirement: NameForRequirement = new CachedNameForRequirement, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {

@@ -81,7 +81,7 @@ class WebPagesCreator(project: Project, dir: File = CddRunner.directory, nameFor
           val file = nameForRequirement.file(dir, "scenario.html", project, e, test)
  
           Files.printToFile(file)((p) => p.append {
-            val report = Report("Decision Tree for " + nameForRequirement(e), e)
+            val report = Report("Scenario " + nameForRequirement(test), e)
             val s = report.foldWithPath(ReqPrintContext(nameForRequirement))(RequirementsPrinter.decisionTree(Some(test))).result
             s
           })

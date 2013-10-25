@@ -57,7 +57,7 @@ trait HtmlTemplate extends RequirementsPrinterTemplate {
 
   protected val usecaseHtml = "<div class='usecase'>" + titleAndDescription("usecaseText", "Use Case: {0}") + table("usecaseTable", refsRow, scenariosRow) + "\n"
   protected val engineHtml = "<div class='engine'>" + titleAndDescription("engineText", "Engine: {0}") + table("engineTable", refsRow, useCasesRow, nodesCountRow) + "\n"
-  protected val scenarioHtml = "<div class='scenario'>" + titleAndDescription("scenarioText", "{0}") +
+  protected val scenarioHtml = "<div class='scenario'>" + titleAndDescription("scenarioText", "Scenario: {0}") +
     table("scenarioTable",
       refsRow,
       paramsRow,
@@ -77,6 +77,7 @@ trait HtmlReportTemplate extends HtmlTemplate {
       "<body>" +
       "<div class='report'>" +
       "<div class='topLine'>"+
+      "<div class='cddLogo'><img src='http://img24.imageshack.us/img24/4325/gp9j.png'  alt='CDD'/></div>" +
       "<div class='advertBox'>" + Files.getFromClassPath(getClass, "OurAdvert.xml") + "</div>" +
       "<div class='reportTopBox'>" +
       "<div class='reportTitle'>Report name</div>" +

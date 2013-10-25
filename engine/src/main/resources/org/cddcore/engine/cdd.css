@@ -8,7 +8,7 @@ div {
 	position: relative;
 	padding: 5px;
 	width: inherit;
-	overflow:auto;
+	overflow: auto;
 }
 
 span {
@@ -19,13 +19,14 @@ span {
 
 table {
 	table-layout: fixed;
-	width:100%;
+	width: 100%;
 	background-color: #ffffff;
 	position: relative;
 	border-collapse: collapse;
 	margin: 0px;
 	padding: 4px;
 	border: 0px;
+	background-color: #ffffff;
 }
 
 td {
@@ -49,32 +50,40 @@ br {
 }
 
 .topLine {
+	padding: 0px;
 }
 
-.advertBox {
-	width: 25%;
+.cddLogo{
 	position: relative;
 	float: left;
 }
+.advertBox {
+	position: relative;
+	float: left;
+	}
 
 .reportTopBox {
 	position: relative;
-	width: 70%;
+	width: 65%;
 	border: 1px solid gray;
 	padding: 0px;
 	margin: 4px;
-	float: left;
+	float: right;
 }
 
 .reportTitle {
+	
 }
 
 .reportText {
+	
 }
 
 .reportTitle {
+	width: 100%;
 	background-color: #b29f8c;
 	padding: 0px;
+	background-color: #b29f8c;
 }
 
 .reportText {
@@ -83,9 +92,12 @@ br {
 
 .decisionTree {
 	clear: both;
-	width: 45%;
+	width: 58%;
+	margin: 5px;
+	height: 100%;
 	float: left;
 	border: 1px solid gray;
+	float: left;
 }
 
 .project {
@@ -101,10 +113,11 @@ br {
 }
 
 .engine {
-	position: relative;
+	width: auto;
 	margin: 6px;
 	padding: 0px;
 	border: 1px solid gray;
+	margin: 6px;
 }
 
 .engineText {
@@ -170,6 +183,7 @@ br {
 	padding: 0px;
 	width: 100%;
 	clear: both;
+	width: 100%;
 }
 
 .because {
@@ -180,7 +194,7 @@ br {
 }
 
 .becauseTrue {
-	border: 1px solid green;
+	border: 2px solid green;
 	width: 70%;
 	float: left;
 }
@@ -202,7 +216,7 @@ br {
 .conclusionWithTest {
 	width: 80%;
 	float: left;
-	border: 1px solid green;
+	border: 2px solid green;
 	width: 80%;
 }
 
@@ -221,6 +235,10 @@ br {
 }
 
 .useCaseAndScenario {
-	width: 45%;
-	float: left;
+	border: 1px solid gray;
+	padding: 0px;
+	margin: 5px;
+	width: 38%;
+	height: 100%;
+	float: right;
 }
