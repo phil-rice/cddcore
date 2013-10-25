@@ -34,7 +34,7 @@ class EngineRequirementTests extends EngineStringStringTests {
 
   }
   def checkHtmlPrinter(holder: RequirementHolder, expected: String) {
-    val printer = RequirementsPrinter.html
+    val printer = RequirementsPrinter.html(None)
     val result = holder.foldWithPath( ReqPrintContext())(printer)
     assertEquals(ReqPrintContext(1, expected, new NoNameForRequirement), result)
   }

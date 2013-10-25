@@ -46,6 +46,13 @@ trait HtmlTemplate extends RequirementsPrinterTemplate {
   protected val date = "$if(reportDate)$<hr /><div class='dateTitle'>$reportDate$</div><hr /><div>$reportDate$</div>$endif$"
   protected def titleAndDescription(clazz: String, titlePattern: String) = s"<div class='$clazz'>" + MessageFormat.format(titlePattern, title) + " " + description + "</div>"
 
+  protected def cddLogoImg = "<img src='http://img24.imageshack.us/img24/4325/gp9j.png'  alt='CDD'/>"
+  protected def cddLogo(rootUrl: Option[String]) =
+    "<div class='cddLogo'>" + (rootUrl match {
+      case Some(u) => s"<a href='$u'>$cddLogoImg</a>"
+      case None => cddLogoImg
+    }) + "</div>\n"
+
   protected val expectedRow = "<tr><td class='title'>Expected</td><td class='value'>$if(expected)$$expected$$endif$</td></tr>"
   protected val codeRow = "$if(code)$<tr><td class='title'>Code</td><td class='value'>$code$</td></tr>$endif$"
   protected val becauseRow = "$if(because)$<tr><td class='title'>Because</td><td class='value'>$because$</td></tr>$endif$"
@@ -55,7 +62,7 @@ trait HtmlTemplate extends RequirementsPrinterTemplate {
   protected val scenariosRow = "$if(scenariosCount)$<tr><td class='title'>Scenarios</td><td class='value'>$scenariosCount$</td></tr>$endif$"
   protected val refsRow = "$if(references)$<tr><td class='title'>References</td><td class='value'>$references: {r|$r$}; separator=\", \"$</td></tr>$endif$"
 
-  protected val usecaseHtml = "<div class='usecase'>" + titleAndDescription("usecaseText", "Use Case: {0}") + table("usecaseTable", refsRow, scenariosRow) + "\n"
+  protected val usecaseHtml = "<div class='usecase'>" + titleAndDescription("usecaseText", "Use Case: {0}") + table("usecaseTable", refsRow, scenariosRow) + "\n" 
   protected val engineHtml = "<div class='engine'>" + titleAndDescription("engineText", "Engine: {0}") + table("engineTable", refsRow, useCasesRow, nodesCountRow) + "\n"
   protected val scenarioHtml = "<div class='scenario'>" + titleAndDescription("scenarioText", "Scenario: {0}") +
     table("scenarioTable",
@@ -72,12 +79,13 @@ trait HtmlTemplate extends RequirementsPrinterTemplate {
 }
 
 trait HtmlReportTemplate extends HtmlTemplate {
+  def rootUrl: Option[String]
   def reportStart =
     Renderer("<!DOCTYPE html><html><head><title>CDD Report: $title$</title><style>" + Files.getFromClassPath(getClass, "cdd.css") + "\n</style></head>\n" +
       "<body>" +
       "<div class='report'>" +
-      "<div class='topLine'>"+
-      "<div class='cddLogo'><img src='http://img24.imageshack.us/img24/4325/gp9j.png'  alt='CDD'/></div>" +
+      "<div class='topLine'>" +
+      cddLogo(rootUrl) +
       "<div class='advertBox'>" + Files.getFromClassPath(getClass, "OurAdvert.xml") + "</div>" +
       "<div class='reportTopBox'>" +
       "<div class='reportTitle'>Report name</div>" +
@@ -101,14 +109,14 @@ trait HtmlUseCaseScenario extends HtmlTemplate {
 
 }
 
-class HtmlRequirementsPrinterTemplate extends HtmlReportTemplate with HtmlProjectTemplate with HtmlUseCaseScenario {
+class HtmlRequirementsPrinterTemplate(val rootUrl: Option[String] = None) extends HtmlReportTemplate with HtmlProjectTemplate with HtmlUseCaseScenario {
 
   def engineStart = Renderer(engineHtml)
   def engineEnd = Renderer("</div> <!-- Engine -->\n")
 
 }
 
-class HtmlDecisionTreePrinterTemplate(test: Option[Test]) extends HtmlReportTemplate with HtmlProjectTemplate {
+class HtmlDecisionTreePrinterTemplate(test: Option[Test], val rootUrl: Option[String] = None) extends HtmlReportTemplate with HtmlProjectTemplate {
 
   class UseCaseForDTRenderer(template: String) extends Renderer {
     val superRenderer = Renderer(template)
@@ -129,7 +137,7 @@ class HtmlDecisionTreePrinterTemplate(test: Option[Test]) extends HtmlReportTemp
 
   class EngineForDTRenderer(template: String) extends Renderer {
     def render(nameForRequirement: NameForRequirement, path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
-    val superRenderer = Renderer(template)
+      val superRenderer = Renderer(template)
       val dt = r match {
         case e: Engine =>
           e.toStringWith(test match {
@@ -141,11 +149,11 @@ class HtmlDecisionTreePrinterTemplate(test: Option[Test]) extends HtmlReportTemp
       s"<div class='decisionTree'>$dt</div><!--decisionTree -->\n<div class='useCaseAndScenario'>\n" + superRenderer.render(nameForRequirement, path, indent, r, pattern)
     }
   }
-  def engineStart =  new EngineForDTRenderer(engineHtml)
+  def engineStart = new EngineForDTRenderer(engineHtml)
   def useCaseStart = new UseCaseForDTRenderer(usecaseHtml)
   def scenario = new ScenarioForDTRenderer
   def useCaseEnd = new UseCaseForDTRenderer("</div><!-- useCase -->\n")
-  def engineEnd =Renderer("</div><!-- engine --> </div><!--useCaseAndScenario --> \n")
+  def engineEnd = Renderer("</div><!-- engine --> </div><!--useCaseAndScenario --> \n")
 }
 
 object Renderer {
@@ -226,10 +234,9 @@ object RequirementsPrinter {
       "UseCase_end" -> useCaseEnd,
       "Engine_end" -> builderEnd))
 
-  private lazy val htmlTemplate = new HtmlRequirementsPrinterTemplate
-  def html = apply(htmlTemplate)
+  def html(rootUrl: Option[String] = None) = apply(new HtmlRequirementsPrinterTemplate(rootUrl))
 
-  def decisionTree(test: Option[Test] = None) = apply(new HtmlDecisionTreePrinterTemplate(test))
+  def decisionTree(test: Option[Test] = None, rootUrl: Option[String] = None) = apply(new HtmlDecisionTreePrinterTemplate(test, rootUrl))
 
   def apply(r: RequirementsPrinterTemplate): RequirementsFolderWithPath[ReqPrintContext] =
     apply(

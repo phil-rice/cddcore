@@ -22,9 +22,6 @@ object CategorisePerson {
     description("This engine works out what category of customer you are").
     code((p: Person) => throw new IllegalStateException).
 
-    useCase("Rich people").expected("person.rich").reference("2.1").reference("1.1", funcSpec).
-    scenario(Person(savings = 1050, ageInYears = 20), "Rich person").reference("2.1.1").
-    because((p: Person) => p.hasEnoughSavings).
 
     useCase("Young people are not eligable").expected("person.child").reference("1.2", funcSpec).
     scenario(Person(savings = 10000, ageInYears = 10), "Child aged 10").
@@ -38,6 +35,9 @@ object CategorisePerson {
 
     scenario(Person(savings = 999, ageInYears = 20), "Only just poor person").
 
+    useCase("Rich people").expected("person.rich").reference("2.1").reference("1.1", funcSpec).
+    scenario(Person(savings = 1050, ageInYears = 20), "Rich person").reference("2.1.1").
+    because((p: Person) => p.hasEnoughSavings).
 
     build
 

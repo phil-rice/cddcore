@@ -22,13 +22,5 @@ object Reports {
       TennisScorer.scorer)
     new WebPagesCreator(project).create
     println("done")
-    //    val e = TennisScorer.scorer.references;
-    //    val html = Report("Static",  project).html
-    //    val file = new File("C:/Users/Phil/Desktop/stuff.html")
-    //    file.delete()
-    //    Files.appendToFile(file)((p) =>
-    //      //      p.append(html)
-    //      p.append(TennisScorer.scorer.toStringWith(new HtmlIfThenPrinter)))
-    //    println(TennisScorer.scorer.toStringWith(new HtmlIfThenPrinter))
   }
 }
