@@ -44,7 +44,7 @@ trait HtmlTemplate extends RequirementsPrinterTemplate {
   protected val title = "$title$"
   protected val description = "$if(description)$<p>$description$</p>$endif$"
   protected val date = "$if(reportDate)$<hr /><div class='dateTitle'>$reportDate$</div><hr /><div>$reportDate$</div>$endif$"
-  protected def titleAndDescription(clazz: String) = s"<div class='$clazz'>" + title + " " + description + "</div>"
+  protected def titleAndDescription(clazz: String, titlePattern: String) = s"<div class='$clazz'>" + MessageFormat.format(titlePattern, title) + " " + description + "</div>"
 
   protected val expectedRow = "<tr><td class='title'>Expected</td><td class='value'>$if(expected)$$expected$$endif$</td></tr>"
   protected val codeRow = "$if(code)$<tr><td class='title'>Code</td><td class='value'>$code$</td></tr>$endif$"
@@ -52,17 +52,18 @@ trait HtmlTemplate extends RequirementsPrinterTemplate {
   protected val nodesCountRow = "<tr><td class='title'>Nodes</td><td class='value'>$decisionTreeNodes$</td></tr>"
   protected val paramsRow = "<tr><td class='title'>Parameter</td><td class='value'>$params: {p|$p$}; separator=\"<hr /> \"$</td></tr>"
   protected val useCasesRow = "$if(usecaseCount)$<tr><td class='title'>Usecases</td><td class='value'>$usecaseCount$</td></tr>$endif$"
-  protected val summariesRow = "$if(summariesCount)$<tr><td class='title'>Scenarios</td><td class='value'>$summariesCount$</td></tr>$endif$"
+  protected val scenariosRow = "$if(scenariosCount)$<tr><td class='title'>Scenarios</td><td class='value'>$scenariosCount$</td></tr>$endif$"
   protected val refsRow = "$if(references)$<tr><td class='title'>References</td><td class='value'>$references: {r|$r$}; separator=\", \"$</td></tr>$endif$"
 
-  protected val useCaseHtml = "<div class='engine'>" + titleAndDescription("engineText") + table("engineTable", refsRow, useCasesRow, nodesCountRow) + "\n"
-  protected val scenarioHtml = "<div class='scenario'>" + titleAndDescription("scenarioText") +
+  protected val usecaseHtml = "<div class='usecase'>" + titleAndDescription("usecaseText", "Use Case: {0}") + table("usecaseTable", refsRow, scenariosRow) + "\n"
+  protected val engineHtml = "<div class='engine'>" + titleAndDescription("engineText", "Engine: {0}") + table("engineTable", refsRow, useCasesRow, nodesCountRow) + "\n"
+  protected val scenarioHtml = "<div class='scenario'>" + titleAndDescription("scenarioText", "{0}") +
     table("scenarioTable",
       refsRow,
       paramsRow,
       expectedRow,
       codeRow,
-      becauseRow) + "</div>\n"
+      becauseRow) + "</div><!-- scenario -->\n"
 
   def table(clazz: String, rows: String*) = {
     val result = s"<table class='$clazz'>${rows.mkString("")}</table>"
@@ -75,14 +76,15 @@ trait HtmlReportTemplate extends HtmlTemplate {
     Renderer("<!DOCTYPE html><html><head><title>CDD Report: $title$</title><style>" + Files.getFromClassPath(getClass, "cdd.css") + "\n</style></head>\n" +
       "<body>" +
       "<div class='report'>" +
-      "<div class='topRightBox'>" + Files.getFromClassPath(getClass, "OurAdvert.xml") + "</div>" +
+      "<div class='topLine'>"+
+      "<div class='advertBox'>" + Files.getFromClassPath(getClass, "OurAdvert.xml") + "</div>" +
       "<div class='reportTopBox'>" +
       "<div class='reportTitle'>Report name</div>" +
       "<div class='reportText'>" + title + " " + description + "</div>" +
       "<div class='reportTitle'>Report date</div>" +
-      "<div class='reportText'>$reportDate$</div></div>" +
+      "<div class='reportText'>$reportDate$</div></div></div>" +
       "\n")
-  def reportEnd = Renderer("</div></body></html>")
+  def reportEnd = Renderer("</div><!-- report -->\n</body></html>")
 }
 
 trait HtmlProjectTemplate extends HtmlTemplate {
@@ -92,7 +94,7 @@ trait HtmlProjectTemplate extends HtmlTemplate {
 }
 
 trait HtmlUseCaseScenario extends HtmlTemplate {
-  def useCaseStart = Renderer("<div class='usecase'>" + titleAndDescription("usecaseText") + table("usecaseTable", refsRow, summariesRow) + "\n")
+  def useCaseStart = Renderer(usecaseHtml)
   def scenario = Renderer(scenarioHtml)
   def useCaseEnd = Renderer("</div> <!-- UseCase -->\n")
 
@@ -100,7 +102,7 @@ trait HtmlUseCaseScenario extends HtmlTemplate {
 
 class HtmlRequirementsPrinterTemplate extends HtmlReportTemplate with HtmlProjectTemplate with HtmlUseCaseScenario {
 
-  def engineStart = Renderer(useCaseHtml)
+  def engineStart = Renderer(engineHtml)
   def engineEnd = Renderer("</div> <!-- Engine -->\n")
 
 }
@@ -125,22 +127,23 @@ class HtmlDecisionTreePrinterTemplate(test: Option[Test]) extends HtmlReportTemp
   }
 
   class EngineForDTRenderer extends Renderer {
-    def render(nameForRequirement: NameForRequirement, path: List[Requirement], indent: Int, r: Requirement, pattern: String): String =
-      r match {
+    def render(nameForRequirement: NameForRequirement, path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
+      val dt = r match {
         case e: Engine =>
           e.toStringWith(test match {
             case Some(t) => new HtmlWithTestIfThenPrinter(t, nameForRequirement)
             case _ => new HtmlIfThenPrinter(nameForRequirement)
-          }) +"<br />"
-         
-      }
-  }
-  def engineStart = Renderer("")
-  def engineEnd = new EngineForDTRenderer
-  def useCaseStart = new UseCaseForDTRenderer(useCaseHtml)
-  def scenario = new ScenarioForDTRenderer
+          })
 
-  def useCaseEnd = new UseCaseForDTRenderer("</div>")
+      }
+      s"<div class='decisionTree'>$dt</div><!--decisionTree -->\n<div class='useCaseAndScenario'>\n"
+    }
+  }
+  def engineStart =  new EngineForDTRenderer
+  def useCaseStart = new UseCaseForDTRenderer(usecaseHtml)
+  def scenario = new ScenarioForDTRenderer
+  def useCaseEnd = new UseCaseForDTRenderer("</div><!-- useCase -->\n")
+  def engineEnd =Renderer("</div><!--useCaseAndScenario --> \n")
 }
 
 object Renderer {
@@ -172,7 +175,7 @@ case class StRenderer(template: String) extends Renderer {
     r match {
       case holder: RequirementHolder =>
         r.templateName match {
-          case "UseCase" => stringTemplate.setAttribute("summariesCount", holder.children.size)
+          case "UseCase" => stringTemplate.setAttribute("scenariosCount", holder.children.size)
           case _ => ;
         }
       case _ => ;

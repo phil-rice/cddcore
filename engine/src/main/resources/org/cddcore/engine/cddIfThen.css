@@ -16,67 +16,8 @@ span {
 	margin: 0px;
 }
 
-br {
-	clear: both;
-}
+
 
 .indent {
-	float: left;
-}
-
-.keyword {
-	font-weight: 900;
-	color: #7f0055;
-	float: left;
-}
-
-.if {
-	width: 100%;
-	margin: 2px;
-}
-
-.because {
-	border: 1px solid gray;
-	background-color: #dfdfdf;
-	width: 70%;
-	float: left;
-}
-
-.becauseTrue {
-	border: 2px solid green;
-	width: 70%;
-	float: left;
-}
-
-.result {
-	margin: 2px;
-	float: left;
-	width: 100%;
-}
-
-
-.conclusion {
-	float: left;
-	border: 1px solid gray;
-	background-color: #efefef;
-	width: 70%;
-}
-
-.conclusionWithTest {
-	float: left;
-	border: 2px solid green;
-	width: 70%;
-}
-
-.else {
-		margin: 2px;
-	
-}
-
-.tests{
-	float: left;
-	
-}
-.scenario {
 	float: left;
 }

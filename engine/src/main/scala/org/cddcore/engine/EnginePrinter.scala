@@ -21,33 +21,44 @@ class DefaultIfThenPrinter extends IfThenPrinter {
   def elsePrint(e: Engine, indent: String, decision: Decision) =
     indent + "else\n";
   def endPrint(e: Engine, indent: String, decision: Decision) = "";
-  def titlePrint(e: Engine, indent: String, test: Test) = "Adding "+test+"\n"
+  def titlePrint(e: Engine, indent: String, test: Test) = "Adding " + test + "\n"
   def end: String = ""
+}
+
+class FullHtmlPage(delegate: IfThenPrinter) extends IfThenPrinter {
+  def start(engine: Engine): String = s"<html><head><title>Decision Tree for ${engine.titleString}</title></head><style>\n${Files.getFromClassPath(getClass, "cdd.css")}</style><body>"
+  def incIndent: String = delegate.incIndent
+  def resultPrint(e: Engine, indent: String, conclusion: Conclusion): String = delegate.resultPrint(e, indent, conclusion)
+  def ifPrint(e: Engine, indent: String, decision: Decision): String = delegate.ifPrint(e, indent, decision)
+  def elsePrint(e: Engine, indent: String, decision: Decision): String = delegate.elsePrint(e, indent, decision)
+  def endPrint(e: Engine, indent: String, decision: Decision): String = delegate.endPrint(e, indent, decision)
+  def titlePrint(e: Engine, indent: String, test: Test): String = delegate.titlePrint(e, indent, test)
+  def end: String = "</body></html>"
 }
 
 trait HtmlForIfThenPrinter extends IfThenPrinter {
   import Strings._
   def nameForRequirement: NameForRequirement
   def scenarioPrefix: Option[Any]
-  def start(e: Engine): String = s"<html><head><title>Decision Tree for ${e.titleString}</title></head><style>\n${Files.getFromClassPath(getClass, "cddIfThen.css")}</style><body>"
+  def start(e: Engine): String = ""
   val incIndent = "  "
   def nbsp(i: String) = "<div class='indent'>" + i.replace(" ", "&nbsp;") + "</div>"
 
   def ifPrint(e: Engine, indent: String, decision: Decision, becauseClassName: String) =
-    s"<div class='if'>${nbsp(indent)}<span class='keyword'>if&nbsp;</span> <div class='$becauseClassName'>(${htmlEscape(decision.prettyString)})</div></div><br />\n"
+    s"<div class='if'>${nbsp(indent)}<span class='keyword'>if&nbsp;</span> <div class='$becauseClassName'>(${htmlEscape(decision.prettyString)})</div><!-- $becauseClassName --></div><!-- if -->\n"
 
   def resultPrint(e: Engine, indent: String, conclusion: Conclusion, conclusionClassName: String) = {
     val scenarioHtml = conclusion.scenarios.map((s) => {
-      val name =nameForRequirement( s) + ".scenario.html"
-      s"<a class='scenario' href='$name' ><img height='15' width='15' src=http://img546.imageshack.us/img546/6186/d6qt.png title='${htmlEscape(s.titleString)}' alt='Test' /></a>"
+      val name = nameForRequirement(s) + ".scenario.html"
+      s"<a class='scenarioLink' href='$name' ><img height='15' width='15' src='http://img546.imageshack.us/img546/6186/d6qt.png' title='${htmlEscape(s.titleString)}' alt='Test' /></a>"
     }).mkString
-    s"<div class='result'>${nbsp(indent)}<span class='keyword'>then&nbsp;</span>$scenarioHtml<div class='$conclusionClassName'>${htmlEscape(conclusion.code.pretty)}</div><div class='tests'></div></div><br />\n"
+    s"<div class='result'>${nbsp(indent)}<span class='keyword'>then&nbsp;</span>$scenarioHtml<div class='$conclusionClassName'>${htmlEscape(conclusion.code.pretty)}</div></div><!-- result -->\n"
   }
 
-  def elsePrint(e: Engine, indent: String, decision: Decision) = s"<div class='else'>${nbsp(indent)}<span class='keyword'>else&nbsp;</span></div><br />\n";
+  def elsePrint(e: Engine, indent: String, decision: Decision) = s"<div class='else'>${nbsp(indent)}<span class='keyword'>else&nbsp;</span></div>\n";
   def titlePrint(e: Engine, indent: String, test: Test) = "";
   def endPrint(e: Engine, indent: String, decision: Decision) = "";
-  def end = "</body></html>";
+  def end = "";
 }
 
 class HtmlIfThenPrinter(val nameForRequirement: NameForRequirement = new CachedNameForRequirement, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {

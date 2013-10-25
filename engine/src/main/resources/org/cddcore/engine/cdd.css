@@ -1,16 +1,25 @@
 html {
 	font-family: Arial, Helvetica, sans-serif;
 	vertical-align: top;
-	clear:both;
+	word-wrap: break-word;
 }
 
 div {
 	position: relative;
 	padding: 5px;
+	width: inherit;
+}
+
+span {
+	position: relative;
+	padding: 0px;
+	margin: 0px;
 }
 
 table {
+	table-layout: fixed;
 	width: 100%;
+	max-width: 100%;
 	background-color: #ffffff;
 	position: relative;
 	border-collapse: collapse;
@@ -19,19 +28,56 @@ table {
 	border: 0px;
 }
 
+td {
+	vertical-align: top;
+	margin: 0px;
+	padding: 0px;
+	border: 1px solid black
+}
+
+hr {
+	margin: 0px;
+}
+
+br {
+	clear: both;
+}
+
 .report {
+	width: 100%;
 	position: relative;
 	margin: 6px;
 	padding: 0px;
+	position: relative;
 }
 
+.topLine {width 100%;
+	
+}
+
+.advertBox {
+	width: 25%;
+	position: relative;
+	float: left;
+	align: left;
+}
 .reportTopBox {
 	position: relative;
-	width: 40%;
+	width: 70%;
 	border: 1px solid gray;
 	padding: 0px;
 	margin: 4px;
+	float: left;
 }
+
+.reportTitle {
+	width: 100%;
+}
+
+.reportText {
+	width: 100%;
+}
+
 
 .reportTitle {
 	background-color: #b29f8c;
@@ -42,12 +88,11 @@ table {
 	padding: 2px;
 }
 
-.topRightBox {
-	position: relative;
-	float: right;
-	align: right;
+.decisionTree {
+	clear: both;
+	width: 45%;
+	float: left;
 }
-
 .project {
 	position: relative;
 	margin: 4px;
@@ -73,10 +118,12 @@ table {
 }
 
 .usecase {
+	width: 100%;
 	position: relative;
 	margin: 6px;
 	padding: 0px;
 	border: 1px solid gray;
+	position: relative;
 }
 
 .usecaseText {
@@ -88,10 +135,12 @@ table {
 }
 
 .scenario {
+	max-width: 100%;
 	position: relative;
 	padding: 0px;
 	margin: 6px;
 	border: 1px solid gray;
+	position: relative;
 }
 
 .scenarioText {
@@ -101,27 +150,10 @@ table {
 	padding: 2px;
 }
 
-table {
-	width: 100%;
-	background-color: #ffffff;
-	position: relative;
-	border-collapse: collapse;
-	margin: 0px;
-	padding: 4px;
-	border: 0px;
-}
-
 .scenarioValue {
 	background-color: #d0efd0;
 	width: 100%;
 	margin: 10px;
-}
-
-td {
-	vertical-align: top;
-	margin: 0px;
-	padding: 0px;
-	border: 1px solid black
 }
 
 .title {
@@ -132,6 +164,75 @@ td {
 	
 }
 
-hr {
-	margin: 0px;
+.indent {
+	float: left;
+	width: auto;
 }
+
+.keyword {
+	font-weight: 900;
+	color: #7f0055;
+	float: left;
+	width: auto;
+}
+
+.if {
+	width: 100%;
+	margin: 2px;
+	clear: both;
+}
+
+.because {
+	border: 1px solid gray;
+	background-color: #dfdfdf;
+	width: 70%;
+	float: left;
+}
+
+.becauseTrue {
+	border: 2px solid green;
+	width: 70%;
+	float: left;
+}
+
+.result {
+	margin: 2px;
+	float: left;
+	width: 100%;
+	clear: both;
+}
+
+.conclusion {
+	width: 80%;
+	float: left;
+	border: 1px solid gray;
+	background-color: #efefef;
+	float: left;
+}
+
+.conclusionWithTest {
+	float: left;
+	border: 2px solid green;
+	width: 70%;
+	clear: both;
+}
+
+.else {
+	margin: 2px;
+	clear: both;
+}
+
+.tests {
+	float: left;
+	width: auto;
+}
+
+.scenario {
+	float: left;
+}
+
+.useCaseAndScenario {
+	width: 45%;
+	float: left;
+}
+
