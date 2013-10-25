@@ -8,6 +8,7 @@ div {
 	position: relative;
 	padding: 5px;
 	width: inherit;
+	overflow:auto;
 }
 
 span {
@@ -18,8 +19,7 @@ span {
 
 table {
 	table-layout: fixed;
-	width: 100%;
-	max-width: 100%;
+	width:100%;
 	background-color: #ffffff;
 	position: relative;
 	border-collapse: collapse;
@@ -44,23 +44,19 @@ br {
 }
 
 .report {
-	width: 100%;
-	position: relative;
 	margin: 6px;
 	padding: 0px;
-	position: relative;
 }
 
-.topLine {width 100%;
-	
+.topLine {
 }
 
 .advertBox {
 	width: 25%;
 	position: relative;
 	float: left;
-	align: left;
 }
+
 .reportTopBox {
 	position: relative;
 	width: 70%;
@@ -71,13 +67,10 @@ br {
 }
 
 .reportTitle {
-	width: 100%;
 }
 
 .reportText {
-	width: 100%;
 }
-
 
 .reportTitle {
 	background-color: #b29f8c;
@@ -92,7 +85,9 @@ br {
 	clear: both;
 	width: 45%;
 	float: left;
+	border: 1px solid gray;
 }
+
 .project {
 	position: relative;
 	margin: 4px;
@@ -118,7 +113,6 @@ br {
 }
 
 .usecase {
-	width: 100%;
 	position: relative;
 	margin: 6px;
 	padding: 0px;
@@ -129,14 +123,11 @@ br {
 .usecaseText {
 	background-color: #cbc8be;
 	border: 0px;
-	position: relative;
 	margin: 0px;
 	padding: 2px;
 }
 
 .scenario {
-	max-width: 100%;
-	position: relative;
 	padding: 0px;
 	margin: 6px;
 	border: 1px solid gray;
@@ -152,7 +143,6 @@ br {
 
 .scenarioValue {
 	background-color: #d0efd0;
-	width: 100%;
 	margin: 10px;
 }
 
@@ -177,8 +167,8 @@ br {
 }
 
 .if {
+	padding: 0px;
 	width: 100%;
-	margin: 2px;
 	clear: both;
 }
 
@@ -190,14 +180,13 @@ br {
 }
 
 .becauseTrue {
-	border: 2px solid green;
+	border: 1px solid green;
 	width: 70%;
 	float: left;
 }
 
 .result {
-	margin: 2px;
-	float: left;
+	padding: 0px;
 	width: 100%;
 	clear: both;
 }
@@ -211,10 +200,10 @@ br {
 }
 
 .conclusionWithTest {
+	width: 80%;
 	float: left;
-	border: 2px solid green;
-	width: 70%;
-	clear: both;
+	border: 1px solid green;
+	width: 80%;
 }
 
 .else {
@@ -227,7 +216,7 @@ br {
 	width: auto;
 }
 
-.scenario {
+.scenarioLink {
 	float: left;
 }
 
@@ -235,4 +224,3 @@ br {
 	width: 45%;
 	float: left;
 }
-

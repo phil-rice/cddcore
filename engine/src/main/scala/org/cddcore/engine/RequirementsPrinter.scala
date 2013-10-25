@@ -42,7 +42,7 @@ trait RequirementsPrinterTemplate {
 
 trait HtmlTemplate extends RequirementsPrinterTemplate {
   protected val title = "$title$"
-  protected val description = "$if(description)$<p>$description$</p>$endif$"
+  protected val description = "$if(description)$$description$$endif$"
   protected val date = "$if(reportDate)$<hr /><div class='dateTitle'>$reportDate$</div><hr /><div>$reportDate$</div>$endif$"
   protected def titleAndDescription(clazz: String, titlePattern: String) = s"<div class='$clazz'>" + MessageFormat.format(titlePattern, title) + " " + description + "</div>"
 
@@ -126,8 +126,9 @@ class HtmlDecisionTreePrinterTemplate(test: Option[Test]) extends HtmlReportTemp
     }
   }
 
-  class EngineForDTRenderer extends Renderer {
+  class EngineForDTRenderer(template: String) extends Renderer {
     def render(nameForRequirement: NameForRequirement, path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
+    val superRenderer = Renderer(template)
       val dt = r match {
         case e: Engine =>
           e.toStringWith(test match {
@@ -136,14 +137,14 @@ class HtmlDecisionTreePrinterTemplate(test: Option[Test]) extends HtmlReportTemp
           })
 
       }
-      s"<div class='decisionTree'>$dt</div><!--decisionTree -->\n<div class='useCaseAndScenario'>\n"
+      s"<div class='decisionTree'>$dt</div><!--decisionTree -->\n<div class='useCaseAndScenario'>\n" + superRenderer.render(nameForRequirement, path, indent, r, pattern)
     }
   }
-  def engineStart =  new EngineForDTRenderer
+  def engineStart =  new EngineForDTRenderer(engineHtml)
   def useCaseStart = new UseCaseForDTRenderer(usecaseHtml)
   def scenario = new ScenarioForDTRenderer
   def useCaseEnd = new UseCaseForDTRenderer("</div><!-- useCase -->\n")
-  def engineEnd =Renderer("</div><!--useCaseAndScenario --> \n")
+  def engineEnd =Renderer("</div><!-- engine --> </div><!--useCaseAndScenario --> \n")
 }
 
 object Renderer {
