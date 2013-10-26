@@ -1,6 +1,10 @@
 package org.cddcore.engine
 
-trait Requirement {
+trait Reportable {
+  
+}
+
+trait Requirement extends Reportable{
   def title: Option[String]
   def titleString = title.getOrElse("")
   def titleOrDescription(default: String): String = title.getOrElse(description.getOrElse(default))
@@ -38,6 +42,18 @@ trait RequirementHolder extends Requirement with Traversable[Requirement] {
       }
     visitor.holderFnEnd(this)
   }
+  def walkWithPath(visitor: (List[Requirement]) => Unit): Unit = walkWithPath(List(), visitor)
+
+  def walkWithPath(path: List[Requirement], visitor: (List[Requirement]) => Unit): Unit = {
+    val newPath = path :+ this
+    visitor(newPath)
+    for (c <- children)
+      c match {
+        case holder: RequirementHolder => holder.walkWithPath(newPath, visitor)
+        case _ => visitor (newPath :+ c)
+      }
+  }
+
   def fold[Acc](initial: Acc)(folder: RequirementsFolder[Acc]): Acc = {
     //I could do this functionally, but I'm not sure it would be any cleaner
     var acc: Acc = folder.holderFnStart(initial, this)
@@ -50,7 +66,7 @@ trait RequirementHolder extends Requirement with Traversable[Requirement] {
     val result: Acc = folder.holderFnEnd(acc, this)
     result
   }
-  def foldWithPath[Acc](initial: Acc)(folder: RequirementsFolderWithPath[Acc]):  Acc = foldWithPath((List(), initial))(folder)._2
+  def foldWithPath[Acc](initial: Acc)(folder: RequirementsFolderWithPath[Acc]): Acc = foldWithPath((List(), initial))(folder)._2
   def foldWithPath[Acc](initial: (List[Requirement], Acc))(folder: RequirementsFolderWithPath[Acc]): (List[Requirement], Acc) = {
     //I could do this functionally, but I'm not sure it would be any cleaner
     val initialPath = initial._1

@@ -23,7 +23,7 @@ class RunListenerForTests extends RunListener {
   override def testIgnored(description: Description) = log("testIgnored", description)
 }
 @RunWith(classOf[JUnitRunner])
-class AutoTddRunnerTests extends AbstractEngine1Test[String, String] {
+class CddRunnerTests extends AbstractEngine1Test[String, String] {
   class CddRunnerForTests extends CddRunner {
     val getDescription = Description.createSuiteDescription("Test")
   }

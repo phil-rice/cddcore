@@ -4,19 +4,19 @@ trait Engine extends RequirementHolder {
   def documents: List[Document]
   def decisionTreeNodes: Int
   def root: Either[Conclusion, Decision]
-  def toStringWith(printer: IfThenPrinter): String = toStringWith("", root, printer)
-  def toStringWith(indent: String, root: Either[Conclusion, Decision], printer: IfThenPrinter): String
+  def toStringWith(printer: IfThenPrinter): String = toStringWith(List(), root, printer)
+  protected def toStringWith(path: List[Requirement], root: Either[Conclusion, Decision], printer: IfThenPrinter): String
   def evaluateBecauseForDecision(decision: Decision, params: List[Any]): Boolean
 }
 
-trait Decision {
+trait Decision extends Reportable {
   def because: List[CodeHolder]
   def yes: Either[Conclusion, Decision]
   def no: Either[Conclusion, Decision]
   def prettyString: String
 }
 
-trait Conclusion {
+trait Conclusion extends Reportable{
   def code: CodeHolder
   def scenarios: List[Test]
 }

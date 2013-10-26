@@ -62,7 +62,7 @@ trait HtmlTemplate extends RequirementsPrinterTemplate {
   protected val scenariosRow = "$if(scenariosCount)$<tr><td class='title'>Scenarios</td><td class='value'>$scenariosCount$</td></tr>$endif$"
   protected val refsRow = "$if(references)$<tr><td class='title'>References</td><td class='value'>$references: {r|$r$}; separator=\", \"$</td></tr>$endif$"
 
-  protected val usecaseHtml = "<div class='usecase'>" + titleAndDescription("usecaseText", "Use Case: {0}") + table("usecaseTable", refsRow, scenariosRow) + "\n" 
+  protected val usecaseHtml = "<div class='usecase'>" + titleAndDescription("usecaseText", "Use Case: {0}") + table("usecaseTable", refsRow, scenariosRow) + "\n"
   protected val engineHtml = "<div class='engine'>" + titleAndDescription("engineText", "Engine: {0}") + table("engineTable", refsRow, useCasesRow, nodesCountRow) + "\n"
   protected val scenarioHtml = "<div class='scenario'>" + titleAndDescription("scenarioText", "Scenario: {0}") +
     table("scenarioTable",
@@ -179,6 +179,7 @@ case class StRenderer(template: String) extends Renderer {
     stringTemplate.setAttribute("indent", Integer.toString(indent))
     stringTemplate.setAttribute("description", r.description.collect { case d => ValueForRender(d) }.getOrElse(null))
     stringTemplate.setAttribute("title", ValueForRender(r.titleString))
+    stringTemplate.setAttribute("titleUrl", nameForRequirement.file(( path :+ r):_*))
     for (ref <- r.references)
       stringTemplate.setAttribute("references", ref)
 

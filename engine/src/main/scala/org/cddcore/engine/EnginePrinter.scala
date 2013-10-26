@@ -1,48 +1,47 @@
 package org.cddcore.engine
 
+import org.cddcore.engine.tests.CddRunner
+
 trait IfThenPrinter {
-  def start(engine: Engine): String
-  def incIndent: String
-  def resultPrint(e: Engine, indent: String, conclusion: Conclusion): String
-  def ifPrint(e: Engine, indent: String, decision: Decision): String
-  def elsePrint(e: Engine, indent: String, decision: Decision): String
-  def endPrint(e: Engine, indent: String, decision: Decision): String
-  def titlePrint(e: Engine, indent: String, test: Test): String
+  type ReqList = List[Reportable]
+  def start(path: ReqList, e: Engine): String
+  def ifPrint(path: ReqList, decision: Decision): String
+  def resultPrint(path: ReqList, conclusion: Conclusion): String
+  def elsePrint(path: ReqList, decision: Decision): String
+  def endPrint(path: ReqList, decision: Decision): String
   def end: String
+
+  def indent(path: ReqList): String = "".padTo(path.size, " ").mkString
+  def engine(path: ReqList) = path.collect{case (e: Engine) => e}.head
 }
 
 class DefaultIfThenPrinter extends IfThenPrinter {
-  def start(e: Engine): String = ""
-  val incIndent = " "
-  def ifPrint(e: Engine, indent: String, decision: Decision) =
-    indent + "if(" + decision.prettyString + ")\n"
-  def resultPrint(e: Engine, indent: String, conclusion: Conclusion) =
-    indent + conclusion.code.pretty + ":" + conclusion.scenarios.map((s) => s.titleString).mkString(",") + "\n"
-  def elsePrint(e: Engine, indent: String, decision: Decision) =
-    indent + "else\n";
-  def endPrint(e: Engine, indent: String, decision: Decision) = "";
-  def titlePrint(e: Engine, indent: String, test: Test) = "Adding " + test + "\n"
+  def start(path: ReqList, e: Engine): String = ""
+  def ifPrint(path: ReqList, decision: Decision) =
+    indent(path) + "if(" + decision.prettyString + ")\n"
+  def resultPrint(path: ReqList, conclusion: Conclusion) =
+    indent(path) + conclusion.code.pretty + ":" + conclusion.scenarios.map((s) => s.titleString).mkString(",") + "\n"
+  def elsePrint(path: ReqList, decision: Decision) =
+    indent(path) + "else\n";
+  def endPrint(path: ReqList, decision: Decision) = "";
   def end: String = ""
 }
 
 class FullHtmlPage(delegate: IfThenPrinter) extends IfThenPrinter {
-  def start(engine: Engine): String = s"<html><head><title>Decision Tree for ${engine.titleString}</title></head><style>\n${Files.getFromClassPath(getClass, "cdd.css")}</style><body>"
-  def incIndent: String = delegate.incIndent
-  def resultPrint(e: Engine, indent: String, conclusion: Conclusion): String = delegate.resultPrint(e, indent, conclusion)
-  def ifPrint(e: Engine, indent: String, decision: Decision): String = delegate.ifPrint(e, indent, decision)
-  def elsePrint(e: Engine, indent: String, decision: Decision): String = delegate.elsePrint(e, indent, decision)
-  def endPrint(e: Engine, indent: String, decision: Decision): String = delegate.endPrint(e, indent, decision)
-  def titlePrint(e: Engine, indent: String, test: Test): String = delegate.titlePrint(e, indent, test)
+  def start(path: ReqList, e: Engine): String = s"<html><head><title>Decision Tree for ${e.titleString}</title></head><style>\n${Files.getFromClassPath(getClass, "cdd.css")}</style><body>"
   def end: String = "</body></html>"
 
+  def ifPrint(path: ReqList, decision: Decision) = delegate.ifPrint(path, decision)
+  def resultPrint(path: ReqList, conclusion: Conclusion) = delegate.resultPrint(path, conclusion)
+  def elsePrint(path: ReqList, decision: Decision) = delegate.elsePrint(path, decision)
+  def endPrint(path: ReqList, decision: Decision) = delegate.endPrint(path, decision)
 }
 
 trait HtmlForIfThenPrinter extends IfThenPrinter {
   import Strings._
   def nameForRequirement: NameForRequirement
   def scenarioPrefix: Option[Any]
-  def start(e: Engine): String = ""
-  val incIndent = "  "
+  def start(path: ReqList, e: Engine): String = ""
   def nbsp(i: String) = "<div class='indent'>" + i.replace(" ", "&nbsp;") + "</div>"
 
   def highlightedScenarioIcon = "http://img407.imageshack.us/img407/3948/o96r.png"
@@ -55,43 +54,44 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
     s"<a class='scenarioLink' href='$name' ><img height='15' width='15' src='${scenarioIconLink(s)}' title='${htmlEscape(s.titleString)}' alt='Test' /></a>"
   }
 
-  def ifPrint(e: Engine, indent: String, decision: Decision, becauseClassName: String) =
-    s"<div class='if'>${nbsp(indent)}<span class='keyword'>if&nbsp;</span> <div class='$becauseClassName'>(${htmlEscape(decision.prettyString)})</div><!-- $becauseClassName --></div><!-- if -->\n"
+  def ifPrint(path: ReqList, decision: Decision, becauseClassName: String) =
+    s"<div class='if'>${nbsp(indent(path))}<span class='keyword'>if&nbsp;</span> <div class='$becauseClassName'>(${htmlEscape(decision.prettyString)})</div><!-- $becauseClassName --></div><!-- if -->\n"
 
-  def resultPrint(e: Engine, indent: String, conclusion: Conclusion, conclusionClassName: String) = {
+  def resultPrint(path: ReqList, conclusion: Conclusion, conclusionClassName: String) = {
     val scenarioHtml = conclusion.scenarios.map(scenarioLink(_)).mkString
-    s"<div class='result'>${nbsp(indent)}<span class='keyword'>then&nbsp;</span>$scenarioHtml<div class='$conclusionClassName'>${htmlEscape(conclusion.code.pretty)}</div></div><!-- result -->\n"
+    s"<div class='result'>${nbsp(indent(path))}<span class='keyword'>then&nbsp;</span>$scenarioHtml<div class='$conclusionClassName'>${htmlEscape(conclusion.code.pretty)}</div></div><!-- result -->\n"
   }
 
-  def elsePrint(e: Engine, indent: String, decision: Decision) = s"<div class='else'>${nbsp(indent)}<span class='keyword'>else&nbsp;</span></div>\n";
-  def titlePrint(e: Engine, indent: String, test: Test) = "";
-  def endPrint(e: Engine, indent: String, decision: Decision) = "";
+  def elsePrint(path: ReqList, decision: Decision) = s"<div class='else'>${nbsp(indent(path))}<span class='keyword'>else&nbsp;</span></div>\n";
+  def endPrint(path: ReqList, decision: Decision) = "";
   def end = "";
 }
 
 class HtmlIfThenPrinter(val nameForRequirement: NameForRequirement = new CachedNameForRequirement, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
-  def ifPrint(e: Engine, indent: String, decision: Decision): String = ifPrint(e, indent, decision, "because")
-  def resultPrint(e: Engine, indent: String, conclusion: Conclusion): String = resultPrint(e, indent, conclusion, "conclusion")
+  def ifPrint(path: ReqList, decision: Decision): String = 
+    ifPrint(path, decision, "because")
+  def resultPrint(path: ReqList, conclusion: Conclusion): String = 
+    resultPrint(path, conclusion, "conclusion")
 }
 
 class HtmlWithTestIfThenPrinter(test: Test, val nameForRequirement: NameForRequirement = new CachedNameForRequirement, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
-  def ifPrint(e: Engine, indent: String, decision: Decision): String =
+  def ifPrint(path: ReqList, decision: Decision): String =
     try {
-      if (e.evaluateBecauseForDecision(decision, test.params))
-        ifPrint(e, indent, decision, "becauseTrue")
+      if (engine(path).evaluateBecauseForDecision(decision, test.params))
+        ifPrint(path, decision, "becauseTrue")
       else
-        ifPrint(e, indent, decision, "because")
+        ifPrint(path, decision, "because")
     } catch {
       case t: Throwable =>
         t.printStackTrace()
-        ifPrint(e, indent, decision, "because")
+        ifPrint(path, decision, "because")
     }
 
- override def scenarioIconLink(s: Test) = if (s == test) highlightedScenarioIcon else normalScenarioIcon
-  def resultPrint(e: Engine, indent: String, conclusion: Conclusion): String =
+  override def scenarioIconLink(s: Test) = if (s == test) highlightedScenarioIcon else normalScenarioIcon
+  def resultPrint(path: ReqList, conclusion: Conclusion): String =
     if (conclusion.scenarios.contains(test))
-      resultPrint(e, indent, conclusion, "conclusionWithTest")
+      resultPrint(path, conclusion, "conclusionWithTest")
     else
-      resultPrint(e, indent, conclusion, "conclusion")
+      resultPrint(path, conclusion, "conclusion")
 }
 

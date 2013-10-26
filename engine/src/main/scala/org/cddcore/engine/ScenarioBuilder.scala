@@ -475,6 +475,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
   }
   trait EngineToString extends org.cddcore.engine.Engine {
+    
     def root: Either[Conclusion, Decision]
 
     def toString(indent: String, root: Either[Conclusion, Decision]): String = {
@@ -490,7 +491,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
     override def toString(): String = toString("", root)
 
-    def toStringWithScenarios(): String = toStringWithScenarios("", root);
+    def toStringWithScenarios(): String = toStringWithScenarios( root);
 
     def increasingScenariosList(cs: List[Scenario]): List[List[Scenario]] =
       cs.foldLeft(List[List[Scenario]]())((a, c) => (a match {
@@ -499,25 +500,27 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }))
 
     def titleString: String
-    def toStringWith(indent: String, root: Either[Conclusion, Decision], printer: IfThenPrinter): String =
-      printer.start(this) + toStringPrimWith(indent, root, printer) + printer.end
-    private def toStringPrimWith(indent: String, root: Either[Conclusion, Decision], printer: IfThenPrinter): String = {
+    
+    def toStringWith(path: List[Requirement], root: Either[Conclusion, Decision], printer: IfThenPrinter): String =
+      printer.start(path, this) + toStringPrimWith(path, root, printer) + printer.end
+      
+    private def toStringPrimWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String = {
       root match {
         case null => "Could not toString as root as null. Possibly because of earlier exceptions"
-        case Left(result) => printer.resultPrint(this, indent, result)
-        case Right(node) =>
-          val ifString = printer.ifPrint(this, indent, node)
-          val yesString = toStringPrimWith(indent + printer.incIndent, node.yes, printer)
-          val elseString = printer.elsePrint(this, indent, node)
-          val noString = toStringPrimWith(indent + printer.incIndent, node.no, printer)
-          val endString = printer.endPrint(this, indent, node)
+        case Left(result) => printer.resultPrint(path,  result)
+        case Right(node:  Reportable) =>
+          val ifString = printer.ifPrint(path, node)
+          val yesString = toStringPrimWith(path :+ node, node.yes, printer)
+          val elseString = printer.elsePrint(path, node)
+          val noString = toStringPrimWith(path :+ node, node.no, printer)
+          val endString = printer.endPrint(path, node)
           val result = ifString + yesString + elseString + noString + endString
           return result
       }
     }
 
-    def toStringWithScenarios(indent: String, root: Either[Conclusion, Decision]): String =
-      toStringWith(indent, root, new DefaultIfThenPrinter())
+    def toStringWithScenarios( root: Either[Conclusion, Decision]): String =
+      toStringWith(List(), root, new DefaultIfThenPrinter())
   }
 
   trait BuildEngine extends EvaluateEngine with EngineToString {
@@ -798,9 +801,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       validateScenarios(root, scenarios)
 
     def constructionString: String =
-      constructionString(defaultRoot, scenarios, new DefaultIfThenPrinter {
-        def titlePrint(e: Engine, indent: String, decision: Decision): String = s"${indent}Adding ${decision}\n";
-      })
+      constructionString(defaultRoot, scenarios, new DefaultIfThenPrinter)
 
     def logParams(p: Any*) =
       logger.executing(p.toList)
@@ -815,9 +816,9 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       increasingScenariosList(cs).reverse.map((cs) =>
         try {
           val c = cs.head
-          val title = printer.titlePrint(this, "", c)
+          val title ="Adding " + c +"\n"
           val (r, s) = buildRoot(root, cs.reverse)
-          title + toStringWith("", r, printer)
+          title + toStringWith(List(), r, printer)
         } catch {
           case e: Throwable => e.getClass() + "\n" + e.getMessage()
         }).mkString("\n")
