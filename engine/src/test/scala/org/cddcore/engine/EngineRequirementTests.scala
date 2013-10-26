@@ -7,7 +7,7 @@ import RequirementsPrinter._
 class EngineRequirementTests extends EngineStringStringTests {
   def checkBuilderPrinter(holder: RequirementHolder, expected: String) {
     import Renderer._
-    val printer = RequirementsPrinter("+B $indent$/$title$/$description$\n",
+    val printer = RequirementsPrinter(Map(), "+B $indent$/$title$/$description$\n",
       "+UC $indent$/$title$/$description$\n",
       "S $indent$/$title$/$description$\n",
       "-UC $indent$/$title$/$description$\n",
@@ -34,7 +34,7 @@ class EngineRequirementTests extends EngineStringStringTests {
 
   }
   def checkHtmlPrinter(holder: RequirementHolder, expected: String) {
-    val printer = RequirementsPrinter.html(None)
+    val printer = RequirementsPrinter.html(None, Map())
     val result = holder.foldWithPath( ReqPrintContext())(printer)
     assertEquals(ReqPrintContext(1, expected, new NoNameForRequirement), result)
   }

@@ -12,7 +12,7 @@ trait IfThenPrinter {
   def end: String
 
   def indent(path: ReqList): String = "".padTo(path.size, " ").mkString
-  def engine(path: ReqList) = path.collect{case (e: Engine) => e}.head
+  def engine(path: ReqList) = path.collect { case (e: Engine) => e }.head
 }
 
 class DefaultIfThenPrinter extends IfThenPrinter {
@@ -40,6 +40,7 @@ class FullHtmlPage(delegate: IfThenPrinter) extends IfThenPrinter {
 trait HtmlForIfThenPrinter extends IfThenPrinter {
   import Strings._
   def nameForRequirement: NameForRequirement
+  def urlMap: Map[Requirement, String]
   def scenarioPrefix: Option[Any]
   def start(path: ReqList, e: Engine): String = ""
   def nbsp(i: String) = "<div class='indent'>" + i.replace(" ", "&nbsp;") + "</div>"
@@ -50,8 +51,11 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   def scenarioIconLink(s: Test) = normalScenarioIcon
 
   def scenarioLink(s: Test) = {
-    val name = nameForRequirement(s) + ".scenario.html"
-    s"<a class='scenarioLink' href='$name' ><img height='15' width='15' src='${scenarioIconLink(s)}' title='${htmlEscape(s.titleString)}' alt='Test' /></a>"
+    val imageHtml = s"<img height='15' width='15' src='${scenarioIconLink(s)}' title='${htmlEscape(s.titleString)}' alt='Test' />"
+    urlMap.get(s) match {
+      case Some(url) => s"<a class='scenarioLink' href='$url' >$imageHtml</a>"
+      case _ => imageHtml
+    }
   }
 
   def ifPrint(path: ReqList, decision: Decision, becauseClassName: String) =
@@ -67,14 +71,14 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   def end = "";
 }
 
-class HtmlIfThenPrinter(val nameForRequirement: NameForRequirement = new CachedNameForRequirement, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
-  def ifPrint(path: ReqList, decision: Decision): String = 
+class HtmlIfThenPrinter(val nameForRequirement: NameForRequirement = new CachedNameForRequirement, val urlMap: Map[Requirement, String] = Map(), val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
+  def ifPrint(path: ReqList, decision: Decision): String =
     ifPrint(path, decision, "because")
-  def resultPrint(path: ReqList, conclusion: Conclusion): String = 
+  def resultPrint(path: ReqList, conclusion: Conclusion): String =
     resultPrint(path, conclusion, "conclusion")
 }
 
-class HtmlWithTestIfThenPrinter(test: Test, val nameForRequirement: NameForRequirement = new CachedNameForRequirement, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
+class HtmlWithTestIfThenPrinter(test: Test, val nameForRequirement: NameForRequirement = new CachedNameForRequirement, val urlMap: Map[Requirement, String], val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
   def ifPrint(path: ReqList, decision: Decision): String =
     try {
       if (engine(path).evaluateBecauseForDecision(decision, test.params))

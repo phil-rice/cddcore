@@ -70,12 +70,13 @@ trait RequirementHolder extends Requirement with Traversable[Requirement] {
   def foldWithPath[Acc](initial: (List[Requirement], Acc))(folder: RequirementsFolderWithPath[Acc]): (List[Requirement], Acc) = {
     //I could do this functionally, but I'm not sure it would be any cleaner
     val initialPath = initial._1
+    val pathWithThis = initialPath :+ RequirementHolder.this
     var acc: (List[Requirement], Acc) = folder.holderFnStart(initial, this)
     for (c <- children)
       c match {
         case holder: RequirementHolder =>
-          acc = holder.foldWithPath((this :: initialPath, acc._2))(folder);
-        case _ => acc = folder.childFn((initialPath, acc._2), c)
+          acc = holder.foldWithPath((pathWithThis, acc._2))(folder);
+        case _ => acc = folder.childFn((pathWithThis, acc._2), c)
       }
     val result: (List[Requirement], Acc) = folder.holderFnEnd((initialPath, acc._2), this)
     (initialPath, result._2)
@@ -103,5 +104,11 @@ trait RequirementsFolderWithPath[Acc] {
   def holderFnStart: ((List[Requirement], Acc), RequirementHolder) => (List[Requirement], Acc)
   def childFn: ((List[Requirement], Acc), Requirement) => (List[Requirement], Acc)
   def holderFnEnd: ((List[Requirement], Acc), RequirementHolder) => (List[Requirement], Acc)
+}
 
+trait SimpleFolderWithPath[Acc] extends RequirementsFolderWithPath[Acc]{
+  def fn(reqList: List[Requirement], acc: Acc, r: Requirement):  (List[Requirement], Acc)
+  def holderFnStart = (reqAndAcc, holder) => fn(reqAndAcc._1, reqAndAcc._2, holder)
+  def holderFnEnd = (reqAndAcc, holder) => fn(reqAndAcc._1, reqAndAcc._2, holder)
+  def childFn = (reqAndAcc, r) => fn(reqAndAcc._1, reqAndAcc._2, r)
 }

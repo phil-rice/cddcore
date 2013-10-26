@@ -4,7 +4,7 @@ trait Engine extends RequirementHolder {
   def documents: List[Document]
   def decisionTreeNodes: Int
   def root: Either[Conclusion, Decision]
-  def toStringWith(printer: IfThenPrinter): String = toStringWith(List(), root, printer)
+  def toStringWith(printer: IfThenPrinter): String = toStringWith(List(this), root, printer)
   protected def toStringWith(path: List[Requirement], root: Either[Conclusion, Decision], printer: IfThenPrinter): String
   def evaluateBecauseForDecision(decision: Decision, params: List[Any]): Boolean
 }

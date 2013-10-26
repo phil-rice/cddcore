@@ -85,7 +85,7 @@ class RequirementTests extends AbstractTest {
   def checkStPrinter(holder: RequirementHolder, expected: String) = {
     val classPathPattern = getClass.getPackage().getName().replace('.', '/') + "/RequirementTestTemplate"
     import RequirementsPrinter._
-    val printer = new StRequirementsPrinter(Map(
+    val printer = new StRequirementsPrinter(Map(), Map(
       "RequirementHolderForTest_start" -> "Start $indent$/$title$/$description$\n",
       "RequirementForTest" -> "Requirement $indent$/$title$/$description$\n",
       "RequirementForTestNoDesc" -> "RequirementNoDesc $indent$/$title$/$description$\n",

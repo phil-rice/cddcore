@@ -44,7 +44,7 @@ trait HtmlTemplate extends RequirementsPrinterTemplate {
   protected val title = "$title$"
   protected val description = "$if(description)$$description$$endif$"
   protected val date = "$if(reportDate)$<hr /><div class='dateTitle'>$reportDate$</div><hr /><div>$reportDate$</div>$endif$"
-  protected def titleAndDescription(clazz: String, titlePattern: String) = s"<div class='$clazz'>" + MessageFormat.format(titlePattern, title) + " " + description + "</div>"
+  protected def titleAndDescription(clazz: String, titlePattern: String) = s"<div class='$clazz'>" + "$if(url)$<a href='$url$'>$endif$" + MessageFormat.format(titlePattern, title) + "$if(url)$</a>$endif$ " + description + "</div>"
 
   protected def cddLogoImg = "<img src='http://img24.imageshack.us/img24/4325/gp9j.png'  alt='CDD'/>"
   protected def cddLogo(rootUrl: Option[String]) =
@@ -63,7 +63,7 @@ trait HtmlTemplate extends RequirementsPrinterTemplate {
   protected val refsRow = "$if(references)$<tr><td class='title'>References</td><td class='value'>$references: {r|$r$}; separator=\", \"$</td></tr>$endif$"
 
   protected val usecaseHtml = "<div class='usecase'>" + titleAndDescription("usecaseText", "Use Case: {0}") + table("usecaseTable", refsRow, scenariosRow) + "\n"
-  protected val engineHtml = "<div class='engine'>" + titleAndDescription("engineText", "Engine: {0}") + table("engineTable", refsRow, useCasesRow, nodesCountRow) + "\n"
+  protected val engineHtml = "<div class='engine'>" + titleAndDescription("engineText", "Engine {0}") + table("engineTable", refsRow, useCasesRow, nodesCountRow) + "\n"
   protected val scenarioHtml = "<div class='scenario'>" + titleAndDescription("scenarioText", "Scenario: {0}") +
     table("scenarioTable",
       refsRow,
@@ -109,7 +109,7 @@ trait HtmlUseCaseScenario extends HtmlTemplate {
 
 }
 
-class HtmlRequirementsPrinterTemplate(val rootUrl: Option[String] = None) extends HtmlReportTemplate with HtmlProjectTemplate with HtmlUseCaseScenario {
+class HtmlRequirementsPrinterTemplate(val rootUrl: Option[String] = None, val urlMap: Map[Requirement, String] = Map()) extends HtmlReportTemplate with HtmlProjectTemplate with HtmlUseCaseScenario {
 
   def engineStart = Renderer(engineHtml)
   def engineEnd = Renderer("</div> <!-- Engine -->\n")
@@ -120,9 +120,9 @@ class HtmlDecisionTreePrinterTemplate(test: Option[Test], val rootUrl: Option[St
 
   class UseCaseForDTRenderer(template: String) extends Renderer {
     val superRenderer = Renderer(template)
-    def render(nameForRequirement: NameForRequirement, path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
+    def render(nameForRequirement: NameForRequirement, urlMap: Map[Requirement, String], path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
       (r, test) match {
-        case (holder: RequirementHolder, Some(t)) => if (holder.children.contains(t)) superRenderer.render(nameForRequirement,
+        case (holder: RequirementHolder, Some(t)) => if (holder.children.contains(t)) superRenderer.render(nameForRequirement, urlMap,
           path, indent, r, pattern)
         else ""; case _ => ""
       }
@@ -130,23 +130,23 @@ class HtmlDecisionTreePrinterTemplate(test: Option[Test], val rootUrl: Option[St
   }
   class ScenarioForDTRenderer extends Renderer {
     val superRenderer = Renderer(scenarioHtml)
-    def render(nameForRequirement: NameForRequirement, path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
-      (r, test) match { case (test: Test, Some(t)) => if (test == t) superRenderer.render(nameForRequirement, path, indent, r, pattern) else ""; case _ => "" }
+    def render(nameForRequirement: NameForRequirement, urlMap: Map[Requirement, String], path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
+      (r, test) match { case (test: Test, Some(t)) => if (test == t) superRenderer.render(nameForRequirement, urlMap, path, indent, r, pattern) else ""; case _ => "" }
     }
   }
 
   class EngineForDTRenderer(template: String) extends Renderer {
-    def render(nameForRequirement: NameForRequirement, path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
+    def render(nameForRequirement: NameForRequirement, urlMap: Map[Requirement, String], path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
       val superRenderer = Renderer(template)
       val dt = r match {
         case e: Engine =>
           e.toStringWith(test match {
-            case Some(t) => new HtmlWithTestIfThenPrinter(t, nameForRequirement)
-            case _ => new HtmlIfThenPrinter(nameForRequirement)
+            case Some(t) => new HtmlWithTestIfThenPrinter(t, nameForRequirement, urlMap)
+            case _ => new HtmlIfThenPrinter(nameForRequirement, urlMap)
           })
 
       }
-      s"<div class='decisionTree'>$dt</div><!--decisionTree -->\n<div class='useCaseAndScenario'>\n" + superRenderer.render(nameForRequirement, path, indent, r, pattern)
+      s"<div class='decisionTree'>$dt</div><!--decisionTree -->\n<div class='useCaseAndScenario'>\n" + superRenderer.render(nameForRequirement, urlMap, path, indent, r, pattern)
     }
   }
   def engineStart = new EngineForDTRenderer(engineHtml)
@@ -165,7 +165,7 @@ object Renderer {
 }
 
 trait Renderer {
-  def render(nameForRequirement: NameForRequirement, path: List[Requirement], indent: Int, r: Requirement, pattern: String): String
+  def render(nameForRequirement: NameForRequirement, urlMap: Map[Requirement, String], path: List[Requirement], indent: Int, r: Requirement, pattern: String): String
 }
 
 case class StRenderer(template: String) extends Renderer {
@@ -174,12 +174,23 @@ case class StRenderer(template: String) extends Renderer {
   stringTemplate.registerRenderer(classOf[ValueForRender], renderer)
   stringTemplate.registerRenderer(classOf[Reference], refRenderer)
 
-  def render(nameForRequirement: NameForRequirement, path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
+  def render(nameForRequirement: NameForRequirement, urlMap: Map[Requirement, String], path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
     stringTemplate.reset()
     stringTemplate.setAttribute("indent", Integer.toString(indent))
     stringTemplate.setAttribute("description", r.description.collect { case d => ValueForRender(d) }.getOrElse(null))
     stringTemplate.setAttribute("title", ValueForRender(r.titleString))
-    stringTemplate.setAttribute("titleUrl", nameForRequirement.file(( path :+ r):_*))
+    stringTemplate.setAttribute("titleUrl", nameForRequirement.file((path :+ r): _*))
+    if (urlMap.contains(r)) {
+      val url = urlMap(r)
+      stringTemplate.setAttribute("url", url)
+    } else {
+      println("Not found")
+      println("" + r.getClass() + r.hashCode)
+      println(urlMap.keys.map((k) => k.getClass().getName() + k.hashCode).mkString("\n"))
+      println
+      println
+    }
+
     for (ref <- r.references)
       stringTemplate.setAttribute("references", ref)
 
@@ -216,8 +227,8 @@ case class StRenderer(template: String) extends Renderer {
 
 object RequirementsPrinter {
 
-  def apply(reportStart: Renderer, projectStart: Renderer, engineStart: Renderer, useCaseStart: Renderer, scenario: Renderer, useCaseEnd: Renderer, engineEnd: Renderer, projectEnd: Renderer, reportEnd: Renderer): RequirementsFolderWithPath[ReqPrintContext] =
-    new StRequirementsPrinter(Map(
+  def apply(urlMap: Map[Requirement, String], reportStart: Renderer, projectStart: Renderer, engineStart: Renderer, useCaseStart: Renderer, scenario: Renderer, useCaseEnd: Renderer, engineEnd: Renderer, projectEnd: Renderer, reportEnd: Renderer): RequirementsFolderWithPath[ReqPrintContext] =
+    new StRequirementsPrinter(urlMap, Map(
       "Report_start" -> reportStart,
       "Project_start" -> projectStart,
       "Engine_start" -> engineStart,
@@ -227,20 +238,21 @@ object RequirementsPrinter {
       "Engine_end" -> engineEnd,
       "Project_end" -> projectEnd,
       "Report_end" -> reportEnd))
-  def apply(builderStart: Renderer, useCaseStart: Renderer, scenario: Renderer, useCaseEnd: Renderer, builderEnd: Renderer): RequirementsFolderWithPath[ReqPrintContext] =
-    new StRequirementsPrinter(Map(
+  def apply(urlMap: Map[Requirement, String], builderStart: Renderer, useCaseStart: Renderer, scenario: Renderer, useCaseEnd: Renderer, builderEnd: Renderer): RequirementsFolderWithPath[ReqPrintContext] =
+    new StRequirementsPrinter(urlMap, Map(
       "Engine_start" -> builderStart,
       "UseCase_start" -> useCaseStart,
       "Scenario" -> scenario,
       "UseCase_end" -> useCaseEnd,
       "Engine_end" -> builderEnd))
 
-  def html(rootUrl: Option[String] = None) = apply(new HtmlRequirementsPrinterTemplate(rootUrl))
+  def html(rootUrl: Option[String] = None, urlMap: Map[Requirement, String] = Map()) = apply(urlMap, new HtmlRequirementsPrinterTemplate(rootUrl, urlMap))
 
-  def decisionTree(test: Option[Test] = None, rootUrl: Option[String] = None) = apply(new HtmlDecisionTreePrinterTemplate(test, rootUrl))
+  def decisionTree(test: Option[Test] = None, rootUrl: Option[String] = None, urlMap: Map[Requirement, String] = Map()) = apply(urlMap, new HtmlDecisionTreePrinterTemplate(test, rootUrl))
 
-  def apply(r: RequirementsPrinterTemplate): RequirementsFolderWithPath[ReqPrintContext] =
+  def apply(urlMap: Map[Requirement, String], r: RequirementsPrinterTemplate): RequirementsFolderWithPath[ReqPrintContext] =
     apply(
+      urlMap,
       r.reportStart,
       r.projectStart,
       r.engineStart,
@@ -252,13 +264,13 @@ object RequirementsPrinter {
       r.reportEnd)
 }
 
-class StRequirementsPrinter(nameToRenderer: Map[String, Renderer], startPattern: String = "{0}_start", childPattern: String = "{0}", endPattern: String = "{0}_end") extends RequirementsFolderWithPath[ReqPrintContext] {
+class StRequirementsPrinter(urlMap: Map[Requirement, String], nameToRenderer: Map[String, Renderer], startPattern: String = "{0}_start", childPattern: String = "{0}", endPattern: String = "{0}_end") extends RequirementsFolderWithPath[ReqPrintContext] {
   import StRenderer._
 
   def render(nameForRequirement: NameForRequirement, path: List[Requirement], indent: Int, r: Requirement, pattern: String): String = {
     val name = MessageFormat.format(pattern, r.templateName)
     val renderer = nameToRenderer(name)
-    renderer.render(nameForRequirement, path, indent, r, pattern)
+    renderer.render(nameForRequirement, urlMap, path, indent, r, pattern)
   }
   protected def render(acc: (List[Requirement], ReqPrintContext), r: Requirement, pattern: String, preIndentFn: (Int) => Int = (i) => i, postIndentFn: (Int) => Int = (i) => i): (List[Requirement], ReqPrintContext) = {
     val preIndent = preIndentFn(acc._2.indent)
