@@ -71,7 +71,7 @@ trait ReportableToUrl {
       case Some(s) => s;
       case _ => {
         reqId += 1; val default = r.templateName + reqId;
-        val result = Strings.clean(r match {
+        val result = Strings.urlClean(r match {
           case req: Requirement => req.titleOrDescription(default)
           case _ => default;
 

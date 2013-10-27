@@ -43,8 +43,8 @@ object BuildSettings {
       </developers>),
 
     organization := "org.cddcore",
-    //version := "1.6.0-SNAPSHOT",
-    version := "1.6.0",
+    //version := "1.6.1-SNAPSHOT",
+    version := "1.6.1",
     scalacOptions ++= Seq(),
     retrieveManaged := false,
     scalaVersion := "2.10.1",

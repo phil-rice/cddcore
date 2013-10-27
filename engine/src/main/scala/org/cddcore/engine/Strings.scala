@@ -5,15 +5,14 @@ object Strings {
   val digits = stringToKvs("0123456789")
   val brackets = bracketsToKvs("<{(>})", "<<<>>>")
   val misc = stringToKvs("., /=-_")
+  val urlMisc = stringToKvs("_")
 
-  
   def rawCleaner() = new StringCleaner(Map())
-  val cleaner = {
-    val kvs: List[(Char, Char)] = alphas ::: digits ::: brackets ::: misc
-    new StringCleaner(Map() ++ kvs)
-  }
+  private val cleaner = new StringCleaner(Map() ++ (alphas ::: digits ::: brackets ::: misc))
+  private val urlCleaner = new StringCleaner(Map() ++ (alphas ::: digits ::: urlMisc))
 
   def clean(s: String): String = cleaner.clean(s)
+  def urlClean(s: String): String = urlCleaner.clean(s)
 
   def stringToKvs(s: String) = s.foldLeft(List[(Char, Char)]()) { (m, c) => (c, c) :: m }
   def bracketsToKvs(left: String, right: String) = left.zip(right).toList
