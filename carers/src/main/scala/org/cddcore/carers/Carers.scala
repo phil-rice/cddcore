@@ -132,15 +132,10 @@ object Carers {
     build
 
   def main(args: Array[String]) {
-    val situation: CarersXmlSituation = (World("2010-6-1"), "CL800119A")
-    println(situation)
-    val file = new File("C:/Users/Phil/Desktop/stuff.html")
-    file.delete()
+    val project = Project("Carers", engine, Income.income, Expenses.expenses, Expenses.childCareExpenses, Expenses.occupationalExpenses, Expenses.privatePensionExpenses)
+    new WebPagesCreator(project).create
+    println("done")
 
-    Files.appendToFile(file)((p) =>
-      //      p.append(html)
-      p.append(engine.toStringWith(new HtmlIfThenPrinter)))
-    println(engine.toStringWith(new HtmlIfThenPrinter))
   }
 
 }

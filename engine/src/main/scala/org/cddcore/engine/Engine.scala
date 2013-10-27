@@ -1,25 +1,6 @@
 package org.cddcore.engine
 
-trait Engine extends RequirementHolder {
-  def documents: List[Document]
-  def decisionTreeNodes: Int
-  def root: Either[Conclusion, Decision]
-  def toStringWith(printer: IfThenPrinter): String = toStringWith(List(this), root, printer)
-  protected def toStringWith(path: List[Requirement], root: Either[Conclusion, Decision], printer: IfThenPrinter): String
-  def evaluateBecauseForDecision(decision: Decision, params: List[Any]): Boolean
-}
 
-trait Decision extends Reportable {
-  def because: List[CodeHolder]
-  def yes: Either[Conclusion, Decision]
-  def no: Either[Conclusion, Decision]
-  def prettyString: String
-}
-
-trait Conclusion extends Reportable{
-  def code: CodeHolder
-  def scenarios: List[Test]
-}
 
 
 trait Engine1Types[P, R] extends EngineTypes[R] {
@@ -58,17 +39,6 @@ trait Engine3Types[P1, P2, P3, R] extends EngineTypes[R] {
   def makeClosureForAssertion(params: List[Any], r: ROrException[R]) = (a: A) => a(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2], params(2).asInstanceOf[P3], r);
 }
 
-object Engine {
-  def apply[P, R]() = new BuilderFactory1[P, R]().builder;
-  def apply[P1, P2, R]() = new BuilderFactory2[P1, P2, R]().builder;
-  def apply[P1, P2, P3, R]() = new BuilderFactory3[P1, P2, P3, R]().builder;
-
-  def state[S, P, R]() = new BuilderFactory2[S, P, (S, R)]().builder;
-  def state[S, P1, P2, R]() = new BuilderFactory3[S, P1, P2, (S, R)]().builder;
-
-  //  def stm[P, R]() = new BuilderFactory2Stm[P, R]().builder;
-  //  def stm[P1, P2, R]() = new BuilderFactory3Stm[P1, P2, R]().builder;
-}
 
 trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
 

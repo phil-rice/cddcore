@@ -37,32 +37,39 @@ class FullHtmlPage(delegate: IfThenPrinter) extends IfThenPrinter {
   def endPrint(path: ReqList, decision: Decision) = delegate.endPrint(path, decision)
 }
 
-trait HtmlForIfThenPrinter extends IfThenPrinter {
+object HtmlForIfThenPrinter {
+  import Reportable._
   import Strings._
-  def nameForRequirement: NameForRequirement
-  def urlMap: Map[Requirement, String]
-  def scenarioPrefix: Option[Any]
-  def start(path: ReqList, e: Engine): String = ""
   def nbsp(i: String) = "<div class='indent'>" + i.replace(" ", "&nbsp;") + "</div>"
 
   def highlightedScenarioIcon = "http://img407.imageshack.us/img407/3948/o96r.png"
   def normalScenarioIcon = "http://img201.imageshack.us/img201/1442/a9t.png"
 
-  def scenarioIconLink(s: Test) = normalScenarioIcon
-
-  def scenarioLink(s: Test) = {
-    val imageHtml = s"<img height='15' width='15' src='${scenarioIconLink(s)}' title='${htmlEscape(s.titleString)}' alt='Test' />"
+  def scenarioLink(urlMap: UrlMap, s: Test, selected: Boolean) = {
+    val imgSrc = if (selected) highlightedScenarioIcon else normalScenarioIcon
+    val imageHtml = s"<img height='15' width='15' src='$imgSrc' title='${htmlEscape(s.titleString)}' alt='Test' />"
     urlMap.get(s) match {
       case Some(url) => s"<a class='scenarioLink' href='$url' >$imageHtml</a>"
       case _ => imageHtml
     }
   }
 
+}
+trait HtmlForIfThenPrinter extends IfThenPrinter {
+  import Reportable._
+  import HtmlForIfThenPrinter._
+  import Strings._
+
+  def reportableToUrl: ReportableToUrl
+  def urlMap: Map[Reportable, String]
+  def scenarioPrefix: Option[Any]
+  def start(path: ReqList, e: Engine): String = ""
   def ifPrint(path: ReqList, decision: Decision, becauseClassName: String) =
     s"<div class='if'>${nbsp(indent(path))}<span class='keyword'>if&nbsp;</span> <div class='$becauseClassName'>(${htmlEscape(decision.prettyString)})</div><!-- $becauseClassName --></div><!-- if -->\n"
 
+  def isSelected(t: Test) = false
   def resultPrint(path: ReqList, conclusion: Conclusion, conclusionClassName: String) = {
-    val scenarioHtml = conclusion.scenarios.map(scenarioLink(_)).mkString
+    val scenarioHtml = conclusion.scenarios.map((s)=>scenarioLink(urlMap, s, isSelected(s))).mkString
     s"<div class='result'>${nbsp(indent(path))}<span class='keyword'>then&nbsp;</span>$scenarioHtml<div class='$conclusionClassName'>${htmlEscape(conclusion.code.pretty)}</div></div><!-- result -->\n"
   }
 
@@ -71,14 +78,16 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   def end = "";
 }
 
-class HtmlIfThenPrinter(val nameForRequirement: NameForRequirement = new CachedNameForRequirement, val urlMap: Map[Requirement, String] = Map(), val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
+class HtmlIfThenPrinter(val reportableToUrl: ReportableToUrl = new FileSystemReportableToUrl, val urlMap: Map[Reportable, String] = Map(), val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
   def ifPrint(path: ReqList, decision: Decision): String =
     ifPrint(path, decision, "because")
   def resultPrint(path: ReqList, conclusion: Conclusion): String =
     resultPrint(path, conclusion, "conclusion")
 }
 
-class HtmlWithTestIfThenPrinter(test: Test, val nameForRequirement: NameForRequirement = new CachedNameForRequirement, val urlMap: Map[Requirement, String], val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
+class HtmlWithTestIfThenPrinter(test: Test, val reportableToUrl: ReportableToUrl = new FileSystemReportableToUrl, val urlMap: Map[Reportable, String], val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
+  import HtmlForIfThenPrinter._
+  override def isSelected(t: Test) = t == test
   def ifPrint(path: ReqList, decision: Decision): String =
     try {
       if (engine(path).evaluateBecauseForDecision(decision, test.params))
@@ -91,7 +100,6 @@ class HtmlWithTestIfThenPrinter(test: Test, val nameForRequirement: NameForRequi
         ifPrint(path, decision, "because")
     }
 
-  override def scenarioIconLink(s: Test) = if (s == test) highlightedScenarioIcon else normalScenarioIcon
   def resultPrint(path: ReqList, conclusion: Conclusion): String =
     if (conclusion.scenarios.contains(test))
       resultPrint(path, conclusion, "conclusionWithTest")

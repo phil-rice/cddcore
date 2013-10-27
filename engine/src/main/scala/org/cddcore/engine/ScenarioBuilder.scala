@@ -306,11 +306,11 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       case _ => throw new NeedUseCaseException
     })
 
-  case class UseCase(title: Option[String] = None, description: Option[String] = None, scenarios: List[Scenario] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Int = 0, references: List[Reference] = List()) extends BuilderNode with RequirementHolder {
+  case class UseCase(title: Option[String] = None, description: Option[String] = None, scenarios: List[Scenario] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Int = 0, references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
     def children = scenarios
   }
 
-  trait ScenarioBuilder extends BuilderNode with RequirementHolder {
+  trait ScenarioBuilder extends BuilderNode with ReportableHolder {
 
     def validateBecause(s: Scenario) = {
       s.configure
@@ -501,7 +501,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     def titleString: String
     
-    def toStringWith(path: List[Requirement], root: Either[Conclusion, Decision], printer: IfThenPrinter): String =
+    def toStringWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String =
       printer.start(path, this) + toStringPrimWith(path, root, printer) + printer.end
       
     private def toStringPrimWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String = {
@@ -776,7 +776,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       result
     }
   }
-  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document]) extends BuildEngine with RequirementHolder with org.cddcore.engine.Engine {
+  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine {
     def defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>

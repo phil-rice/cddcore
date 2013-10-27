@@ -2,13 +2,12 @@ html {
 	font-family: Arial, Helvetica, sans-serif;
 	vertical-align: top;
 	word-wrap: break-word;
-	box-sizing: border-box;
 }
 
 div {
 	position: relative;
 	padding: 5px;
-	width: auto;
+	width: inherit;
 	overflow: auto;
 }
 
@@ -54,22 +53,21 @@ br {
 	padding: 0px;
 }
 
-.cddLogo {
+.cddLogo{
 	position: relative;
 	float: left;
 }
-
 .advertBox {
 	position: relative;
 	float: left;
-}
+	}
 
 .reportTopBox {
 	position: relative;
-	width: 58%;
+	width: 65%;
 	border: 1px solid gray;
 	padding: 0px;
-	margin: 0px;
+	margin: 4px;
 	float: right;
 }
 
@@ -90,11 +88,18 @@ br {
 
 .reportText {
 	padding: 2px;
-	font-weight: bold;
+	font-weight:bold;
 }
-
 .reportDate {
 	padding: 2px;
+}
+
+.decisionTree {
+	width: 58%;
+	margin: 5px;
+	height: 100%;
+	float: left;
+	border: 1px solid gray;
 }
 
 .project {
@@ -111,28 +116,23 @@ br {
 
 .engine {
 	width: auto;
-	margin: 0px;
+	margin: 6px;
 	padding: 0px;
 	border: 1px solid gray;
+	margin: 6px;
 }
-
 .engineSummary {
 	float: left;
 	width: 35%;
-	margin: 0px;
 	margin: 6px;
 	padding: 0px;
+	border: 1px solid gray;
+	margin: 6px;
 }
 
 .engineText {
 	background-color: #d6c6c4;
 	padding: 2px;
-}
-
-.decisionTree {
-	width: 58%;
-	height: 100%;
-	float: right;
 }
 
 .usecase {
@@ -141,11 +141,11 @@ br {
 	padding: 0px;
 	border: 1px solid gray;
 }
-
 .usecaseSummary {
+	position: relative;
 	margin: 6px;
 	padding: 0px;
-	width: 95%;
+	width: 100%;
 }
 
 .usecaseText {

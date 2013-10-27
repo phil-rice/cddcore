@@ -17,7 +17,6 @@ object Reports {
   def main(args: Array[String]) {
     val project = Project("Example",
       CategorisePerson.categorise,
-      ProcessCheque.processCheque,
       ProcessChequeXml.processCheque,
       TennisScorer.scorer)
     new WebPagesCreator(project).create
