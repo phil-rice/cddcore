@@ -1,11 +1,33 @@
+Short Term
+==========
 
-An engine description. For the website
-Macros: The because/code/withDefaultCode should become macros on engine. That way I can get rid of the type signatures in the because 
-Consider: The expected might also be able to take a parameter list, so that the input can be copied to the output...
-CSS for the improved website
+Sort out the CDD website so that it points to the Wiki
+
+Ensure the examples look really good 
+
+XML situation print out
+
+Decision tree slightly nicer
+
+Usecase command should do title and description at the same time.. probably for the scenario as well
+
+We need a more flexible requirement structure.
+   Look at the Tennis scorer for an example. Under the 'Wins if...' it would be nice to group the left won and the right won.
+   Plus if we don't want a use case, we shouldn't need one
+   
+   
+Have a live website serving up the code. This would allow AutoTdd to sort itself out
 
 
-Special Engines
-* Ranges (dates / numbers / amounts). We know it's about partitioning the range, so let's make it easy
-* XML We can have special because clauses that allow you to specify one or more fragments, then make statements about the fragments. this allows us to highlight the code better in the documentation and error messages
+Medium term
+==========
 
+
+
+
+Consider
+========
+I want to be able to use partial functions with bindings:
+   case x: X => "is OK"  as the combination because and code.
+   I think this is a precursor to effective multiple trues 
+  
