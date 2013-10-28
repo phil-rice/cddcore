@@ -1,10 +1,8 @@
 package org.cddcore.example.tennisScore
 
-import org.cddcore.engine.Engine
+import org.cddcore.engine._
 import org.junit.runner.RunWith
 import org.cddcore.engine.tests._
-import org.cddcore.engine.Report
-import org.cddcore.engine.Document
 
 @RunWith(classOf[CddJunitRunner])
 object TennisScorer {

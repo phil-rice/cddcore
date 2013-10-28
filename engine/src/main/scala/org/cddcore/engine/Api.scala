@@ -3,8 +3,16 @@ package org.cddcore.engine
 object Reportable {
   type ReportableList = List[Reportable]
   type ReportableSet = Set[Reportable]
-  type UrlMap = Map[Reportable, String]
 
+}
+
+case class UrlMap(val toUrl: Map[Reportable, String], val fromUrl: Map[String, List[Reportable]]) {
+  def apply(r: Reportable): String = toUrl(r)
+  def get(r: Reportable): Option[String] = toUrl.get(r)
+  def apply(url: String) = fromUrl(url)
+  def get(url: String) = fromUrl.get(url)
+  def contains(r: Reportable) = toUrl.contains(r)
+  def +(kv: (List[Reportable], String)) = UrlMap(toUrl + (kv._1.head -> kv._2), fromUrl + (kv._2 -> kv._1))
 }
 
 trait Reportable {
@@ -15,7 +23,7 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
   import Reportable._
   def children: ReportableList
   def foreach[U](f: Reportable => U): Unit = {
-    for (c <- children) c match {
+    for (c <- children) c match { 
       case holder: ReportableHolder =>
         f(c); holder.foreach(f)
       case c => f(c)
@@ -84,8 +92,6 @@ trait Test extends Requirement {
   def params: List[Any]
   def paramPrinter: LoggerDisplayProcessor
 }
-
-
 
 object Report {
   def apply(reportTitle: String, requirements: Requirement*): Report = Report(reportTitle, None, requirements: _*)

@@ -6,7 +6,6 @@ import org.antlr.stringtemplate.StringTemplate
 import org.joda.time.format.DateTimeFormat
 import Reportable.ReportableList
 import Reportable.ReportableSet
-import Reportable.UrlMap
 import org.cddcore.engine.tests.CddRunner
 import java.io.File
 
@@ -33,7 +32,7 @@ class FileReportCreator(project: Project, title: String, reportableToUrl: FileSy
   }
 }
 
-class ReportCreator[RtoUrl <: ReportableToUrl](project: Project, title: String = null, reportableToUrl: RtoUrl = new FileSystemReportableToUrl) {
+class ReportCreator[RtoUrl <: ReportableToUrl](project: RequirementAndHolder, title: String = null, reportableToUrl: RtoUrl = new FileSystemReportableToUrl) {
   import Reportable._
   import Renderer._
   val report = Report(if (title == null) project.titleOrDescription("Unnamed") else title, project)
@@ -48,11 +47,11 @@ class ReportCreator[RtoUrl <: ReportableToUrl](project: Project, title: String =
       throw new IllegalStateException
     val optHtml = r match {
       //        case r: Report => Some(HtmlRenderer.reportHtml(rootUrl).render(reportableToUrl, urlMap, r))
-      case p: Project => 
+      case p: Project =>
         Some(HtmlRenderer.projectHtml(rootUrl).render(reportableToUrl, urlMap, Report("Project: " + p.titleOrDescription(ReportCreator.unnamed), p)))
       case e: Engine => Some(HtmlRenderer.engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), engine(path))))
       case u: RequirementAndHolder => Some(HtmlRenderer.usecaseHtml(rootUrl, restrict = path.toSet ++ u.children).render(reportableToUrl, urlMap, Report("Usecase: " + u.titleOrDescription(ReportCreator.unnamed), engine(path))))
-      case t: Test =>        Some(HtmlRenderer.scenarioHtml(rootUrl, t, path.toSet).render(reportableToUrl, urlMap, Report("Scenario: " + t.titleOrDescription(ReportCreator.unnamed), engine(path))))
+      case t: Test => Some(HtmlRenderer.scenarioHtml(rootUrl, t, path.toSet).render(reportableToUrl, urlMap, Report("Scenario: " + t.titleOrDescription(ReportCreator.unnamed), engine(path))))
       case _ => None
     }
     optHtml
@@ -94,10 +93,11 @@ trait ReportableToUrl {
   def apply(path: ReportableList, separator: String = "/"): String = path.reverse.map(apply(_)).mkString(separator)
 
   def url(path: ReportableList): Option[String]
-  def makeUrlMap(r: ReportableHolder): Map[Reportable, String] =
-    r.foldWithPath(List(), Map[Reportable, String](), ((acc: Map[Reportable, String], path) => {
+
+  def makeUrlMap(r: ReportableHolder): UrlMap =
+    r.foldWithPath(List(), UrlMap(Map(), Map()), ((acc: UrlMap, path) => {
       val u = url(path);
-      if (u.isDefined) acc + (path.head -> u.get) else acc
+      if (u.isDefined) acc + (path -> u.get) else acc
     }))
 }
 
@@ -107,6 +107,9 @@ class FileSystemReportableToUrl(val dir: File = CddRunner.directory) extends Rep
   def url(path: ReportableList) = Some("file:///" + file(path).getAbsolutePath())
 }
 
+class SimpleReportableToUrl extends ReportableToUrl {
+  def url(path: ReportableList) = Some("/" + apply(path) + "." + path.head.templateName + ".html")
+}
 class NoReportableToUrl extends ReportableToUrl {
   import Reportable._
   def dir: File = CddRunner.directory
@@ -149,7 +152,7 @@ case class ReportableRenderer(restrict: Set[Reportable], configurers: List[Rende
   def configureReportableHolder(templateNameAndTemplates: StringRendererRenderer*): ReportableRenderer =
     templateNameAndTemplates.foldLeft(this)((renderer, tAndN) => renderer.configureReportableHolder(tAndN._1, tAndN._2, tAndN._3))
 
-  protected def render(reportableToUrl: ReportableToUrl, urlMap: Map[Reportable, String], path: List[Reportable], templateName: String): String = {
+  protected def render(reportableToUrl: ReportableToUrl, urlMap: UrlMap, path: List[Reportable], templateName: String): String = {
     if (!restrict.isEmpty && !restrict.contains(path.head))
       return ""
     val optRenderer = templates.get(templateName)
@@ -230,7 +233,7 @@ object Renderer {
 trait Renderer {
   def clear;
 
-  def render(reportableToUrl: ReportableToUrl, urlMap: Map[Reportable, String], path: List[Reportable]): String
+  def render(reportableToUrl: ReportableToUrl, urlMap: UrlMap, path: List[Reportable]): String
 }
 
 object RenderAttributeConfigurer {
@@ -238,7 +241,7 @@ object RenderAttributeConfigurer {
   def apply(fn: (ReportableToUrl, UrlMap, ReportableList, StringTemplate) => Unit) = BaseRenderAttributeConfigurer(fn)
   def apply[R <: Reportable](templateName: String, fn: (ReportableToUrl, UrlMap, ReportableList, R, StringTemplate) => Unit) = TypedRenderAttributeConfigurer[R](templateName, fn)
 
-  case class BaseRenderAttributeConfigurer(val fn: (ReportableToUrl, Map[Reportable, String], List[Reportable], StringTemplate) => Unit) extends RenderAttributeConfigurer {
+  case class BaseRenderAttributeConfigurer(val fn: (ReportableToUrl, UrlMap, List[Reportable], StringTemplate) => Unit) extends RenderAttributeConfigurer {
     import Reportable._
     def update(reportableToUrl: ReportableToUrl, urlMap: UrlMap, path: ReportableList, template: StringTemplate) {
       fn(reportableToUrl, urlMap, path, template)
@@ -268,7 +271,7 @@ case class StringTemplateRenderer(template: String) extends Renderer {
 
   def clear = stringTemplate.reset()
 
-  def render(reportableToUrl: ReportableToUrl, urlMap: Map[Reportable, String], path: ReportableList): String = {
+  def render(reportableToUrl: ReportableToUrl, urlMap: UrlMap, path: ReportableList): String = {
     val result = stringTemplate.toString
     result
   }

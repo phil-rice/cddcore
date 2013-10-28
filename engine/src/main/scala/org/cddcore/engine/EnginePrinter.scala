@@ -61,16 +61,16 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   import Strings._
 
   def reportableToUrl: ReportableToUrl
-  def urlMap: Map[Reportable, String]
+  def urlMap: UrlMap
   def scenarioPrefix: Option[Any]
   def start(path: ReqList, e: Engine): String = ""
   def ifPrint(path: ReqList, decision: Decision, ifClassName: String) =
     s"<div class='$ifClassName'>${nbsp(indent(path))}<span class='keyword'>if&nbsp;</span> <div class='because'>(${htmlEscape(decision.prettyString)})</div><!-- because --></div><!-- $ifClassName -->\n"
 
   def isSelected(t: Test) = false
-  
+
   def resultPrint(path: ReqList, conclusion: Conclusion, resultClassName: String) = {
-    val scenarioHtml = conclusion.scenarios.map((s)=>scenarioLink(urlMap, s, isSelected(s))).mkString
+    val scenarioHtml = conclusion.scenarios.map((s) => scenarioLink(urlMap, s, isSelected(s))).mkString
     s"<div class='$resultClassName'>${nbsp(indent(path))}<span class='keyword'>then&nbsp;</span>$scenarioHtml<div class='conclusion'>${htmlEscape(conclusion.code.pretty)}</div><!-- conclusion --></div><!-- $resultClassName -->\n"
   }
 
@@ -79,15 +79,15 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   def end = "";
 }
 
-class HtmlIfThenPrinter(val reportableToUrl: ReportableToUrl = new FileSystemReportableToUrl, val urlMap: Map[Reportable, String] = Map(), val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
+class HtmlIfThenPrinter(val reportableToUrl: ReportableToUrl = new FileSystemReportableToUrl, val urlMap:UrlMap = UrlMap(Map(), Map()), val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
   def ifPrint(path: ReqList, decision: Decision): String =
     ifPrint(path, decision, "because")
-    
+
   def resultPrint(path: ReqList, conclusion: Conclusion): String =
     resultPrint(path, conclusion, "result")
 }
 
-class HtmlWithTestIfThenPrinter(test: Test, val reportableToUrl: ReportableToUrl = new FileSystemReportableToUrl, val urlMap: Map[Reportable, String], val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
+class HtmlWithTestIfThenPrinter(test: Test, val reportableToUrl: ReportableToUrl = new FileSystemReportableToUrl, val urlMap: UrlMap, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
   import HtmlForIfThenPrinter._
   override def isSelected(t: Test) = t == test
   def ifPrint(path: ReqList, decision: Decision): String =
