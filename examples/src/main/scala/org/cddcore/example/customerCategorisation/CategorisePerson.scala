@@ -1,12 +1,12 @@
 package org.cddcore.example.customerCategorisation
 
 import scala.language.implicitConversions
-import org.cddcore.engine.Engine
+import org.cddcore.engine._
 import org.junit.runner.RunWith
 import org.cddcore.engine.tests._
 import org.cddcore.example.processCheque_DM_1.GBP
 import javax.ws.rs._
-import org.cddcore.engine.Document
+import org.corecdd.website.WebServer
 
 case class Person(savings: GBP, ageInYears: Int) {
   lazy val hasEnoughSavings = savings >= 1000
@@ -42,49 +42,11 @@ object CategorisePerson {
     build
 
   def main(args: Array[String]) {
-    org.cddcore.example.WebServer.launch("org.cddcore.example.customerCategorisation")
+    WebServer.launch("org.cddcore.example.customerCategorisation")
     println(categorise(Person(40, 100)))
     println(categorise(Person(1040, 100)))
   }
 
 }
 
-object CategorisePersonResource {
-  final val path = "/person"
-  final val formUrlEncoded = "application/x-www-form-urlencoded"
-}
 
-@Path(CategorisePersonResource.path)
-class CategorisePersonResource() {
-  import GBP._
-
-  @GET
-  def start() = html(0, 0)
-
-  @POST @Consumes(Array(CategorisePersonResource.formUrlEncoded))
-  def continue(@FormParam("savings") savings: Int, @FormParam("age") age: Int) = {
-    html(savings, age)
-  }
-
-  def html(savings: Int, age: Int) =
-    <html>
-      <body>
-        <h1>Person Categorisation</h1>
-        <form method='post' action={ CategorisePersonResource.path }>
-          <table>
-            <tr>
-              <td><label name='age'>Age</label></td>
-              <td><input type='text' name='age' value={ age.toString }/></td>
-            </tr>
-            <tr>
-              <td><label name='savings'>Savings</label></td>
-              <td><input type='text' name='savings' value={ savings.toString }/></td>
-            </tr>
-          </table>
-          <input type='submit'/>
-        </form>
-        <p>Category:&nbsp;{ CategorisePerson.categorise(Person(savings, age)) }</p>
-      </body>
-    </html>.toString
-
-}

@@ -10,7 +10,7 @@ import java.io.File
 import org.cddcore.example.processCheque_DM_Xml.ProcessChequeXml
 import org.cddcore.engine.DefaultIfThenPrinter
 import org.cddcore.engine.HtmlIfThenPrinter
-import org.cddcore.engine.WebPagesCreator
+import org.cddcore.engine.ReportCreator
 
 object Reports {
 
@@ -19,7 +19,7 @@ object Reports {
       CategorisePerson.categorise,
       ProcessChequeXml.processCheque,
       TennisScorer.scorer)
-    new WebPagesCreator(project).create
+    ReportCreator.fileSystem(project).create
     println("done")
   }
 }

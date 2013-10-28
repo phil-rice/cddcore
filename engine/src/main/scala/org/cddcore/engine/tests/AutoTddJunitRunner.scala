@@ -198,7 +198,7 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
 
   def recordEngine(clazz: Class[Any], engineDescription: Description, engine: Engine) {
     val project = Project("Junit_" + engine.titleOrDescription("Unnamed"), engine)
-    new WebPagesCreator(project).create
+      ReportCreator.fileSystem( project).create
   }
 
   trait SomeTrait { def someMethod: String }

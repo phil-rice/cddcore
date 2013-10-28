@@ -6,15 +6,6 @@
 	<classpathentry kind="src" output="bin" path="src/test/java"/>
 	<classpathentry kind="src" path="src/main/resources"/>
 	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/org.clapper/grizzled-scala_2.10/jars/grizzled-scala_2.10-1.1.2.jar" sourcepath="C:/Users/Phil/.ivy2/cache/org.clapper/grizzled-scala_2.10/srcs/grizzled-scala_2.10-1.1.2-sources.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/jline/jline/jars/jline-2.6.jar" sourcepath="C:/Users/Phil/.ivy2/cache/jline/jline/srcs/jline-2.6-sources.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/org.clapper/classutil_2.10/jars/classutil_2.10-1.0.1.jar" sourcepath="C:/Users/Phil/.ivy2/cache/org.clapper/classutil_2.10/srcs/classutil_2.10-1.0.1-sources.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/asm/asm/jars/asm-3.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/asm/asm-commons/jars/asm-commons-3.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/asm/asm-tree/jars/asm-tree-3.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/asm/asm-util/jars/asm-util-3.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/org.clapper/grizzled-slf4j_2.10/jars/grizzled-slf4j_2.10-1.0.1.jar" sourcepath="C:/Users/Phil/.ivy2/cache/org.clapper/grizzled-slf4j_2.10/srcs/grizzled-slf4j_2.10-1.0.1-sources.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.1.jar" sourcepath="C:/Users/Phil/.ivy2/cache/org.slf4j/slf4j-api/srcs/slf4j-api-1.7.1-sources.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/org.antlr/stringtemplate/jars/stringtemplate-3.2.1.jar" sourcepath="C:/Users/Phil/.ivy2/cache/org.antlr/stringtemplate/srcs/stringtemplate-3.2.1-sources.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/antlr/antlr/jars/antlr-2.7.7.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/org.scalaj/scalaj-time_2.10.2/jars/scalaj-time_2.10.2-0.7.jar" sourcepath="C:/Users/Phil/.ivy2/cache/org.scalaj/scalaj-time_2.10.2/srcs/scalaj-time_2.10.2-0.7-sources.jar"/>
@@ -39,6 +30,7 @@
 	<classpathentry kind="lib" path="C:/Users/Phil/.ivy2/cache/junit/junit/jars/junit-4.8.2.jar" sourcepath="C:/Users/Phil/.ivy2/cache/junit/junit/srcs/junit-4.8.2-sources.jar"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/constraint"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/engine"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/website"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -1,15 +1,12 @@
 package org.cddcore.carers
 
 import scala.language.implicitConversions
-import scala.xml.NodeSeq
 import scala.xml.Elem
-import org.joda.time.DateTime
-import org.joda.time.format._
-import scala.concurrent.stm._
-import org.junit.runner.RunWith
-import org.cddcore.engine.tests.CddJunitRunner
+
 import org.cddcore.engine._
-import java.io.File
+import org.cddcore.engine.tests.CddJunitRunner
+import org.joda.time.DateTime
+import org.junit.runner.RunWith
 
 case class CarersXmlSituation(w: World, e: Elem) extends XmlSituation {
   import Xml._
@@ -133,7 +130,7 @@ object Carers {
 
   def main(args: Array[String]) {
     val project = Project("Carers", engine, Income.income, Expenses.expenses, Expenses.childCareExpenses, Expenses.occupationalExpenses, Expenses.privatePensionExpenses)
-    new WebPagesCreator(project).create
+    ReportCreator.fileSystem(project).create
     println("done")
 
   }

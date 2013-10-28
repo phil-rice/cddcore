@@ -1,9 +1,10 @@
-package org.cddcore.example
+package org.corecdd.website
 
 import org.eclipse.jetty.servlet.ServletHolder
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.server.nio.SelectChannelConnector
 import org.eclipse.jetty.server.Server
+import com.sun.jersey.spi.container.servlet.ServletContainer
 import com.sun.jersey.spi.container.servlet.ServletContainer
 import com.sun.jersey.spi.container.servlet.ServletContainer
 
@@ -28,8 +29,6 @@ object WebServer {
   }
 
   def main(args: Array[String]) {
-    launch("org.cddcore.example.tennisScore", //http://localhost:8080/tennis
-      "org.cddcore.example.customerCategorisation" //http://localhost:8080/person
-      )
+   
   }
 }

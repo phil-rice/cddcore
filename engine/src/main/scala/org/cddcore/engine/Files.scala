@@ -2,6 +2,7 @@ package org.cddcore.engine
 
 import java.io.FileOutputStream
 import scala.io.Source
+import java.io.FileNotFoundException
 
 object Files {
 
@@ -16,8 +17,10 @@ object Files {
   }
 
   def getFromClassPath(clazz: Class[_], name: String) = {
-    val fullName = clazz.getPackage().getName().replace('.', '/') + "/" + name
+   val fullName = clazz.getPackage().getName().replace('.', '/') + "/" + name
     val stream = clazz.getClassLoader().getResourceAsStream(fullName)
+    if (stream == null)
+      throw new FileNotFoundException(fullName)
     Source.fromInputStream(stream).mkString
   }
 }

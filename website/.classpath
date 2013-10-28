@@ -48,7 +48,6 @@
   <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.eclipse.jetty\jetty-security\jars\jetty-security-8.0.0.M0.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.eclipse.jetty\jetty-security\srcs\jetty-security-8.0.0.M0-sources.jar"></classpathentry>
   <classpathentry exported="true" path="/constraint" kind="src" combineaccessrules="false"></classpathentry>
   <classpathentry exported="true" path="/engine" kind="src" combineaccessrules="false"></classpathentry>
-  <classpathentry exported="true" path="/website" kind="src" combineaccessrules="false"></classpathentry>
   <classpathentry path="org.eclipse.jdt.launching.JRE_CONTAINER" kind="con"></classpathentry>
   <classpathentry path="bin" kind="output"></classpathentry>
 </classpath>

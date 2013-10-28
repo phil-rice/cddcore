@@ -79,7 +79,7 @@ object BuildSettings {
 	  
   val javanetDeps = "javanetDeps" at "http://download.java.net/maven/2/"
  
- val exampleSettings = buildSettings ++ Seq(
+ val websiteSettings = buildSettings ++ Seq(
     //resolvers += "eclipse-repo" at "https://swt-repo.googlecode.com/svn/repo/",
     libraryDependencies ++= Seq(
        "com.sun.jersey" % "jersey-server" % "1.2",
@@ -100,9 +100,10 @@ object HelloBuild extends Build {
 
   lazy val constraint = Project(id = "constraint", settings = buildSettings, base = file("constraint"))
   lazy val engine = Project(id = "engine", settings = buildSettings, base = file("engine")) dependsOn (constraint)
+  lazy val website = Project(id = "website", settings = websiteSettings, base = file("website")) dependsOn (constraint, engine)
   lazy val engine_test = Project(id = "engine_test", settings = buildSettings, base = file("engine-tests")) dependsOn (constraint, engine)
-  lazy val examples = Project(id = "examples", settings = exampleSettings, base = file("examples")) dependsOn (constraint, engine)  
-  lazy val carers = Project(id = "carers", settings = buildSettings, base = file("carers")) dependsOn (constraint, engine)
+  lazy val examples = Project(id = "examples", settings = buildSettings, base = file("examples")) dependsOn (constraint, engine,website)  
+  lazy val carers = Project(id = "carers", settings = buildSettings, base = file("carers")) dependsOn (constraint, engine,website)
   lazy val timing = Project(id = "timing", settings = buildSettings, base = file("timing")) dependsOn (constraint, engine, carers)
   lazy val eclipse = Project(id = "eclipse", settings = eclipseSettings ++ Seq(copyDepTask), base = file("eclipse2")) // dependsOn (constraint, engine)
   lazy val root = Project(id = "root", settings = buildSettings ++ Seq(copyTask, copyDepTask), base = file(".")) aggregate (constraint, engine, examples, engine_test,carers, timing)
