@@ -1,5 +1,8 @@
 package org.cddcore.engine
 
+import org.cddcore.engine.tests.CddRunner
+import java.io.File
+
 object Reportable {
   type ReportableList = List[Reportable]
   type ReportableSet = Set[Reportable]
@@ -10,7 +13,6 @@ object Reportable {
 trait Reportable {
   def templateName: String = getClass.getSimpleName()
 }
-
 
 trait ReportableHolder extends Reportable with Traversable[Reportable] {
   import Reportable._
@@ -67,8 +69,6 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
 
 trait RequirementAndHolder extends ReportableHolder with Requirement
 
-class SimpleReportableHolder(val children: List[Reportable]) extends ReportableHolder
-
 trait Requirement extends Reportable {
   def title: Option[String]
   def titleString = title.getOrElse("")
@@ -88,3 +88,58 @@ trait Test extends Requirement {
   def paramPrinter: LoggerDisplayProcessor
 }
 
+trait ReportableToUrl {
+  import Reportable._
+  protected var reqId = 0
+  protected var cache = Map[Reportable, String]()
+  protected var seen = Set[String]()
+
+  /** Will return a human readable name for the reportable. Will allways return the same name for the reportable */
+  def apply(r: Reportable): String = {
+    val existing = cache.get(r)
+    existing match {
+      case Some(s) => s;
+      case _ => {
+        def makeNewName: String = {
+          reqId += 1; val default = r.templateName + reqId;
+          val result = Strings.urlClean(r match {
+            case req: Requirement => { val result = req.titleOrDescription(default); if (result.length > 20) default else result }
+            case _ => default;
+          }).replace(" ", "_")
+          if (seen.contains(result)) default else result
+        }
+        var result: String = null
+        do {
+          result = makeNewName
+        } while (seen.contains(result))
+        cache += (r -> result)
+        seen += result
+        result
+      }
+    }
+  }
+
+  /** Will return a human readable name for each reportable in the reversed list. Typically this is used to make a path */
+  def apply(path: ReportableList, separator: String = "/"): String = path.reverse.map(apply(_)).mkString(separator)
+
+  def url(path: ReportableList): Option[String]
+  def makeUrlMap(r: ReportableHolder): Map[Reportable, String] =
+    r.foldWithPath(List(), Map[Reportable, String](), ((acc: Map[Reportable, String], path) => {
+      val u = url(path);
+      if (u.isDefined) acc + (path.head -> u.get) else acc
+    }))
+}
+
+class FileSystemReportableToUrl(val dir: File = CddRunner.directory) extends ReportableToUrl {
+  import Reportable._
+  def file(path: ReportableList) = new File(dir, apply(path, "\\") + "." + path.head.templateName + ".html")
+  def url(path: ReportableList) = Some("file:///" + file(path).getAbsolutePath())
+}
+
+class NoReportableToUrl extends ReportableToUrl {
+  import Reportable._
+  def dir: File = CddRunner.directory
+  def url(path: ReportableList) = None
+  override def hashCode = 0
+  override def equals(other: Any) = other != null && other.isInstanceOf[NoReportableToUrl]
+}

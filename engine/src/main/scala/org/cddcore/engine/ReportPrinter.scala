@@ -60,53 +60,6 @@ case class ReportableRenderer(restrict: Set[Reportable], configurers: List[Rende
   }
 }
 
-trait ReportableToUrl {
-  import Reportable._
-  protected var reqId = 0
-  protected var cache = Map[Reportable, String]()
-
-  /** Will return a human readable name for the reportable. Will allways return the same name for the reportable */
-  def apply(r: Reportable): String = {
-    cache.get(r) match {
-      case Some(s) => s;
-      case _ => {
-        reqId += 1; val default = r.templateName + reqId;
-        val result = Strings.urlClean(r match {
-          case req: Requirement => req.titleOrDescription(default)
-          case _ => default;
-
-        }).replace(" ", "_")
-        cache += (r -> result)
-        result
-      }
-    }
-  }
-
-  /** Will return a human readable name for each reportable in the reversed list. Typically this is used to make a path */
-  def apply(path: ReportableList, separator: String = "/"): String = path.reverse.map(apply(_)).mkString(separator)
-
-  def url(path: ReportableList): Option[String]
-  def makeUrlMap(r: ReportableHolder): Map[Reportable, String] =
-    r.foldWithPath(List(), Map[Reportable, String](), ((acc: Map[Reportable, String], path) => {
-      val u = url(path);
-      if (u.isDefined) acc + (path.head -> u.get) else acc
-    }))
-}
-
-class FileSystemReportableToUrl(val dir: File = CddRunner.directory) extends ReportableToUrl {
-  import Reportable._
-  def file(path: ReportableList) = new File(dir, apply(path, "\\") + "." + path.head.templateName + ".html")
-  def url(path: ReportableList) = Some("file:///" + file(path).getAbsolutePath())
-}
-
-class NoReportableToUrl extends ReportableToUrl {
-  import Reportable._
-  def dir: File = CddRunner.directory
-  def url(path: ReportableList) = None
-  override def hashCode = 0
-  override def equals(other: Any) = other != null && other.isInstanceOf[NoReportableToUrl]
-}
-
 object Renderer {
   import Reportable._
   type StringRenderer = Tuple2[String, Renderer]

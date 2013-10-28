@@ -43,7 +43,7 @@ trait Engine3Types[P1, P2, P3, R] extends EngineTypes[R] {
 trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
 
   trait ABuilder1 extends ScenarioBuilder {
-    def scenario(p: P, title: String = null) = newScenario(title, List(p))
+    def scenario(p: P, title: String = null, description: String = null) = newScenario(title,description,  List(p) )
     def build = new Engine(title, description, optCode, priority, references, documents) with Function[P, R] {
       def useCases = useCasesForBuild
       def apply(p: P): R = {
@@ -71,7 +71,7 @@ class BuilderFactory1[P, R](override val logger: TddLogger = TddLogger.noLogger)
 trait ABuilderFactory2[P1, P2, R] extends EngineUniverse[R] with Engine2Types[P1, P2, R] {
 
   trait ABuilder2 extends ScenarioBuilder {
-    def scenario(p1: P1, p2: P2, description: String = null) = newScenario(description, List(p1, p2))
+    def scenario(p1: P1, p2: P2, title: String = null, description: String = null) = newScenario(title,description, List(p1, p2))
     def build = new Engine(title, description, optCode, priority, references, documents) with Function2[P1, P2, R] {
       def useCases = useCasesForBuild
       def apply(p1: P1, p2: P2): R = {
@@ -105,7 +105,7 @@ class BuilderFactory3[P1, P2, P3, R](override val logger: TddLogger = TddLogger.
     def thisAsBuilder = this
     def withCases(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference], documents: List[Document]) =
       new Builder3(title, description, useCases, optCode, expected, priority, references, documents)
-    def scenario(p1: P1, p2: P2, p3: P3, description: String = null) = newScenario(description, List(p1, p2, p3))
+    def scenario(p1: P1, p2: P2, p3: P3,  title: String = null, description: String = null) = newScenario(title, description, List(p1, p2, p3))
     def build = new Engine(title, description, optCode, priority, references, documents) with Function3[P1, P2, P3, R] {
       def useCases = useCasesForBuild
       def apply(p1: P1, p2: P2, p3: P3): R = {

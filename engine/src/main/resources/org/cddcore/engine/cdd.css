@@ -133,6 +133,7 @@ br {
 	width: 58%;
 	height: 100%;
 	float: right;
+	font-family: monospace;
 }
 
 .usecase {

@@ -66,6 +66,14 @@ class BuilderNodeTests extends EngineStringStringTests {
     assertEquals(0, b1.priority);
   }
 
+  it should "allow usecase title and description to be set in one go" in {
+
+    val b1 = builder.useCase("one", "d1").code(c).expected("x").priority(2);
+    val uc1 = b1.useCases(0);
+    assertEquals(Some("one"), uc1.title);
+    assertEquals(Some("d1"), uc1.description);
+  }
+
   it should "throw exceptions if values are set twice" in {
     val b1 = builder.useCase("one").description("d").code(c).expected("x").priority(2);
     val b2 = builder.useCase("two").description("d").code(c).expectException(new RuntimeException).priority(2);
@@ -106,6 +114,13 @@ class BuilderNodeTests extends EngineStringStringTests {
     assertEquals(None, b1.expected);
     assertEquals(None, b2.expected);
     assertEquals(0, b1.priority);
+  }
+  it should "allow usecase title and description to be set in one go" in {
+
+    val b1 = builder.useCase("one", "d1").scenario("x", "sc_title", "sc_description")
+    val s1 = b1.useCases(0).scenarios(0);
+    assertEquals(Some("sc_title"), s1.title);
+    assertEquals(Some("sc_description"), s1.description);
   }
 
   it should "throw exceptions if values are set twice" in {

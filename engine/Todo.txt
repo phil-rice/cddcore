@@ -3,6 +3,8 @@ Short Term
 
 Sort out the CDD website so that it points to the Wiki
 
+Ensure we deal with titles - duplicates, too long... etc
+
 Ensure the examples look really good 
 
 XML situation print out

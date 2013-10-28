@@ -73,14 +73,7 @@ object HtmlRenderer {
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
       "</div><!-- engine -->\n")
-
-  val engineForScenarioTemplate: StringRendererRenderer =
-    ("Engine",
-      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") +
-      table("engineTable", refsRow, useCasesRow, nodesCountRow),
-
-      "</div><!-- engineSummary -->\n" +
-      "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n")
+ 
 
   val useCaseTemplate: StringRendererRenderer =
     ("UseCase",

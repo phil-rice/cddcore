@@ -15,7 +15,7 @@ object TennisScorer {
   
   val scorer = Engine[Int, Int, String]().title("Tennis Kata").reference("Game_score", wikipedia).reference("", definition).
     code((l: Int, r: Int) => "error").
-    useCase("Winning").    description("A game is won by the first player to have won at least four points in total and at least two points more than the opponent.").
+    useCase("Winning","A game is won by the first player to have won at least four points in total and at least two points more than the opponent."). 
     scenario(4, 0).expected("left won").because((l: Int, r: Int) => (l - r) >= 2 && l >= 4).
     scenario(4, 1).expected("left won").reference("1.22", changeRequest).
     scenario(4, 2).expected("left won").

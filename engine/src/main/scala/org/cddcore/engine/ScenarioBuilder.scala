@@ -423,10 +423,11 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         s.copy(because = Some(b.copy(comment = comment)))
       })
 
-    protected def withUseCase(useCaseTitle: String) =
-      withCases(useCases = UseCase(title = Some(useCaseTitle)) :: useCases);
+    protected def withUseCase(useCaseTitle: String, useCaseDescription: Option[String]) =
+      withCases(useCases = UseCase(title = Some(useCaseTitle), description = useCaseDescription) :: useCases);
 
-    def useCase(useCaseDescription: String) = withUseCase(useCaseDescription)
+    def useCase(useCaseTitle: String) = withUseCase(useCaseTitle, None)
+    def useCase(useCaseTitle: String, useCaseDescription: String ) = withUseCase(useCaseTitle, Some(useCaseDescription))
 
     def configuration[K](cfg: CfgFn) = scenarioLens.mod(thisAsBuilder, (s) => s.copy(configuration = Some(cfg)))
     def assertion(a: Assertion[A], comment: String = "") = scenarioLens.mod(thisAsBuilder, (s) => s.copy(assertions = a.copy(comment = comment) :: s.assertions))
@@ -443,10 +444,11 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def scenariosForBuild: List[Scenario] =
       useCasesForBuild.flatMap((u) => u.scenarios);
 
-    def newScenario(scenarioTitle: String, params: List[Any]) = useCases match {
+    def newScenario(scenarioTitle: String, scenarioDescription: String, params: List[Any]) = useCases match {
       case h :: t => {
         val titleString = if (scenarioTitle == null) None else Some(scenarioTitle);
-        withCases(title, description, h.copy(scenarios = Scenario(titleString, None, params, logger) :: h.scenarios) :: t, optCode, expected, priority, references)
+        val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
+        withCases(useCases= h.copy(scenarios = Scenario(titleString, descriptionString, params, logger) :: h.scenarios) :: t)
       }
       case _ => throw new NeedUseCaseException
     }
