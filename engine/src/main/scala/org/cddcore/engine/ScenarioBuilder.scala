@@ -240,7 +240,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
     def evaluateBecause(fn: BecauseClosure): Boolean = {
       for (b <- because)
-        if (fn(b.because)) 
+        if (fn(b.because))
           return true
       false
 
@@ -325,6 +325,8 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def documents: List[Document]
     def useCases: List[UseCase]
     def children = useCases
+    def parsers: List[(String) => _]
+
     override def templateName = "Engine"
     def set[X](x: X, bFn: (RealScenarioBuilder, X) => ScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) = {
       useCases match {
@@ -336,7 +338,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
               checkFn(h, x); uFn(h, x)
             case s :: tail => checkFn(s, x); h.copy(scenarios = sFn(s, x) :: tail)
           }
-          withCases(title, description, newHead :: tail, optCode, expected, priority, references)
+          withCases(useCases = newHead :: tail)
       }
     }
 
@@ -347,7 +349,8 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       expected: Option[ROrException[R]] = expected,
       priority: Int = priority,
       references: List[Reference] = references,
-      documents: List[Document] = documents): RealScenarioBuilder;
+      documents: List[Document] = documents,
+      parsers: List[(String) => _] = parsers): RealScenarioBuilder;
 
     def thisAsBuilder: RealScenarioBuilder
 
@@ -373,6 +376,8 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (u, description) => u.copy(description = description),
         (s, description) => s.copy(description = description),
         (n, description) => if (n.description.isDefined) throw CannotDefineDescriptionTwiceException(n.description.get, description.get))
+
+    def parser(parser: (String) => _) = withCases(parsers = parser :: parsers)
 
     def expectException[E <: Throwable](e: E, comment: String = "") =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
@@ -427,7 +432,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       withCases(useCases = UseCase(title = Some(useCaseTitle), description = useCaseDescription) :: useCases);
 
     def useCase(useCaseTitle: String) = withUseCase(useCaseTitle, None)
-    def useCase(useCaseTitle: String, useCaseDescription: String ) = withUseCase(useCaseTitle, Some(useCaseDescription))
+    def useCase(useCaseTitle: String, useCaseDescription: String) = withUseCase(useCaseTitle, Some(useCaseDescription))
 
     def configuration[K](cfg: CfgFn) = scenarioLens.mod(thisAsBuilder, (s) => s.copy(configuration = Some(cfg)))
     def assertion(a: Assertion[A], comment: String = "") = scenarioLens.mod(thisAsBuilder, (s) => s.copy(assertions = a.copy(comment = comment) :: s.assertions))
@@ -448,14 +453,13 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       case h :: t => {
         val titleString = if (scenarioTitle == null) None else Some(scenarioTitle);
         val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
-        withCases(useCases= h.copy(scenarios = Scenario(titleString, descriptionString, params, logger) :: h.scenarios) :: t)
+        withCases(useCases = h.copy(scenarios = Scenario(titleString, descriptionString, params, logger) :: h.scenarios) :: t)
       }
       case _ => throw new NeedUseCaseException
     }
   }
 
   trait EvaluateEngine {
-
     def evaluate(fn: BecauseClosure, n: RorN, log: Boolean = true): RFn = {
       val result = n match {
         case Left(r) =>
@@ -464,6 +468,18 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         case Right(n) => evaluate(fn, n, log)
       }
       result
+    }
+
+    protected def findConclusionFor(fn: BecauseClosure, n: RorN): Conclusion = {
+      n match {
+        case Left(c: Conclusion) => c;
+        case Right(r) =>
+          val condition = r.evaluateBecause(fn)
+          condition match {
+            case false => findConclusionFor(fn, r.no);
+            case true => findConclusionFor(fn, r.yes);
+          }
+      }
     }
 
     private def evaluate(fn: BecauseClosure, n: EngineNode, log: Boolean): RFn = {
@@ -477,7 +493,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
   }
   trait EngineToString extends org.cddcore.engine.Engine {
-    
+
     def root: Either[Conclusion, Decision]
 
     def toString(indent: String, root: Either[Conclusion, Decision]): String = {
@@ -493,7 +509,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
     override def toString(): String = toString("", root)
 
-    def toStringWithScenarios(): String = toStringWithScenarios( root);
+    def toStringWithScenarios(): String = toStringWithScenarios(root);
 
     def increasingScenariosList(cs: List[Scenario]): List[List[Scenario]] =
       cs.foldLeft(List[List[Scenario]]())((a, c) => (a match {
@@ -502,15 +518,15 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }))
 
     def titleString: String
-    
+
     def toStringWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String =
       printer.start(path, this) + toStringPrimWith(path, root, printer) + printer.end
-      
+
     private def toStringPrimWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String = {
       root match {
         case null => "Could not toString as root as null. Possibly because of earlier exceptions"
-        case Left(result) => printer.resultPrint(path,  result)
-        case Right(node:  Reportable) =>
+        case Left(result) => printer.resultPrint(path, result)
+        case Right(node: Reportable) =>
           val ifString = printer.ifPrint(path, node)
           val yesString = toStringPrimWith(path :+ node, node.yes, printer)
           val elseString = printer.elsePrint(path, node)
@@ -521,7 +537,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     }
 
-    def toStringWithScenarios( root: Either[Conclusion, Decision]): String =
+    def toStringWithScenarios(root: Either[Conclusion, Decision]): String =
       toStringWith(List(), root, new DefaultIfThenPrinter())
   }
 
@@ -609,7 +625,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         }
       }
     }
-    def evaluateBecauseForDecision(decision: Decision, params: List[Any])= {
+    def evaluateBecauseForDecision(decision: Decision, params: List[Any]) = {
       decision match {
         case e: EngineNode =>
           e.evaluateBecause(makeClosureForBecause(params))
@@ -778,7 +794,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       result
     }
   }
-  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine {
+  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document], val parsers: List[(String) => _]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine {
     def defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>
@@ -802,8 +818,14 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     if (!EngineTest.testing)
       validateScenarios(root, scenarios)
 
-    def constructionString: String =
-      constructionString(defaultRoot, scenarios, new DefaultIfThenPrinter)
+    def findConclusionFor(params: List[Any]): Conclusion = findConclusionFor(makeClosureForBecause(params), root)
+    def evaluateConclusion(params: List[Any], conclusion: Conclusion): Any = {
+      conclusion match {
+        case c: CodeAndScenarios => makeClosureForResult(params)(c.code.rfn)
+      }     
+    }
+
+    def constructionString: String = constructionString(defaultRoot, scenarios, new DefaultIfThenPrinter)
 
     def logParams(p: Any*) =
       logger.executing(p.toList)
@@ -818,7 +840,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       increasingScenariosList(cs).reverse.map((cs) =>
         try {
           val c = cs.head
-          val title ="Adding " + c +"\n"
+          val title = "Adding " + c + "\n"
           val (r, s) = buildRoot(root, cs.reverse)
           title + toStringWith(List(), r, printer)
         } catch {

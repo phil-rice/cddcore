@@ -142,6 +142,10 @@ trait Engine extends Requirement with RequirementAndHolder {
   def toStringWith(printer: IfThenPrinter): String = toStringWith(List(this), root, printer)
   protected def toStringWith(path: ReportableList, root: Either[Conclusion, Decision], printer: IfThenPrinter): String
   def evaluateBecauseForDecision(decision: Decision, params: List[Any]): Boolean
+  def arity: Int
+  def parsers: List[(String)=>_]
+  def findConclusionFor(params: List[Any]): Conclusion
+  def evaluateConclusion(params: List[Any], conclusion: Conclusion) : Any
 }
 
 trait Decision extends Reportable {

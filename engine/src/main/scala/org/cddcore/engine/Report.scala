@@ -32,7 +32,7 @@ class FileReportCreator(project: Project, title: String, reportableToUrl: FileSy
   }
 }
 
-class ReportCreator[RtoUrl <: ReportableToUrl](project: RequirementAndHolder, title: String = null, reportableToUrl: RtoUrl = new FileSystemReportableToUrl) {
+class ReportCreator[RtoUrl <: ReportableToUrl](project: RequirementAndHolder, title: String = null, val reportableToUrl: RtoUrl = new FileSystemReportableToUrl) {
   import Reportable._
   import Renderer._
   val report = Report(if (title == null) project.titleOrDescription("Unnamed") else title, project)
@@ -213,6 +213,10 @@ object Renderer {
         case Some(t) => new HtmlWithTestIfThenPrinter(t, reportableToUrl, urlMap)
         case _ => new HtmlIfThenPrinter(reportableToUrl, urlMap)
       })))
+      
+  def setAttribute(templateName: String, attributeName: String, value: Any) =
+    RenderAttributeConfigurer[Engine](templateName, (reportableToUrl, urlMap, path, e, stringTemplate) =>
+      stringTemplate.setAttribute(attributeName, value))
 
   protected def reportConfig = RenderAttributeConfigurer[Report]("Report", (reportableToUrl, urlMap, path, r, stringTemplate) => {
     stringTemplate.setAttribute("reportDate", dateFormatter.print(System.currentTimeMillis()))
@@ -348,6 +352,11 @@ object HtmlRenderer {
     configureReportableHolder(reportTemplate, projectTemplate, engineTemplate, useCaseWithScenariosSummarisedTemplate).
     configureReportable(scenarioSummaryTemplate)
 
+  def liveEngineHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set(), engineForm: String) = Renderer(rootUrl, restrict).
+    configureAttribute(Renderer.decisionTreeConfig(test), Renderer.setAttribute("Engine", "engineForm", engineForm)).
+    configureReportableHolder(reportTemplate, projectTemplate, liveEngineTemplate).
+    configureReportable(scenarioSummaryTemplate)
+
   def usecaseHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set()) = Renderer(rootUrl, restrict).
     configureAttribute(Renderer.decisionTreeConfig(test)).
     configureReportableHolder(reportTemplate, projectTemplate, engineTemplate, useCaseTemplate).
@@ -384,6 +393,13 @@ object HtmlRenderer {
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
       "</div><!-- engine -->\n")
+      val liveEngineTemplate: StringRendererRenderer =
+      ("Engine", "<div class='engine'>" +
+    		  "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + table("engineTable", refsRow, useCasesRow, nodesCountRow) +"$engineForm$",
+    		  
+    		  "</div><!-- engineSummary -->" +
+    				  "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
+    		  "</div><!-- engine -->\n")
 
   val useCaseTemplate: StringRendererRenderer =
     ("UseCase",
