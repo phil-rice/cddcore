@@ -104,20 +104,21 @@ class FieldSet[T](instance: Any, clazz: Class[T]) {
 
 }
 
-trait Structure[S, Result] {
+trait Structure[S, Result] extends HtmlDisplay {
 
-  protected def findFragmentsToString(fragmentFieldMap: Map[Field, Fragment[S, Result, _, _]], endToString: (Result) => String) = fragmentFieldMap.keys.map(((f) => {
-    val frag = fragmentFieldMap(f)
-    val resultString = try {
-      frag.convertor match {
-        case Some(_) => frag.apply
-        case _ => "No Convertor"
-      }
-    } catch { case e: Throwable => e.getClass.getSimpleName() + " " + e.getMessage }
-    raw"${f.getName} = ${resultString}"
-  })).mkString("\n  ")
+  protected def findFragmentsToString(fragmentFieldMap: Map[Field, Fragment[S, Result, _, _]], endToString: (Result) => String, toStringFn: (Field, Any) => String = (f, a) => raw"${f.getName} = $a") =
+    fragmentFieldMap.keys.toList.sortBy(_.getName).map(((f) => {
+      val frag = fragmentFieldMap(f)
+      val resultString = try {
+        frag.convertor match {
+          case Some(_) => frag.apply
+          case _ => "No Convertor"
+        }
+      } catch { case e: Throwable => e.getClass.getSimpleName() + " " + e.getMessage }
+      toStringFn(f, resultString)
+    })).mkString("\n  ")
 
-  protected def selfAndChildren(s: S, pathMap: PathMap[S, Result]): (IndentAndString, List[Path]) => IndentAndString = (acc, p) => {
+  protected def selfAndChildren(s: S, pathMap: PathMap[S, Result], separator: String = "\n"): (IndentAndString, List[Path]) => IndentAndString = (acc, p) => {
     val fragments = pathMap.fullPaths(s).filter(_.paths.reverse == p)
     val valueString = fragments.size match {
       case 0 => "";
@@ -128,12 +129,14 @@ trait Structure[S, Result] {
         }
       } catch { case e: Throwable => e.getClass.getSimpleName() + " " + e.getMessage }).mkString(",")
     }
-    val myString = acc.indent + p.mkString("") + valueString + "\n"
+    val myString = acc.indent + p.mkString("") + valueString + separator
     val childrensString = pathMap(s, p).foldLeft(acc.indentedBlank)(selfAndChildren(s, pathMap))
     new IndentAndString(acc.indent, acc.string + myString + childrensString.string)
   }
 
-  protected def structuresToString(pathMap: PathMap[S, Result], structureTitle: (S) => String) = pathMap.roots.keys.map((s) => structureTitle(s) + "\n" + {
-    pathMap.roots(s).foldLeft(IndentAndString("    ", ""))((acc, r) => selfAndChildren(s, pathMap)(acc, List(r)))
-  }.string).mkString("\n")
+  protected def structuresToString(pathMap: PathMap[S, Result], structureTitle: (S) => String, separator: String = "\n") =
+    pathMap.roots.keys.toList.sortBy(structureTitle(_)).map((s) => structureTitle(s) + separator + {
+      pathMap.roots(s).foldLeft(IndentAndString("    ", ""))((acc, r) => selfAndChildren(s, pathMap, separator)(acc, List(r)))
+    }.string).mkString(separator)
+
 }

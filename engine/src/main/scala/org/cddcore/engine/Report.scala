@@ -225,7 +225,12 @@ object Renderer {
     stringTemplate.setAttribute("paramCount", t.params.size)
     stringTemplate.setAttribute("because", ValueForRender(t.because.collect { case c => c.pretty } getOrElse (null)))
     for (p <- t.params)
-      stringTemplate.setAttribute("params", ValueForRender(t.paramPrinter(p)))
+      p match {
+        case h: HtmlDisplay =>
+          stringTemplate.setAttribute("params", ValueForRender(h))
+        case _ =>
+          stringTemplate.setAttribute("params", ValueForRender(t.paramPrinter(p)))
+      }
   })
 
 }
@@ -277,7 +282,7 @@ case class StringTemplateRenderer(template: String) extends Renderer {
   }
 }
 
-class ValueForRender(value: Any) {
+class ValueForRender(val value: Any) {
   override def toString = if (value == null) "" else value.toString
 }
 
@@ -288,11 +293,13 @@ object ValueForRender {
 class ValueForRenderer extends AttributeRenderer {
   def toString(o: Object): String = toString(o, "")
   def toString(o: Object, format: String): String = {
-    val result = if (o == null)
-      null
-    else
-      Strings.htmlEscape(o.toString())
-    result
+    o match {
+      case v: ValueForRender => v.value match {
+        case null => null
+        case x: HtmlDisplay => x.htmlDisplay
+        case _ => Strings.htmlEscape(o.toString())
+      }
+    }
   }
 
 }

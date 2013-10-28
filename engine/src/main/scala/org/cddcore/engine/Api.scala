@@ -6,6 +6,11 @@ object Reportable {
 
 }
 
+trait HtmlDisplay  {
+  def htmlDisplay: String 
+
+}
+
 case class UrlMap(val toUrl: Map[Reportable, String], val fromUrl: Map[String, List[Reportable]]) {
   def apply(r: Reportable): String = toUrl(r)
   def get(r: Reportable): Option[String] = toUrl.get(r)
@@ -23,7 +28,7 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
   import Reportable._
   def children: ReportableList
   def foreach[U](f: Reportable => U): Unit = {
-    for (c <- children) c match { 
+    for (c <- children) c match {
       case holder: ReportableHolder =>
         f(c); holder.foreach(f)
       case c => f(c)

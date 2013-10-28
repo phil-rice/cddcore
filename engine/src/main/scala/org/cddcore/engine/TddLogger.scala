@@ -27,6 +27,7 @@ trait LoggerDisplayProcessor extends Function[Any, String] {
         case d: LoggerDisplay => d.loggerDisplay(this);
         case a => a.toString
       })
+
 }
 
 object LoggerDisplayProcessor {
