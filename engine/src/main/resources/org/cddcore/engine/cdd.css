@@ -59,9 +59,15 @@ br {
 	float: left;
 }
 
-.advertBox {
+.cddBox {
 	position: relative;
 	float: left;
+}
+
+.kindlySupportedBy {
+	font-size: 50%;
+	padding: 0px;
+	margin: 0px;
 }
 
 .reportTopBox {
@@ -186,11 +192,11 @@ br {
 .indent {
 	float: left;
 	width: auto;
-		padding: 0px;
+	padding: 0px;
 }
 
 .keyword {
-		padding: 0px;
+	padding: 0px;
 	font-weight: 900;
 	color: #7f0055;
 	float: left;
@@ -215,7 +221,7 @@ br {
 }
 
 .because {
-/*	background-color: #dfdfdf; */
+	/*	background-color: #dfdfdf; */
 	padding: 0px;
 	width: 70%;
 	float: left;
@@ -226,20 +232,20 @@ br {
 	width: 100%;
 	clear: both;
 }
+
 .resultWithTest {
 	padding: 0px;
 	width: 100%;
 	float: left;
 	border: 2px solid green;
 }
+
 .conclusion {
 	padding: 0px;
 	width: 80%;
 	float: left;
 	float: left;
 }
-
-
 
 .else {
 	padding: 0px;

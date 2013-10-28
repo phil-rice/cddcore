@@ -358,7 +358,7 @@ object HtmlRenderer {
       "<div class='report'>" +
       "<div class='topLine'>" +
       "<div class='cddLogo'>$if(rootUrl)$<a href='$rootUrl$'>$endif$" + cddLogoImg + "$if(rootUrl)$</a>$endif$</div>\n" +
-      "<div class='advertBox'>" + Files.getFromClassPath(getClass, "OurAdvert.xml") + "</div>\n" +
+      "<div class='cddBox'>" + Files.getFromClassPath(getClass, "OurAdvert.xml") + "</div>\n" +
       "<div class='reportTopBox'>\n" +
       "<div class='reportTitle'>Report name</div>\n" +
       "<div class='reportText'>" + title + " " + description + "</div>\n" +
