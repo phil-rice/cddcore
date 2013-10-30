@@ -53,6 +53,7 @@ trait EngineTypes[R] {
   /** This is just a type synonym to save messy code */
   type Code = CodeFn[B, RFn, R]
 
+  
   def makeClosureForAssertion(params: List[Any], r: ROrException[R]): AssertionClosure
   def makeClosureForBecause(params: List[Any]): BecauseClosure
   def makeClosureForResult(params: List[Any]): ResultClosure
@@ -85,6 +86,7 @@ case class ROrException[R](value: Option[R], exception: Option[Throwable]) {
     }
   } else false
 }
+
 
 trait EngineUniverse[R] extends EngineTypes[R] {
 
@@ -325,7 +327,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def documents: List[Document]
     def useCases: List[UseCase]
     def children = useCases
-    def parsers: List[(String) => _]
+    def paramDetails: List[ParamDetail]
 
     override def templateName = "Engine"
     def set[X](x: X, bFn: (RealScenarioBuilder, X) => ScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) = {
@@ -350,7 +352,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       priority: Int = priority,
       references: List[Reference] = references,
       documents: List[Document] = documents,
-      parsers: List[(String) => _] = parsers): RealScenarioBuilder;
+      paramDetails: List[ParamDetail] = paramDetails): RealScenarioBuilder;
 
     def thisAsBuilder: RealScenarioBuilder
 
@@ -377,7 +379,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (s, description) => s.copy(description = description),
         (n, description) => if (n.description.isDefined) throw CannotDefineDescriptionTwiceException(n.description.get, description.get))
 
-    def parser(parser: (String) => _) = withCases(parsers = parser :: parsers)
+    def param(parser: (String) => _, name: String = s"Param${paramDetails.size}") = withCases(paramDetails = ParamDetail( name, parser) :: paramDetails)
 
     def expectException[E <: Throwable](e: E, comment: String = "") =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
@@ -794,7 +796,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       result
     }
   }
-  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document], val parsers: List[(String) => _]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine {
+  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine {
     def defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>

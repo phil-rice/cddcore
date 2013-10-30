@@ -18,6 +18,11 @@ span {
 	margin: 0px;
 }
 
+label {
+	display: inline-block;
+	width: 99px;
+} 
+
 table {
 	table-layout: fixed;
 	width: 100%;
@@ -34,7 +39,7 @@ td {
 	vertical-align: top;
 	margin: 0px;
 	padding: 0px;
-	border: 1px solid black
+	border: 1px solid black;
 }
 
 hr {
@@ -185,6 +190,10 @@ br {
 	width: 125px;
 }
 
+.input {
+	width: 100%
+}
+
 .value {
 	
 }
@@ -273,5 +282,4 @@ br {
 
 .XmlTitle {
 	font-weight: bold;
-	
 }

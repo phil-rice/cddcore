@@ -7,15 +7,15 @@ import org.cddcore.engine.tests._
 @RunWith(classOf[CddJunitRunner])
 object TennisScorer {
   val lookup = Map(0 -> "love", 1 -> "fifteen", 2 -> "thirty", 3 -> "forty")
-  val definition = Document(name=Some("CodingDojo"),url = Some("http://codingdojo.org/cgi-bin/wiki.pl?KataTennis"))
-  val wikipedia = Document(name=Some("Wikipedia"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
-  val changeRequest = Document(name=Some("CR24"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
-  
+  val definition = Document(name = Some("CodingDojo"), url = Some("http://codingdojo.org/cgi-bin/wiki.pl?KataTennis"))
+  val wikipedia = Document(name = Some("Wikipedia"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
+  val changeRequest = Document(name = Some("CR24"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
+
   val scorer = Engine[Int, Int, String]().title("Tennis Kata").reference("Game_score", wikipedia).reference("", definition).
     code((l: Int, r: Int) => "error").
-    parser((s: String)=>Integer.parseInt(s)).
-    parser((s: String)=>Integer.parseInt(s)).
-    useCase("Winning","A game is won by the first player to have won at least four points in total and at least two points more than the opponent."). 
+    param((s: String) => Integer.parseInt(s), "Left").
+    param((s: String) => Integer.parseInt(s), "Right").
+    useCase("Winning", "A game is won by the first player to have won at least four points in total and at least two points more than the opponent.").
     scenario(4, 0).expected("left won").because((l: Int, r: Int) => (l - r) >= 2 && l >= 4).
     scenario(4, 1).expected("left won").reference("1.22", changeRequest).
     scenario(4, 2).expected("left won").
@@ -53,7 +53,7 @@ object TennisScorer {
 
   def main(args: Array[String]) {
     val e = scorer.references
-//    println(Report("Tennis Scorer", scorer).html())
+    //    println(Report("Tennis Scorer", scorer).html())
   }
 }
 

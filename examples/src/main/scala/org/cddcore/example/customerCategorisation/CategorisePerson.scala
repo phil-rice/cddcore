@@ -41,8 +41,8 @@ object CategorisePerson {
 
     build
 
-  def main(args: Array[String]) {
-    WebServer(8080, "org.cddcore.example.customerCategorisation").launch
+  def main(args: Array[String]) { 
+    WebServer(8080, "org.cddcore.example.customerCategorisation").launch  
     println(categorise(Person(40, 100)))
     println(categorise(Person(1040, 100)))
   } 

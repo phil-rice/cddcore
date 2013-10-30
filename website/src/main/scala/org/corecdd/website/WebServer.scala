@@ -7,9 +7,7 @@ import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.nio.SelectChannelConnector
 import org.eclipse.jetty.servlet._
-
 import com.sun.jersey.spi.container.servlet.ServletContainer
-
 import javax.servlet.http._
 
 object WebServer {
@@ -38,37 +36,50 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
   val reportCreator = new ReportCreator(p, reportableToUrl = new SimpleReportableToUrl)
   val urlMap = reportCreator.urlMap
 
-  def html(baseRequest: Request, e: Engine, params: List[String], result: String) =
+  def findParamNames(e: Engine) = e.paramDetails.map((x) => Some(x.displayName)).padTo(e.arity, None).zipWithIndex.map { case (None, i) => "param" + i; case (Some(x), _) => x }
+  def formHtml(baseRequest: Request, e: Engine, params: List[String], result: String) = {
+    val paramNames = findParamNames(e)
     <div>
       <h2>{ e.titleOrDescription("<Unnamed>") }</h2>
       <form method='post' action={ baseRequest.getUri().getPath() }>
         {
           for (i <- 0 to (e.arity - 1)) yield {
-            val name = "param" + i; <label id={ name }>{ name } </label>
-                                    <input name={ name } id={ name } type='text' value={ params(i) }/><br/>
+            val name: String = paramNames(i);
+            <label  id={ name }>{ name } </label>
+            <input name={ name } id={ name } type='text' value={ params(i) }/><br/>
           }
         }
         <input type='submit'/>
       </form>
-      Result:{ result }
+      { result }
     </div>.toString
+  }
 
   def getForm(baseRequest: Request, request: HttpServletRequest, e: Engine) =
-    html(baseRequest, e, List("").padTo(e.arity, ""), "")
+    html(baseRequest, request, e, List().padTo(e.arity, ""))
 
+  def toString(o: Any) = o match {
+    case h: HtmlDisplay => h.htmlDisplay
+    case _ => "" + o
+  }
   def postForm(baseRequest: Request, request: HttpServletRequest, e: Engine) = {
-    try {
-      val paramStrings =
-        for (i <- 0 to e.arity - 1)
-          yield request.getParameterValues(s"param$i")(0)
+    val paramNames = findParamNames(e)
+    val paramStrings =
+      for (i <- 0 to e.arity - 1)
+        yield request.getParameterValues(paramNames(i))(0)
+    html(baseRequest, request, e, paramStrings)
 
-      val params = paramStrings.zip(e.parsers).map { case (param, parser) => parser(param) }.toList
+  }
+ 
+  def html(baseRequest: Request, request: HttpServletRequest, e: Engine, paramStrings: Iterable[String]) = {
+    val (engineForm, test) = try {
+      val params = paramStrings.zip(e.paramDetails).map { case (param, details) => details.parser(param) }.toList
       val conclusion = e.findConclusionFor(params)
       val result = e.evaluateConclusion(params, conclusion)
       val aTest = conclusion.scenarios.head
-      val engineForm = html(baseRequest, e, paramStrings.toList, "Result: " + params + "\n" + result )
-      HtmlRenderer.liveEngineHtml(reportCreator.rootUrl, Some(aTest), Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + e.titleOrDescription(""), e))
-    } catch { case t: Throwable => t.printStackTrace(); html(baseRequest, e, List("").padTo(e.arity, ""), e.getClass + ": " + t.getMessage()) }
+      (formHtml(baseRequest, e, paramStrings.toList, "Params: " + params.map(toString(_)) + "\n" + result), Some(aTest))
+    } catch { case t: Throwable => t.printStackTrace(); (formHtml(baseRequest, e, List("").padTo(e.arity, ""), t.getClass + ": " + t.getMessage()), None) }
+    HtmlRenderer.liveEngineHtml(reportCreator.rootUrl, test, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + e.titleOrDescription(""), e))
   }
 
   def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse) = {

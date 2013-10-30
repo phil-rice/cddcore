@@ -8,6 +8,6 @@ object Example {
     WebServer(8080, "org.cddcore.example.tennisScore", //http://localhost:8080/tennis
       "org.cddcore.example.customerCategorisation"). //http://localhost:8080/person
       launch
-  }
+  } 
 
 } 

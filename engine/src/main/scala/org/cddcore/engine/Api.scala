@@ -6,8 +6,8 @@ object Reportable {
 
 }
 
-trait HtmlDisplay  {
-  def htmlDisplay: String 
+trait HtmlDisplay {
+  def htmlDisplay: String
 
 }
 
@@ -133,6 +133,7 @@ object Engine {
   def state[S, P1, P2, R]() = new BuilderFactory3[S, P1, P2, (S, R)]().builder;
 
 }
+case class ParamDetail(displayName: String, parser: (String) => _)
 
 trait Engine extends Requirement with RequirementAndHolder {
   import Reportable._
@@ -143,9 +144,9 @@ trait Engine extends Requirement with RequirementAndHolder {
   protected def toStringWith(path: ReportableList, root: Either[Conclusion, Decision], printer: IfThenPrinter): String
   def evaluateBecauseForDecision(decision: Decision, params: List[Any]): Boolean
   def arity: Int
-  def parsers: List[(String)=>_]
+  def paramDetails: List[ParamDetail]
   def findConclusionFor(params: List[Any]): Conclusion
-  def evaluateConclusion(params: List[Any], conclusion: Conclusion) : Any
+  def evaluateConclusion(params: List[Any], conclusion: Conclusion): Any
 }
 
 trait Decision extends Reportable {

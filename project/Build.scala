@@ -101,8 +101,9 @@ object HelloBuild extends Build {
   lazy val constraint = Project(id = "constraint", settings = buildSettings, base = file("constraint"))
   lazy val engine = Project(id = "engine", settings = buildSettings, base = file("engine")) dependsOn (constraint)
   lazy val website = Project(id = "website", settings = websiteSettings, base = file("website")) dependsOn (constraint, engine)
-  lazy val examples = Project(id = "examples", settings = buildSettings, base = file("examples")) dependsOn (constraint, engine,website)  
-  lazy val root = Project(id = "root", settings = buildSettings ++ Seq(copyTask, copyDepTask), base = file(".")) aggregate (constraint, engine, examples, website)
+  lazy val legacy  = Project(id = "legacy", settings = buildSettings, base = file("legacy")) dependsOn (constraint, engine)
+  lazy val examples = Project(id = "examples", settings = buildSettings, base = file("examples")) dependsOn (constraint, engine, website)  
+  lazy val root = Project(id = "root", settings = buildSettings ++ Seq(copyTask, copyDepTask), base = file(".")) aggregate (constraint, engine, examples, website,legacy)
 
   import java.io.File
 

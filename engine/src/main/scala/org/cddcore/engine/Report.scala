@@ -354,8 +354,7 @@ object HtmlRenderer {
 
   def liveEngineHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set(), engineForm: String) = Renderer(rootUrl, restrict).
     configureAttribute(Renderer.decisionTreeConfig(test), Renderer.setAttribute("Engine", "engineForm", engineForm)).
-    configureReportableHolder(reportTemplate, projectTemplate, liveEngineTemplate).
-    configureReportable(scenarioSummaryTemplate)
+    configureReportableHolder(reportTemplate, projectTemplate, liveEngineTemplate)
 
   def usecaseHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set()) = Renderer(rootUrl, restrict).
     configureAttribute(Renderer.decisionTreeConfig(test)).
