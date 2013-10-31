@@ -22,7 +22,7 @@ object TennisScorer {
     scenario(5, 3).expected("left won").
 
     scenario(0, 4).expected("right won").because((l: Int, r: Int) => (r - l) >= 2 && r >= 4).
-    scenario(1, 4).expected("right won").
+    scenario(1, 4).expected("right won").reference("1.5", changeRequest).
     scenario(2, 4).expected("right won").
     scenario(3, 5).expected("right won").
     scenario(40, 42).expected("right won").

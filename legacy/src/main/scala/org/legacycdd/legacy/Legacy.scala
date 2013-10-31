@@ -1,24 +1,27 @@
 package org.legacycdd.legacy
 
-import org.cddcore.engine.Engine
-import org.cddcore.engine.Conclusion
+import org.cddcore.engine._
 
-class Legacy[Id](val idGen: Iterable[Id],
+trait LegacyReporter {
+  def report[ID](id: ID, replacement: Engine, replacementConclusion: Conclusion, categorise: Engine, categoriseConclusion: Conclusion)
+}
+
+class Legacy[Id, P, R](val idGen: Iterable[Id],
   idToParams: (Id) => List[Any],
-  idToExpected: (Id) => Any,
-  replacement: Engine,
-  categorise: Engine,
-  report: (Id, Conclusion, Conclusion) => Unit) {
+  idToExpected: (Id) => R,
+  val replacement: Engine,
+  val categorise: Engine,
+  reporter: LegacyReporter) {
   for (id <- idGen) {
     val params = idToParams(id)
     val expected = idToExpected(id)
     val replacementNode = replacement.findConclusionFor(params)
     val actual = replacement.evaluateConclusion(params, replacementNode)
 
-    val categoriseParams = List(id, expected, actual)
+    val categoriseParams = List(expected, actual)
     val categoriseNode = categorise.findConclusionFor(categoriseParams)
     val categoriseActual = categorise.evaluateConclusion(categoriseParams, categoriseNode)
-    report(id, replacementNode, categoriseNode)
+    reporter.report(id, replacement, replacementNode, categorise, categoriseNode)
   }
 
 }
