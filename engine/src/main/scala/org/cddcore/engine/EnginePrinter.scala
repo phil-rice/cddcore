@@ -40,7 +40,7 @@ class FullHtmlPage(delegate: IfThenPrinter) extends IfThenPrinter {
 object HtmlForIfThenPrinter {
   import Reportable._
   import Strings._
-  def nbsp(i: String) = "<div class='indent'>" + i.replace(" ", "&nbsp;") + "</div>"
+  def nbsp(i: String) = "<div class='indent'>" + i.replace(" ", "&#160;") + "</div>"
 
   def highlightedScenarioIcon = "http://img407.imageshack.us/img407/3948/o96r.png"
   def normalScenarioIcon = "http://img201.imageshack.us/img201/1442/a9t.png"
@@ -65,16 +65,16 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   def scenarioPrefix: Option[Any]
   def start(path: ReqList, e: Engine): String = ""
   def ifPrint(path: ReqList, decision: Decision, ifClassName: String) =
-    s"<div class='$ifClassName'>${nbsp(indent(path))}<span class='keyword'>if&nbsp;</span> <div class='because'>(${htmlEscape(decision.prettyString)})</div><!-- because --></div><!-- $ifClassName -->\n"
+    s"<div class='$ifClassName'>${nbsp(indent(path))}<span class='keyword'>if&#160;</span> <div class='because'>(${htmlEscape(decision.prettyString)})</div><!-- because --></div><!-- $ifClassName -->\n"
 
   def isSelected(t: Test) = false
 
   def resultPrint(path: ReqList, conclusion: Conclusion, resultClassName: String) = {
     val scenarioHtml = conclusion.scenarios.map((s) => scenarioLink(urlMap, s, isSelected(s))).mkString
-    s"<div class='$resultClassName'>${nbsp(indent(path))}<span class='keyword'>then&nbsp;</span>$scenarioHtml<div class='conclusion'>${htmlEscape(conclusion.code.pretty)}</div><!-- conclusion --></div><!-- $resultClassName -->\n"
+    s"<div class='$resultClassName'>${nbsp(indent(path))}<span class='keyword'>then&#160;</span>$scenarioHtml<div class='conclusion'>${htmlEscape(conclusion.code.pretty)}</div><!-- conclusion --></div><!-- $resultClassName -->\n"
   }
 
-  def elsePrint(path: ReqList, decision: Decision) = s"<div class='else'>${nbsp(indent(path))}<span class='keyword'>else&nbsp;</span></div>\n";
+  def elsePrint(path: ReqList, decision: Decision) = s"<div class='else'>${nbsp(indent(path))}<span class='keyword'>else&#160;</span></div>\n";
   def endPrint(path: ReqList, decision: Decision) = "";
   def end = "";
 }

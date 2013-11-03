@@ -3,9 +3,7 @@ package org.cddcore.engine
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class ReportableTests extends AbstractTest {
-  import Reportable._
+trait ReportableTestFramework {
   implicit def stringToOption(s: String) = Some(s)
   case class Holder(val name: String, val children: List[Reportable]) extends ReportableHolder
   case class Req(val title: Option[String], description: Option[String], references: List[Reference] = List(), priority: Int = 0) extends Requirement
@@ -19,7 +17,12 @@ class ReportableTests extends AbstractTest {
   val holder12 = Holder("holder12", List(rep1, rep2))
   val holder345 = Holder("holder23", List(rep3, rep4, rep5))
   val holder_12_345 = Holder("holder_12_23", List(holder12, holder345))
+}
 
+@RunWith(classOf[JUnitRunner])
+class ReportableTests extends AbstractTest with ReportableTestFramework{
+  import Reportable._
+ 
   "A Reportable Holder" should "have a for each method that goes over all descendants recursively" in {
     assertEquals(List(rep2, rep1), holder12.foldLeft(List[Reportable]())((acc, r) => r :: acc))
     assertEquals(List(rep5, rep4, rep3, holder345, rep2, rep1, holder12), holder_12_345.foldLeft(List[Reportable]())((acc, r) => r :: acc))

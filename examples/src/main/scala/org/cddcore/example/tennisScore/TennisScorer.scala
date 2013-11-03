@@ -15,6 +15,9 @@ object TennisScorer {
     code((l: Int, r: Int) => "error").
     param((s: String) => Integer.parseInt(s), "Left").
     param((s: String) => Integer.parseInt(s), "Right").
+    
+    
+    
     useCase("Winning", "A game is won by the first player to have won at least four points in total and at least two points more than the opponent.").
     scenario(4, 0).expected("left won").because((l: Int, r: Int) => (l - r) >= 2 && l >= 4).
     scenario(4, 1).expected("left won").reference("1.22", changeRequest).
@@ -24,7 +27,7 @@ object TennisScorer {
     scenario(0, 4).expected("right won").because((l: Int, r: Int) => (r - l) >= 2 && r >= 4).
     scenario(1, 4).expected("right won").reference("1.5", changeRequest).
     scenario(2, 4).expected("right won").
-    scenario(3, 5).expected("right won").
+    scenario(3, 5).expected("right won"). 
     scenario(40, 42).expected("right won").
 
     useCase("Running score").description("The running score of each game is described in a manner peculiar to tennis: scores from zero to three points are described as 'love', 'fifteen', 'thirty', and 'forty' respectively.").
@@ -32,7 +35,7 @@ object TennisScorer {
     scenario(2, 1).expected("thirty, fifteen").
 
     useCase("When both have the same running score").description("The running score, if both scores are the same, is called xx all").
-    scenario(0, 0).expected("love all").because((l: Int, r: Int) => l == r && l < 3).code((l: Int, r: Int) => s"${lookup(l)} all").
+    scenario(0, 0).expected("love all").because((l: Int, r: Int) => l == r && l < 3).code((l: Int, r: Int) => s"${lookup(l)} all").reference("", changeRequest).
     scenario(2, 2).expected("thirty all").
 
     useCase("Deuce").description("If at least three points have been scored by each player, and the scores are equal, the score is 'deuce'.").expected("deuce").

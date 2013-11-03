@@ -110,12 +110,12 @@ case class Report(reportTitle: String, rootUrl: Option[String], reportables: Rep
   val references = List[Reference]()
 }
 
-case class Project(projectTitle: String, engines: Engine*) extends RequirementAndHolder {
-  lazy val documents = engines.flatMap(_.documents).distinct
-  lazy val refToRequirement: Map[Reference, Requirement] =
-    engines.foldLeft(List[(Reference, Requirement)]())((acc, e) => acc ++
-      e.collect { case r: Requirement => r }.flatMap(_.references.map((_, e))) ++
-      e.references.map((_, e))).toMap
+case class Project(projectTitle: String, engines: ReportableHolder*) extends RequirementAndHolder {
+//  lazy val documents = engines.flatMap(_.documents).distinct
+//  lazy val refToRequirement: Map[Reference, Requirement] =
+//    engines.foldLeft(List[(Reference, Requirement)]())((acc, e) => acc ++
+//      e.collect { case r: Requirement => r }.flatMap(_.references.map((_, e))) ++
+//      e.references.map((_, e))).toMap
 
   val title = Some(projectTitle)
   val children = engines.toList

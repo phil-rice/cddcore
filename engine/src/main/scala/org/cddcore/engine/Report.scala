@@ -402,7 +402,7 @@ object HtmlRenderer {
 
   val useCaseTemplate: StringRendererRenderer =
     ("UseCase",
-      "<div class='usecase'>" + "<h4>$if(url)$<a href='$url$'>$endif$" + title + "</a></h4>\n$if(description)$<p>$description$</p>$endif$" + "\n",
+      "<div class='usecase'>" + "<h4>$if(url)$<a href='$url$'>$endif$" + title + "</a></h4>\n$if(description)$<p>$description$</p>$endif$" + "\n" + table(refsRow)+"\n",
       "</div><!-- useCase -->\n")
 
   val useCaseWithScenariosSummarisedTemplate: StringRendererRenderer =
