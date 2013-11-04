@@ -2,9 +2,6 @@ package org.corecdd.website
 
 import org.cddcore.engine._
 import org.cddcore.engine.RequirementAndHolder
-import org.corecdd.website.WebServer;
-import org.corecdd.website.WebServerFromPackage;
-import org.corecdd.website.WebServerWithHandler;
 import org.eclipse.jetty.server._
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.handler.AbstractHandler
