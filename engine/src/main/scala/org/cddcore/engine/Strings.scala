@@ -20,6 +20,7 @@ object Strings {
   def oneLine(s: String) = s.replace('\n', ' ')
   def htmlEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&quot;").replace("<", "&lt;").replace("&gt;", ">").replace("\n", "<br />")
   def htmlTooltipEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&quot;").replace("<", "&lt;").replace("&gt;", ">")
+  def url(s: String*) = s.mkString("/")  
 }
 
 class StringCleaner(map: Map[Char, Char] = Map()) {

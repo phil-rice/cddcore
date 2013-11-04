@@ -372,7 +372,7 @@ object HtmlRenderer {
       "<body>" +
       "<div class='report'>" +
       "<div class='topLine'>" +
-      "<div class='cddLogo'>$if(rootUrl)$<a href='$rootUrl$'>$endif$" + cddLogoImg + "$if(rootUrl)$</a>$endif$</div>\n" +
+      "<div class='cddLogo'>$if(rootUrl)$<a id='cddLogo' href='$rootUrl$'>$endif$" + cddLogoImg + "$if(rootUrl)$</a>$endif$</div>\n" +
       "<div class='cddBox'>" + Files.getFromClassPath(getClass, "OurAdvert.xml") + "</div>\n" +
       "<div class='reportTopBox'>\n" +
       "<div class='reportTitle'>Report name</div>\n" +

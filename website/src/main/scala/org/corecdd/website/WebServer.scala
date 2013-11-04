@@ -2,12 +2,17 @@ package org.corecdd.website
 
 import org.cddcore.engine._
 import org.cddcore.engine.RequirementAndHolder
+import org.corecdd.website.WebServer;
+import org.corecdd.website.WebServerFromPackage;
+import org.corecdd.website.WebServerWithHandler;
 import org.eclipse.jetty.server._
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.nio.SelectChannelConnector
 import org.eclipse.jetty.servlet._
+
 import com.sun.jersey.spi.container.servlet.ServletContainer
+
 import javax.servlet.http._
 
 object WebServer {
@@ -28,7 +33,12 @@ object WebServer {
 }
 
 abstract class WebServer {
-  def launch
+  val server = new Server(port);
+  def launch {
+    start; server.join
+  }
+  def start
+  def stop = server.stop
   def port: Int
 }
 
@@ -45,7 +55,7 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
         {
           for (i <- 0 to (e.arity - 1)) yield {
             val name: String = paramNames(i);
-            <label  id={ name }>{ name } </label>
+            <label id={ name }>{ name } </label>
             <input name={ name } id={ name } type='text' value={ params(i) }/><br/>
           }
         }
@@ -70,7 +80,7 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
     html(baseRequest, request, e, paramStrings)
 
   }
- 
+
   def html(baseRequest: Request, request: HttpServletRequest, e: Engine, paramStrings: Iterable[String]) = {
     val (engineForm, test) = try {
       val params = paramStrings.zip(e.paramDetails).map { case (param, details) => details.parser(param) }.toList
@@ -112,18 +122,15 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
 }
 
 class WebServerWithHandler(val port: Int, handler: Handler) extends WebServer {
-  def launch {
-    val server = new Server(port);
+  def start {
     server.setHandler(handler);
     server.start();
-    server.join();
   }
 }
 
 class WebServerFromPackage(val port: Int, packages: List[String]) extends WebServer {
 
-  def launch() {
-    val server = new Server(port)
+  def start() {
     val connector = new SelectChannelConnector()
     server.addConnector(connector)
     val holder: ServletHolder = new ServletHolder(classOf[ServletContainer])
@@ -132,7 +139,6 @@ class WebServerFromPackage(val port: Int, packages: List[String]) extends WebSer
     val context = new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS)
     context.addServlet(holder, "/*")
     server.start
-    server.join
   }
 
 }

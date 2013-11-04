@@ -62,7 +62,7 @@ object BuildSettings {
       "org.scala-stm" %% "scala-stm" % "0.7",
       "org.scala-lang" % "scala-reflect" % "2.10.1",
       "org.scala-lang" % "scala-compiler" % "2.10.1",
-      "org.scalatest" % "scalatest_2.10" % "1.9.1",
+	  "org.scalatest" % "scalatest_2.10" % "2.0" % "test",
       "log4j" % "log4j" % "1.2.17",
       "junit" % "junit" % "4.8.2"))
 	  
@@ -85,7 +85,10 @@ object BuildSettings {
        "com.sun.jersey" % "jersey-server" % "1.2",
       "com.sun.jersey" % "jersey-json" % "1.2",
       "org.eclipse.jetty" % "jetty-server" % "8.0.0.M0",
-     "org.eclipse.jetty" % "jetty-servlet" % "8.0.0.M0"))
+      "org.eclipse.jetty" % "jetty-servlet" % "8.0.0.M0",
+	  "org.seleniumhq.selenium" % "selenium-java" % "2.28.0" % "test",
+	  "org.seleniumhq.selenium" % "selenium-chrome-driver" % "2.35.0" % "test",
+	  "org.seleniumhq.selenium" % "selenium-htmlunit-driver" % "2.35.0" % "test"))
 
 }
 
@@ -102,7 +105,7 @@ object HelloBuild extends Build {
   lazy val engine = Project(id = "engine", settings = buildSettings, base = file("engine")) dependsOn (constraint)
   lazy val website = Project(id = "website", settings = websiteSettings, base = file("website")) dependsOn (constraint, engine)
   lazy val legacy  = Project(id = "legacy", settings = buildSettings, base = file("legacy")) dependsOn (constraint, engine)
-  lazy val examples = Project(id = "examples", settings = buildSettings, base = file("examples")) dependsOn (constraint, engine, website)  
+  lazy val examples = Project(id = "examples", settings = websiteSettings, base = file("examples")) dependsOn (constraint, engine, website)  
   lazy val root = Project(id = "root", settings = buildSettings ++ Seq(copyTask, copyDepTask), base = file(".")) aggregate (constraint, engine, examples, website,legacy)
 
   import java.io.File

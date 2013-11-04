@@ -1,25 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>engine</name>
-	<comment></comment>
-	<projects>
-	</projects>
-	<buildSpec>
-		<buildCommand>
-			<name>org.scala-ide.sdt.core.scalabuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
-	</buildSpec>
-	<natures>
-		<nature>org.scala-ide.sdt.core.scalanature</nature>
-		<nature>org.eclipse.jdt.core.javanature</nature>
-	</natures>
-	<linkedResources>
-		<link>
-			<name>src/main/resources/org/cddcore/engine/hellogis.js</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/Desktop/hellogis.js</locationURI>
-		</link>
-	</linkedResources>
+  <name>engine</name>
+  <buildSpec>
+    <buildCommand>
+      <name>org.scala-ide.sdt.core.scalabuilder</name>
+    </buildCommand>
+  </buildSpec>
+  <natures>
+    <nature>org.scala-ide.sdt.core.scalanature</nature>
+    <nature>org.eclipse.jdt.core.javanature</nature>
+  </natures>
+  <linkedResources> </linkedResources>
 </projectDescription>

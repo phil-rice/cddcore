@@ -1,16 +1,13 @@
 package org.cddcore.engine
 
 import scala.language.implicitConversions
-
+import junit.framework.AssertionFailedError
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.FlatSpec
-import junit.framework.AssertionFailedError
+import org.scalatest.FlatSpecLike
+import scala.xml.Node
 
-trait AbstractTest extends FlatSpec with ShouldMatchers {
-  def assertEquals[T1, T2](prefix: String, expected: T1, actual: T2) {
-    assert(expected == actual, prefix + "\nExpected\n" + expected + "\nActual\n" + actual)
-  }
-
+trait AssertEquals {
   def assertEquals[T1, T2](expected: T1, actual: T2) {
     def msg = "\nExpected\n" + expected + "\nActual\n" + actual
     if (expected.isInstanceOf[String] & actual.isInstanceOf[String]) {
@@ -23,21 +20,32 @@ trait AbstractTest extends FlatSpec with ShouldMatchers {
         if (t._1 != t._2) {
           val expectedMax = Math.min(i + 10, expectedString.length() - 1)
           val actualMax = Math.min(i + 10, actualString.length() - 1)
-          fail("First fail at " + i + " Expected: [" + expectedString.substring(i, expectedMax) + "] Actual: [ " + actualString.substring(i, actualMax) + "]\n" + msg)
+          ShouldMatchers.fail("First fail at " + i + " Expected: [" + expectedString.substring(i, expectedMax) + "] Actual: [ " + actualString.substring(i, actualMax) + "]\n" + msg)
         }
       }
       expectedString.length() - actualString.length() match {
-        case x if x < 0 => fail(s"Actual ran over end at ${expectedString.length}\n" + msg)
-        case x if x > 0 => fail(s"Actual fell short end at ${actualString.length}\n" + msg)
+        case x if x < 0 => ShouldMatchers.fail(s"Actual ran over end at ${expectedString.length}\n" + msg)
+        case x if x > 0 => ShouldMatchers.fail(s"Actual fell short end at ${actualString.length}\n" + msg)
       }
 
     }
     assert(expected == actual, msg)
   }
 
+  def assertTextEquals(expected: String, actual: Node) {
+    assertEquals(expected, actual.text.trim)
+  }
+
+  def assertEquals[T1, T2](prefix: String, expected: T1, actual: T2) {
+    assert(expected == actual, prefix + "\nExpected\n" + expected + "\nActual\n" + actual)
+  }
 }
 
-trait AbstractEngineTest[R] extends EngineUniverse[R] with AbstractTest with NodeComparator[R] {
+trait AbstractTest extends FlatSpecLike with ShouldMatchers with AssertEquals {
+
+}
+
+trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R] with NodeComparator[R] {
   def logger: TddLogger
   def builder: RealScenarioBuilder
   def firstUseCaseDescription = "UseCase1"
