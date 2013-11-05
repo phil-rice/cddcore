@@ -37,11 +37,11 @@ object LoggerDisplayProcessor {
 object TddLogger {
   def noLogger = new NoLogger()
   val logger = Logger.getLogger(classOf[TddLogger]);
-  def loggerPriority = logger.getPriority()
+  def loggerPriority = logger.getLevel()
   def log(priority: Level, msg: String) = logger.log(priority, msg);
   sealed abstract class TddMessageType(val name: String)
-  case class Compile extends TddMessageType("Compile")
-  case class Run extends TddMessageType("Run")
+  case class Compile() extends TddMessageType("Compile")
+  case class Run() extends TddMessageType("Run")
   val compile = new Compile();
   val run = new Run();
 

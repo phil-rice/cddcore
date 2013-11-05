@@ -2,10 +2,10 @@ package org.cddcore.engine
 
 import scala.language.implicitConversions
 import junit.framework.AssertionFailedError
-import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.FlatSpec
 import org.scalatest.FlatSpecLike
 import scala.xml.Node
+import org.scalatest.Matchers
 
 trait AssertEquals {
   def assertEquals[T1, T2](expected: T1, actual: T2) { 
@@ -20,12 +20,12 @@ trait AssertEquals {
         if (t._1 != t._2) {
           val expectedMax = Math.min(i + 10, expectedString.length() - 1)
           val actualMax = Math.min(i + 10, actualString.length() - 1)
-          ShouldMatchers.fail("First fail at " + i + " Expected: [" + expectedString.substring(i, expectedMax) + "] Actual: [ " + actualString.substring(i, actualMax) + "]\n" + msg)
+          Matchers.fail("First fail at " + i + " Expected: [" + expectedString.substring(i, expectedMax) + "] Actual: [ " + actualString.substring(i, actualMax) + "]\n" + msg)
         }
       }
       expectedString.length() - actualString.length() match {
-        case x if x < 0 => ShouldMatchers.fail(s"Actual ran over end at ${expectedString.length}\n" + msg)
-        case x if x > 0 => ShouldMatchers.fail(s"Actual fell short end at ${actualString.length}\n" + msg)
+        case x if x < 0 => Matchers.fail(s"Actual ran over end at ${expectedString.length}\n" + msg)
+        case x if x > 0 => Matchers.fail(s"Actual fell short end at ${actualString.length}\n" + msg)
       }
 
     }
@@ -42,7 +42,7 @@ trait AssertEquals {
   }
 }
 
-trait AbstractTest extends FlatSpecLike with ShouldMatchers with AssertEquals {
+trait AbstractTest extends FlatSpecLike with Matchers with AssertEquals {
 
 }
 
