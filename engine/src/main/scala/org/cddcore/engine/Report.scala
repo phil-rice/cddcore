@@ -51,7 +51,9 @@ class ReportCreator[RtoUrl <: ReportableToUrl](project: RequirementAndHolder, ti
         Some(HtmlRenderer.projectHtml(rootUrl).render(reportableToUrl, urlMap, Report("Project: " + p.titleOrDescription(ReportCreator.unnamed), p)))
       case e: Engine => Some(HtmlRenderer.engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), engine(path))))
       case u: RequirementAndHolder => Some(HtmlRenderer.usecaseHtml(rootUrl, restrict = path.toSet ++ u.children).render(reportableToUrl, urlMap, Report("Usecase: " + u.titleOrDescription(ReportCreator.unnamed), engine(path))))
-      case t: Test => Some(HtmlRenderer.scenarioHtml(rootUrl, t, path.toSet).render(reportableToUrl, urlMap, Report("Scenario: " + t.titleOrDescription(ReportCreator.unnamed), engine(path))))
+      case t: Test =>
+        val conclusion = PathUtils.findEngine(path).findConclusionFor(t.params)
+        Some(HtmlRenderer.scenarioHtml(rootUrl, conclusion, t, path.toSet).render(reportableToUrl, urlMap, Report("Scenario: " + t.titleOrDescription(ReportCreator.unnamed), engine(path))))
       case _ => None
     }
     optHtml
@@ -209,10 +211,11 @@ object Renderer {
     }
   })
   protected def engineConfig = RenderAttributeConfigurer[Engine]("Engine", (_, _, path, e, stringTemplate) => stringTemplate.setAttribute("decisionTreeNodes", e.decisionTreeNodes))
-  def decisionTreeConfig(test: Option[Test]) =
+
+  def decisionTreeConfig(params: Option[List[Any]], conclusion: Option[Conclusion], test: Option[Test]) =
     RenderAttributeConfigurer[Engine]("Engine", (reportableToUrl, urlMap, path, e, stringTemplate) =>
-      stringTemplate.setAttribute("decisionTree", e.toStringWith(test match {
-        case Some(t) => new HtmlWithTestIfThenPrinter(t, reportableToUrl, urlMap)
+      stringTemplate.setAttribute("decisionTree", e.toStringWith(params match {
+        case Some(p) => new HtmlWithTestIfThenPrinter(p, conclusion, test,  reportableToUrl, urlMap)
         case _ => new HtmlIfThenPrinter(reportableToUrl, urlMap)
       })))
 
@@ -346,26 +349,26 @@ object HtmlRenderer {
   protected val refsRow = "$if(references)$<tr><td class='title'>References</td><td class='value'>$references: {r|$r$}; separator=\", \"$</td></tr>$endif$"
 
   def projectHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) = Renderer(rootUrl, restrict).
-    configureAttribute(Renderer.decisionTreeConfig(None)).
+    configureAttribute(Renderer.decisionTreeConfig(None, None, None)).
     configureReportableHolder(reportTemplate, engineTemplate, useCaseWithScenariosSummarisedTemplate).
     configureReportable(scenarioSummaryTemplate)
 
-  def engineHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set()) = Renderer(rootUrl, restrict).
-    configureAttribute(Renderer.decisionTreeConfig(test)).
+  def engineHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) = Renderer(rootUrl, restrict).
+    configureAttribute(Renderer.decisionTreeConfig(None, None, None)).
     configureReportableHolder(reportTemplate, projectTemplate, engineTemplate, useCaseWithScenariosSummarisedTemplate).
     configureReportable(scenarioSummaryTemplate)
 
-  def liveEngineHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set(), engineForm: String) = Renderer(rootUrl, restrict).
-    configureAttribute(Renderer.decisionTreeConfig(test), Renderer.setAttribute("Engine", "engineForm", engineForm)).
+  def liveEngineHtml(rootUrl: Option[String], params: Option[List[Any]], conclusion: Option[Conclusion], restrict: ReportableSet = Set(), engineForm: String) = Renderer(rootUrl, restrict).
+    configureAttribute(Renderer.decisionTreeConfig(params, conclusion, None), Renderer.setAttribute("Engine", "engineForm", engineForm)).
     configureReportableHolder(reportTemplate, projectTemplate, liveEngineTemplate)
 
   def usecaseHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set()) = Renderer(rootUrl, restrict).
-    configureAttribute(Renderer.decisionTreeConfig(test)).
+    configureAttribute(Renderer.decisionTreeConfig(None, None, test)).
     configureReportableHolder(reportTemplate, projectTemplate, engineTemplate, useCaseTemplate).
     configureReportable(scenarioTemplate)
 
-  def scenarioHtml(rootUrl: Option[String], test: Test, restrict: ReportableSet = Set()) = Renderer(rootUrl, restrict).
-    configureAttribute(Renderer.decisionTreeConfig(Some(test))).
+  def scenarioHtml(rootUrl: Option[String], conclusion: Conclusion, test: Test, restrict: ReportableSet = Set()) = Renderer(rootUrl, restrict).
+    configureAttribute(Renderer.decisionTreeConfig(Some(test.params), Some(conclusion), Some(test))).
     configureReportableHolder(reportTemplate, projectTemplate, engineTemplate, useCaseTemplate).
     configureReportable(scenarioTemplate)
 

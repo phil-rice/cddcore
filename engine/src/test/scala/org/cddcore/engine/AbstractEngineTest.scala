@@ -8,7 +8,7 @@ import org.scalatest.FlatSpecLike
 import scala.xml.Node
 
 trait AssertEquals {
-  def assertEquals[T1, T2](expected: T1, actual: T2) {
+  def assertEquals[T1, T2](expected: T1, actual: T2) { 
     def msg = "\nExpected\n" + expected + "\nActual\n" + actual
     if (expected.isInstanceOf[String] & actual.isInstanceOf[String]) {
       val expectedString = expected.asInstanceOf[String];

@@ -111,11 +111,11 @@ case class Report(reportTitle: String, rootUrl: Option[String], reportables: Rep
 }
 
 case class Project(projectTitle: String, engines: ReportableHolder*) extends RequirementAndHolder {
-//  lazy val documents = engines.flatMap(_.documents).distinct
-//  lazy val refToRequirement: Map[Reference, Requirement] =
-//    engines.foldLeft(List[(Reference, Requirement)]())((acc, e) => acc ++
-//      e.collect { case r: Requirement => r }.flatMap(_.references.map((_, e))) ++
-//      e.references.map((_, e))).toMap
+  //  lazy val documents = engines.flatMap(_.documents).distinct
+  //  lazy val refToRequirement: Map[Reference, Requirement] =
+  //    engines.foldLeft(List[(Reference, Requirement)]())((acc, e) => acc ++
+  //      e.collect { case r: Requirement => r }.flatMap(_.references.map((_, e))) ++
+  //      e.references.map((_, e))).toMap
 
   val title = Some(projectTitle)
   val children = engines.toList
@@ -149,16 +149,27 @@ trait Engine extends Requirement with RequirementAndHolder {
   def evaluateConclusion(params: List[Any], conclusion: Conclusion): Any
 }
 
-trait Decision extends Reportable {
+trait ConclusionOrDecision extends Reportable {
+  def allConclusion: List[Conclusion]
+  protected def allConclusion(either: Either[Conclusion, Decision]): List[Conclusion] =
+    either match {
+      case Left(c) => c.allConclusion
+      case Right(d) => d.allConclusion
+    }
+}
+
+trait Decision extends ConclusionOrDecision {
   def because: List[CodeHolder]
   def yes: Either[Conclusion, Decision]
   def no: Either[Conclusion, Decision]
   def prettyString: String
+  lazy val allConclusion: List[Conclusion] = allConclusion(yes) ::: allConclusion(no)
 }
 
-trait Conclusion extends Reportable {
+trait Conclusion extends ConclusionOrDecision {
   def code: CodeHolder
   def scenarios: List[Test]
+  val allConclusion = List(this) 
 }
 
 case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, url: Option[String] = None) {

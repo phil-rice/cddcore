@@ -87,13 +87,18 @@ class HtmlIfThenPrinter(val reportableToUrl: ReportableToUrl = new FileSystemRep
     resultPrint(path, conclusion, "result")
 }
 
-class HtmlWithTestIfThenPrinter(test: Test, val reportableToUrl: ReportableToUrl = new FileSystemReportableToUrl, val urlMap: UrlMap, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
+class HtmlWithTestIfThenPrinter(params: List[Any], optConclusion: Option[Conclusion], test: Option[Test], val reportableToUrl: ReportableToUrl = new FileSystemReportableToUrl, val urlMap: UrlMap, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
   import HtmlForIfThenPrinter._
-  override def isSelected(t: Test) = t == test
+  override def isSelected(t: Test) = Some(t) == test
   def ifPrint(path: ReqList, decision: Decision): String =
     try {
-      if (engine(path).evaluateBecauseForDecision(decision, test.params))
-        ifPrint(path, decision, "ifTrue")
+      if (engine(path).evaluateBecauseForDecision(decision, params))
+        optConclusion match {
+          case Some(c) if decision.allConclusion contains c =>
+            ifPrint(path, decision, "ifTrueOnPath")
+          case _ =>
+            ifPrint(path, decision, "ifTrue")
+        }
       else
         ifPrint(path, decision, "if")
     } catch {
@@ -103,7 +108,7 @@ class HtmlWithTestIfThenPrinter(test: Test, val reportableToUrl: ReportableToUrl
     }
 
   def resultPrint(path: ReqList, conclusion: Conclusion): String =
-    if (conclusion.scenarios.contains(test))
+    if (optConclusion == Some(conclusion) || (test.isDefined && conclusion.scenarios.contains(test.get)))
       resultPrint(path, conclusion, "resultWithTest")
     else
       resultPrint(path, conclusion, "result")

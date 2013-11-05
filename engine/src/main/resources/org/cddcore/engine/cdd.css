@@ -213,11 +213,11 @@ br {
 }
 
 .decision {
+	overflow: hidden;  
 	margin: 0px;
 	padding: 0px;
 	width: 100%;
 	clear: both;
-	width: 100%;
 }
 .if {
 	margin: 0px;
@@ -229,21 +229,29 @@ br {
 
 .ifTrue {
 	margin: 0px;
-	padding: 0px;
+	padding: 0px; 
+	width: 90%;
+	clear: both;
 	width: 100%;
+	border: 2px solid #FF7E00;
+} 
+.ifTrueOnPath {
+	margin: 0px;
+	padding: 0px; 
+	width: 90%;
 	clear: both;
 	width: 100%;
 	border: 2px solid green;
 }
 
 .because {
-	/*	background-color: #dfdfdf; */
+	/*	background-color: #dfdfdf; */ 
 	padding: 0px;
 	float: left;
 }
 
-.result {
-	padding: 0px;
+.result {  
+	padding: 0px; 
 	width: 100%;
 	clear: both;
 }

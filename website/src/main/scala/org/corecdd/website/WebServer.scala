@@ -75,18 +75,16 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
       for (i <- 0 to e.arity - 1)
         yield request.getParameterValues(paramNames(i))(0)
     html(baseRequest, request, e, paramStrings)
-
   }
 
   def html(baseRequest: Request, request: HttpServletRequest, e: Engine, paramStrings: Iterable[String]) = {
-    val (engineForm, test) = try {
+    val (engineForm, params, conclusion) = try {
       val params = paramStrings.zip(e.paramDetails).map { case (param, details) => details.parser(param) }.toList
       val conclusion = e.findConclusionFor(params)
       val result = e.evaluateConclusion(params, conclusion)
-      val aTest = conclusion.scenarios.head
-      (formHtml(baseRequest, e, paramStrings.toList, "Params: " + params.map(toString(_)) + "\n" + result), Some(aTest))
-    } catch { case t: Throwable => t.printStackTrace(); (formHtml(baseRequest, e, List("").padTo(e.arity, ""), t.getClass + ": " + t.getMessage()), None) }
-    HtmlRenderer.liveEngineHtml(reportCreator.rootUrl, test, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + e.titleOrDescription(""), e))
+      (formHtml(baseRequest, e, paramStrings.toList, "Params: " + params.map(toString(_)) + "\n" + result), Some(params), Some(conclusion))
+    } catch { case t: Throwable => t.printStackTrace(); (formHtml(baseRequest, e, List("").padTo(e.arity, ""), t.getClass + ": " + t.getMessage()), None, None) }
+    HtmlRenderer.liveEngineHtml(reportCreator.rootUrl, params, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + e.titleOrDescription(""), e))
   }
 
   def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse) = {
@@ -104,7 +102,7 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
             if (request.getMethod().equalsIgnoreCase("GET"))
               Some(getForm(baseRequest, request, e));
             else if (request.getMethod().equalsIgnoreCase("POST"))
-              Some(postForm(baseRequest, request, e));
+              Some(postForm(baseRequest, request, e)); 
         }
       case "/" =>
         reportCreator.htmlFor(List(p, reportCreator.report))
