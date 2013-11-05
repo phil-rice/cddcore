@@ -40,7 +40,7 @@ abstract class WebServer {
 }
 
 class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
-  val reportCreator = new ReportCreator(p, reportableToUrl = new SimpleReportableToUrl)
+  val reportCreator = new ReportCreator(p, live = true, reportableToUrl = new SimpleReportableToUrl)
   val urlMap = reportCreator.urlMap
 
   def findParamNames(e: Engine) = e.paramDetails.map((x) => Some(x.displayName)).padTo(e.arity, None).zipWithIndex.map { case (None, i) => "param" + i; case (Some(x), _) => x }
@@ -84,7 +84,7 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
       val result = e.evaluateConclusion(params, conclusion)
       (formHtml(baseRequest, e, paramStrings.toList, "Params: " + params.map(toString(_)) + "\n" + result), Some(params), Some(conclusion))
     } catch { case t: Throwable => t.printStackTrace(); (formHtml(baseRequest, e, List("").padTo(e.arity, ""), t.getClass + ": " + t.getMessage()), None, None) }
-    HtmlRenderer.liveEngineHtml(reportCreator.rootUrl, params, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + e.titleOrDescription(""), e))
+    HtmlRenderer(true).liveEngineHtml(reportCreator.rootUrl, params, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + e.titleOrDescription(""), e))
   }
 
   def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse) = {
@@ -102,7 +102,7 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
             if (request.getMethod().equalsIgnoreCase("GET"))
               Some(getForm(baseRequest, request, e));
             else if (request.getMethod().equalsIgnoreCase("POST"))
-              Some(postForm(baseRequest, request, e)); 
+              Some(postForm(baseRequest, request, e));
         }
       case "/" =>
         reportCreator.htmlFor(List(p, reportCreator.report))

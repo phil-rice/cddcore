@@ -20,7 +20,7 @@ class ReportCreatorTests extends AbstractTest {
     scenario(21, "twentyone").expected("21->").because((x: Int) => x == 21).
     build
   val pForTitle = Project("ProjName", engine);
-  val rc = new ReportCreator(pForTitle, "ReportTitle", new SimpleReportableToUrl)
+  val rc = new ReportCreator(pForTitle, "ReportTitle", false, new SimpleReportableToUrl)
 
   "A ReportCreator" should "produce Html for a project " in {
     val html = rc.htmlFor(List(pForTitle)).get
@@ -39,7 +39,7 @@ class ReportCreatorTests extends AbstractTest {
       new UseCasePageChecker(path, html, rc.reportableToUrl)
     }
   }
-  
+
   it should "produce HTML for scenarios" in {
     for (uc <- engine.children; s <- uc.children) {
       val path = List(s, uc, engine, pForTitle, rc.report)

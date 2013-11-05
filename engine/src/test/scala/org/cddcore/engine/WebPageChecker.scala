@@ -5,6 +5,7 @@ import scala.xml.NodeSeq
 import scala.xml.XML
 import scala.xml.Node
 import Reportable._
+import scala.language.postfixOps 
 
 object PathUtils {
   def findUseCase(path: ReportableList) = findUseCasePath(path).head.asInstanceOf[RequirementAndHolder]
