@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>CDD Report: Project: Example</title>
+		<title>CDD Report: Usecase: Bribery works for young people</title>
 		<style>html {
 			font-family: Arial, Helvetica, sans-serif;
 			vertical-align: top;
@@ -319,15 +319,15 @@
 				</div>
 				<div class='reportTopBox'>
 					<div class='reportTitle'>Report name</div>
-					<div class='reportText'>Project: Example </div>
+					<div class='reportText'>Usecase: Bribery works for young people </div>
 					<div class='reportTitle'>Report date</div>
-					<div class='reportDate'>13:41 Mon Nov 4 2013</div>
+					<div class='reportDate'>13:55 Tue Nov 5 2013</div>
 				</div><!--Report Top Box -->
 			</div><!-- top Line -->
 			<div class='engine'>
 				<div class='engineSummary'>
 					<div class='engineText'>
-						<a href='/Report1/Example/Engine3.Engine.html'>Engine </a>
+						<a id='Engine_Engine3' href='/Report1/Example/Engine3.Engine.html'>Engine </a>
 						This engine works out what category of customer you are
 					</div>
 					<table class='engineTable'>
@@ -346,52 +346,42 @@
 							<td class='value'>9</td>
 						</tr>
 					</table>
-					<div class='usecaseSummary'>
+					<div class='usecase'>
 						<h4>
-							<a href='/Report1/Example/Engine3/UseCase4.UseCase.html'>Young people are not eligable</a>
-							<a href='/Report1/Example/Engine3/UseCase4/Scenario5.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Engine3/UseCase4/Child_aged_15.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
+							<a id='UseCase_UseCase7' href='/Report1/Example/Engine3/UseCase7.UseCase.html'>Bribery works for young people
 							</a>
 						</h4>
-						<p>Young people are not legally allowed to use this system. A
-							person is reguarded as young if they are under 16</p>
-					</div><!-- usecaseSummary -->
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Engine3/UseCase7.UseCase.html'>Bribery works for young people</a>
-							<a href='/Report1/Example/Engine3/UseCase7/Scenario8.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-					</div><!-- usecaseSummary -->
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Engine3/Poor_people.UseCase.html'>Poor people</a>
-							<a
-								href='/Report1/Example/Engine3/Poor_people/Very_poor_person.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Engine3/Poor_people/Scenario11.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-					</div><!-- usecaseSummary -->
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Engine3/Rich_people.UseCase.html'>Rich people</a>
-							<a
-								href='/Report1/Example/Engine3/Rich_people/Rich_person.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-						<p>Rich people are good for us. We regard them as rich if they
-							have more than 1000</p>
-					</div><!-- usecaseSummary -->
+						<table class='<tr><td class=' title '>
+							References
+						</td>
+							<td class='value'>
+								<a href='http://www.autotdd.com/wiki/Comparison_with_JBoss_/_Drools'>CR001</a>
+							</td>
+						</tr>
+							'>
+						</table>
+						<div class='scenario'>
+							<div class='scenarioText'>
+								<a id='Scenario_Scenario8'
+									href='/Report1/Example/Engine3/UseCase7/Scenario8.Scenario.html'>Scenario: Person(GBP(1000000,0),10)</a>
+							</div>
+							<table class='scenarioTable'>
+								<tr>
+									<td class='title'>Parameter</td>
+									<td class='value'>Person(GBP(1000000,0),10)</td>
+								</tr>
+								<tr>
+									<td class='title'>Expected</td>
+									<td class='value'>person.reallyRichKid</td>
+								</tr>
+								<tr>
+									<td class='title'>Because</td>
+									<td class='value'>org.cddcore.example.processCheque_DM_1.GBP.GBPToDouble(p.savings).>(100000)
+									</td>
+								</tr>
+							</table>
+						</div><!-- scenario -->
+					</div><!-- useCase -->
 				</div><!-- engineSummary -->
 				<div class='decisionTree'>
 					<div class='because'>
@@ -492,596 +482,6 @@
 						<span class='keyword'>then&#160;</span>
 						<div class='conclusion'>throw new java.lang.IllegalStateException()</div><!-- 
 							conclusion -->
-					</div><!-- result -->
-				</div><!-- decisionTree -->
-			</div><!-- engine -->
-			<div class='engine'>
-				<div class='engineSummary'>
-					<div class='engineText'>
-						<a href='/Report1/Example/Engine14.Engine.html'>Engine </a>
-						This engine works out whether to pay a cheque that has been
-						presented to the bank specified in the world
-					</div>
-					<table class='engineTable'>
-						<tr>
-							<td class='title'>Usecases</td>
-							<td class='value'>4</td>
-						</tr>
-						<tr>
-							<td class='title'>Nodes</td>
-							<td class='value'>11</td>
-						</tr>
-					</table>
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Engine14/UseCase15.UseCase.html'>Cheques that are for a different bank should be
-								rejected</a>
-							<a href='/Report1/Example/Engine14/UseCase15/Scenario16.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-					</div><!-- usecaseSummary -->
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Engine14/UseCase17.UseCase.html'>Cheques that are to a bank not on the white list should
-								be rejected</a>
-							<a href='/Report1/Example/Engine14/UseCase17/Scenario18.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-					</div><!-- usecaseSummary -->
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Engine14/UseCase19.UseCase.html'>Cheques that will take the customer over the overdraft
-								limit will should be rejected</a>
-							<a href='/Report1/Example/Engine14/UseCase19/Scenario20.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a href='/Report1/Example/Engine14/UseCase19/Scenario21.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-					</div><!-- usecaseSummary -->
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Engine14/UseCase22.UseCase.html'>Cheques that are to to customers in an accepted bank,
-								when the cheque writer has sufficient funds, should be allowed
-							</a>
-							<a href='/Report1/Example/Engine14/UseCase22/Scenario23.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a href='/Report1/Example/Engine14/UseCase22/Scenario24.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-					</div><!-- usecaseSummary -->
-				</div><!-- engineSummary -->
-				<div class='decisionTree'>
-					<div class='because'>
-						<div class='indent'>&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>(s.chequeFromBank().!=(s.world.thisBank))</div><!-- 
-							because -->
-					</div><!-- because -->
-					<div class='result'>
-						<div class='indent'>&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Engine14/UseCase15/Scenario16.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png'
-								title='One thousand pounds from rich roger at HSBC to rich roger at this bank. But the &quot;FromBank&quot; isn&quot;t this bank'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>ProcessChequeResult(false,Message(processCheque.reject.fromBankNotThisBank,WrappedArray()))
-						</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='because'>
-						<div class='indent'>&#160;&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>
-							({
-							<br />
-							val c: org.cddcore.example.processCheque_DM_Xml.BankId =
-							s.chequeToBank();
-							<br />
-							s.world.acceptedBanks.contains(c).unary_!
-							<br />
-							})
-						</div><!-- because -->
-					</div><!-- because -->
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Engine14/UseCase17/Scenario18.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png'
-								title='Dodgy Dave is moving half his funds to a bank that isn&quot;t on the accepted list'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>ProcessChequeResult(false,Message(processCheque.reject.toBank.notInWhiteList,WrappedArray(BankId(DodgyBank))))
-						</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='because'>
-						<div class='indent'>&#160;&#160;&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>(s.customerWouldBeOverDrawn.&amp;&amp;(s.customerHasNoOverdraftLimit))
-						</div><!-- because -->
-					</div><!-- because -->
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Engine14/UseCase19/Scenario20.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='Dodgy Dave sending more money than he has'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>ProcessChequeResult(false,Message(processCheque.reject.noOverdraft,WrappedArray()))
-						</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;&#160;&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='because'>
-						<div class='indent'>&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>(s.customerWouldExceedOverdraftLimit)</div><!-- because -->
-					</div><!-- because -->
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Engine14/UseCase19/Scenario21.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png'
-								title='Rich Roger sending more money than he has, taking him over his limit'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>ProcessChequeResult(false,Message(processCheque.reject.exceedsOverdraftLimit,WrappedArray()))
-						</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='because'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>(s.world.acceptedBanks.contains(s.chequeToBank()))
-						</div><!-- because -->
-					</div><!-- because -->
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Engine14/UseCase22/Scenario24.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png'
-								title='Dodgy Dave sending an OK cheque to someone in an accepted bank'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Engine14/UseCase22/Scenario23.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='Dodgy Dave sending an OK cheque to someone in this bank'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>ProcessChequeResult(true,Message(processCheque.accept,WrappedArray()))
-						</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<div class='conclusion'>ProcessChequeResult(false,
-							processCheque_DM_Xml.Message.stringToMessage(&quot;processCheque.defaultResult.shouldntHappen&quot;))
-						</div><!-- conclusion -->
-					</div><!-- result -->
-				</div><!-- decisionTree -->
-			</div><!-- engine -->
-			<div class='engine'>
-				<div class='engineSummary'>
-					<div class='engineText'>
-						<a href='/Report1/Example/Tennis_Kata.Engine.html'>Engine Tennis Kata</a>
-					</div>
-					<table class='engineTable'>
-						<tr>
-							<td class='title'>References</td>
-							<td class='value'>
-								<a href='http://codingdojo.org/cgi-bin/wiki.pl?KataTennis'>CodingDojo</a>
-								,
-								<a href='http://en.wikipedia.org/wiki/Tennis_score'>Wikipedia</a>
-							</td>
-						</tr>
-						<tr>
-							<td class='title'>Usecases</td>
-							<td class='value'>5</td>
-						</tr>
-						<tr>
-							<td class='title'>Nodes</td>
-							<td class='value'>15</td>
-						</tr>
-					</table>
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Tennis_Kata/Winning.UseCase.html'>Winning</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Winning/Scenario27.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Winning/Scenario28.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Winning/Scenario29.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Winning/Scenario30.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Winning/Scenario31.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Winning/Scenario32.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Winning/Scenario33.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Winning/Scenario34.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Winning/Scenario35.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-						<p>A game is won by the first player to have won at least four
-							points in total and at least two points more than the opponent.
-						</p>
-					</div><!-- usecaseSummary -->
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Tennis_Kata/Running_score.UseCase.html'>Running score</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Running_score/Scenario37.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Running_score/Scenario38.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-						<p>The running score of each game is described in a manner
-							peculiar to tennis: scores from zero to three points are
-							described as &quot;love&quot;, &quot;fifteen&quot;,
-							&quot;thirty&quot;, and &quot;forty&quot; respectively.</p>
-					</div><!-- usecaseSummary -->
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Tennis_Kata/UseCase39.UseCase.html'>When both have the same running score</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/UseCase39/Scenario40.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/UseCase39/Scenario41.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-						<p>The running score, if both scores are the same, is called xx
-							all</p>
-					</div><!-- usecaseSummary -->
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Tennis_Kata/Deuce.UseCase.html'>Deuce</a>
-							<a href='/Report1/Example/Tennis_Kata/Deuce/Scenario43.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a href='/Report1/Example/Tennis_Kata/Deuce/Scenario44.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a href='/Report1/Example/Tennis_Kata/Deuce/Scenario45.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-						<p>If at least three points have been scored by each player, and
-							the scores are equal, the score is &quot;deuce&quot;.</p>
-					</div><!-- usecaseSummary -->
-					<div class='usecaseSummary'>
-						<h4>
-							<a href='/Report1/Example/Tennis_Kata/Advantage.UseCase.html'>Advantage</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Advantage/Scenario47.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Advantage/Scenario48.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Advantage/Scenario49.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Advantage/Scenario50.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Advantage/Scenario51.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-							<a
-								href='/Report1/Example/Tennis_Kata/Advantage/Scenario52.Scenario.html'>
-								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
-							</a>
-						</h4>
-						<p>If at least three points have been scored by each side and a
-							player has one more point than his opponent, the score of the
-							game is &quot;advantage&quot; for the player in the lead.</p>
-					</div><!-- usecaseSummary -->
-				</div><!-- engineSummary -->
-				<div class='decisionTree'>
-					<div class='because'>
-						<div class='indent'>&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r)))
-						</div><!-- because -->
-					</div><!-- because -->
-					<div class='result'>
-						<div class='indent'>&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Deuce/Scenario45.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='6,6'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Deuce/Scenario44.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,4'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Deuce/Scenario43.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='3,3'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>deuce</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='because'>
-						<div class='indent'>&#160;&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>(l.-(r).>=(2).&amp;&amp;(l.>=(4)))</div><!-- because -->
-					</div><!-- because -->
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Winning/Scenario30.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='5,3'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Winning/Scenario29.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,2'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Winning/Scenario28.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,1'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Winning/Scenario27.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,0'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>left won</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='because'>
-						<div class='indent'>&#160;&#160;&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>(r.-(l).>=(2).&amp;&amp;(r.>=(4)))</div><!-- because -->
-					</div><!-- because -->
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Winning/Scenario35.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='40,42'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Winning/Scenario34.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='3,5'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Winning/Scenario33.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='2,4'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Winning/Scenario32.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='1,4'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Winning/Scenario31.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='0,4'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>right won</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;&#160;&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='because'>
-						<div class='indent'>&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>(l.&lt;(4).&amp;&amp;(r.&lt;(4)))</div><!-- because -->
-					</div><!-- because -->
-					<div class='because'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>(l.==(r).&amp;&amp;(l.&lt;(3)))</div><!-- because -->
-					</div><!-- because -->
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/UseCase39/Scenario41.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='2,2'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/UseCase39/Scenario40.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='0,0'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>scala.StringContext(&quot;&quot;, &quot;
-							all&quot;).s(TennisScorer.lookup(l))</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Running_score/Scenario38.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='2,1'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Running_score/Scenario37.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='2,3'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>scala.StringContext(&quot;&quot;, &quot;, &quot;,
-							&quot;&quot;).s(TennisScorer.lookup(l), TennisScorer.lookup(r))
-						</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='because'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r.+(1))))
-						</div><!-- because -->
-					</div><!-- because -->
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Advantage/Scenario49.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,3'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Advantage/Scenario48.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='6,5'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Advantage/Scenario47.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='5,4'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>advantage left</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='because'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>if&#160;</span>
-						<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(r.==(l.+(1))))
-						</div><!-- because -->
-					</div><!-- because -->
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Advantage/Scenario52.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='3,4'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Advantage/Scenario51.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='5,6'
-								alt='Test' />
-						</a>
-						<a class='scenarioLink'
-							href='/Report1/Example/Tennis_Kata/Advantage/Scenario50.Scenario.html'>
-							<img height='15' width='15'
-								src='http://img201.imageshack.us/img201/1442/a9t.png' title='4,5'
-								alt='Test' />
-						</a>
-						<div class='conclusion'>advantage right</div><!-- conclusion -->
-					</div><!-- result -->
-					<div class='else'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>else&#160;</span>
-					</div>
-					<div class='result'>
-						<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;&#160;</div>
-						<span class='keyword'>then&#160;</span>
-						<div class='conclusion'>&quot;error&quot;</div><!-- conclusion -->
 					</div><!-- result -->
 				</div><!-- decisionTree -->
 			</div><!-- engine -->

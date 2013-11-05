@@ -29,7 +29,8 @@ trait AssertEquals {
       }
 
     }
-    assert(expected == actual, msg)
+    if (expected != actual)
+      assert(expected == actual, msg)
   }
 
   def assertTextEquals(expected: String, actual: Node) {

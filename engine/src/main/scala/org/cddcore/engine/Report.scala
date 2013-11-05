@@ -92,6 +92,7 @@ trait ReportableToUrl {
   /** Will return a human readable name for each reportable in the reversed list. Typically this is used to make a path */
   def apply(path: ReportableList, separator: String = "/"): String = path.reverse.map(apply(_)).mkString(separator)
 
+  def urlId(r: Reportable, suffix: Option[String] = None): String = r.templateName + "_" + apply(r) + suffix.collect { case s => "_" + s }.getOrElse("")
   def url(path: ReportableList): Option[String]
 
   def makeUrlMap(r: ReportableHolder): UrlMap =
@@ -204,6 +205,7 @@ object Renderer {
     if (urlMap.contains(r)) {
       val url = urlMap(r)
       stringTemplate.setAttribute("url", url)
+      stringTemplate.setAttribute("urlId", repToUrl.urlId(path.head))
     }
   })
   protected def engineConfig = RenderAttributeConfigurer[Engine]("Engine", (_, _, path, e, stringTemplate) => stringTemplate.setAttribute("decisionTreeNodes", e.decisionTreeNodes))
@@ -213,7 +215,7 @@ object Renderer {
         case Some(t) => new HtmlWithTestIfThenPrinter(t, reportableToUrl, urlMap)
         case _ => new HtmlIfThenPrinter(reportableToUrl, urlMap)
       })))
-      
+
   def setAttribute(templateName: String, attributeName: String, value: Any) =
     RenderAttributeConfigurer[Engine](templateName, (reportableToUrl, urlMap, path, e, stringTemplate) =>
       stringTemplate.setAttribute(attributeName, value))
@@ -329,7 +331,8 @@ object HtmlRenderer {
   protected val title = "$title$"
   protected val description = "$if(description)$$description$$endif$"
   protected val date = "$if(reportDate)$<hr /><div class='dateTitle'>$reportDate$</div><hr /><div>$reportDate$</div>$endif$"
-  protected def titleAndDescription(clazz: String, titlePattern: String) = s"<div class='$clazz'>" + "$if(url)$<a href='$url$'>$endif$" + MessageFormat.format(titlePattern, title) + "$if(url)$</a>$endif$ " + description + "</div>"
+  protected def titleAndDescription(clazz: String, titlePattern: String) = s"<div class='$clazz'>" + a(MessageFormat.format(titlePattern, title)) + description + "</div>"
+  def a(body: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$'>$endif$" + body + "$if(url)$</a>$endif$"
 
   protected def cddLogoImg = "<img src='http://img24.imageshack.us/img24/4325/gp9j.png'  alt='CDD'/>"
 
@@ -392,22 +395,22 @@ object HtmlRenderer {
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
       "</div><!-- engine -->\n")
-      val liveEngineTemplate: StringRendererRenderer =
-      ("Engine", "<div class='engine'>" +
-    		  "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + table("engineTable", refsRow, useCasesRow, nodesCountRow) +"$engineForm$",
-    		  
-    		  "</div><!-- engineSummary -->" +
-    				  "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
-    		  "</div><!-- engine -->\n")
+  val liveEngineTemplate: StringRendererRenderer =
+    ("Engine", "<div class='engine'>" +
+      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + table("engineTable", refsRow, useCasesRow, nodesCountRow) + "$engineForm$",
+
+      "</div><!-- engineSummary -->" +
+      "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
+      "</div><!-- engine -->\n")
 
   val useCaseTemplate: StringRendererRenderer =
     ("UseCase",
-      "<div class='usecase'>" + "<h4>$if(url)$<a href='$url$'>$endif$" + title + "</a></h4>\n$if(description)$<p>$description$</p>$endif$" + "\n" + table(refsRow)+"\n",
+      "<div class='usecase'>" + "<h4>" + a(title) + "</h4>\n$if(description)$<p>$description$</p>$endif$" + "\n" + table("usecaseTable", refsRow) + "\n",
       "</div><!-- useCase -->\n")
 
   val useCaseWithScenariosSummarisedTemplate: StringRendererRenderer =
     ("UseCase",
-      "<div class='usecaseSummary'><h4> $if(url)$<a href='$url$'>$endif$" + title + "</a>\n",
+      s"<div class='usecaseSummary'><h4>${a(title)}\n",
       "</h4>$if(description)$<p>$description$</p>$endif$" + "</div><!-- usecaseSummary -->\n")
 
   val scenarioTemplate: StringRenderer = ("Scenario", "<div class='scenario'>" + titleAndDescription("scenarioText", "Scenario: {0}") +
@@ -417,7 +420,8 @@ object HtmlRenderer {
       expectedRow,
       codeRow,
       becauseRow) + "</div><!-- scenario -->\n")
-  val scenarioSummaryTemplate: StringRenderer = ("Scenario", "$if(url)$<a href='$url$'>$endif$<img src='" + HtmlForIfThenPrinter.normalScenarioIcon + "' />$if(url)$</a>$endif$")
+
+  val scenarioSummaryTemplate: StringRenderer = ("Scenario", a("<img src='" + HtmlForIfThenPrinter.normalScenarioIcon + "' />"))
 
   def table(clazz: String, rows: String*) = {
     val result = s"<table class='$clazz'>${rows.mkString("")}</table>"

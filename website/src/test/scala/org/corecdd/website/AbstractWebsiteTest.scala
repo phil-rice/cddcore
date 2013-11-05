@@ -1,27 +1,14 @@
 package org.corecdd.website
 
 import org.cddcore.engine.AbstractTest
-import org.junit.runner.RunWith
-import org.scalatest.selenium.HtmlUnit
-import org.scalatest.selenium.WebBrowser
-import org.openqa.selenium.htmlunit.HtmlUnitDriver
-import org.openqa.selenium.WebDriver
-import org.scalatest.BeforeAndAfterAll
-import scala.xml.Node
-import org.cddcore.engine.Reportable
-import org.cddcore.engine.Project
-import org.cddcore.engine.ReportableToUrl
-import org.cddcore.engine.Strings
-import scala.xml.XML
-import scala.xml.NodeSeq
-import org.cddcore.engine.Report
-import org.cddcore.engine.Engine
-import scala.xml.Elem
-import org.cddcore.engine.RequirementAndHolder
-import org.cddcore.engine.Test
-import org.cddcore.engine.ReportPages
 
-abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with BeforeAndAfterAll with ReportPages {
+import org.cddcore.engine._
+import org.openqa.selenium.WebDriver
+import org.openqa.selenium.htmlunit.HtmlUnitDriver
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.selenium.WebBrowser
+
+abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with BeforeAndAfterAll {
   import Reportable._
   val host = "http://localhost:8080"
   def server: WebServer
@@ -39,41 +26,50 @@ abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with Bef
     server.stop
   }
 
-  class ProjectPage(path: ReportableList) {
+  trait AbstractPage {
+    def path: ReportableList
+    def clickLogo = { click on id("cddLogo"); new ProjectPage(path.reverse.take(2).reverse) }
+//    println(currentUrl)
+  }
+
+  class ProjectPage(val path: ReportableList) extends AbstractPage {
     type PageType = ProjectPage
-    val project = findProject(path)
-    val reportSection = new ReportSection(path, XML.loadString(pageSource), reportableToUrl)
-    def clickLogo = { click on id("cddLogo"); new ProjectPage(path) }
-    def clickUsecase(useCase: RequirementAndHolder) = {
+    val projectPageChecker = new ProjectPageChecker(path, pageSource, reportableToUrl)
+    def clickEngine(path: ReportableList) = {
+      val urlId = reportableToUrl.urlId(path.head.asInstanceOf[Engine])
+      click on id(urlId)
+      new EnginePage(path)
+    }
+    
+    def clickUseCase(path: ReportableList) = {
+      val urlId = reportableToUrl.urlId(path.head)
+      click on id(urlId)
+      new UseCasePage(path)
+    }
+    
+    def clickScenario(path: ReportableList) = {
+      val urlId = reportableToUrl.urlId(path.head)
+      click on id(urlId)
+      new ScenarioPage(path)
     }
   }
 
-  def findUseCase(path: ReportableList) = usecasePath(path).head.asInstanceOf[RequirementAndHolder]
-  def usecasePath(path: ReportableList): ReportableList = path match {
-    case (usecase: RequirementAndHolder) :: tail => path
-    case h :: tail => usecasePath(tail)
-    case _ => throw new IllegalArgumentException
+  class EnginePage(val path: ReportableList) extends AbstractPage {
+    type PageType = EnginePage
+    val enginePageChecker = new EnginePageChecker(path, pageSource, reportableToUrl)
+
   }
 
-  def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[Engine]
-  def enginePath(path: ReportableList): ReportableList = path match {
-    case (engine: Engine) :: tail => path
-    case h :: tail => enginePath(tail)
-    case _ => throw new IllegalArgumentException
-  }
-  def findProject(path: ReportableList) = projectPath(path).head.asInstanceOf[Project]
-  def projectPath(path: ReportableList): ReportableList = path match {
-    case (project: Project) :: tail => path
-    case h :: tail => projectPath(tail)
-    case _ => throw new IllegalArgumentException
-  }
-  def findReport(path: ReportableList) = reportPath(path).head.asInstanceOf[Report]
-  def reportPath(path: ReportableList): ReportableList = path match {
-    case (project: Report) :: tail => path
-    case h :: tail => reportPath(tail)
-    case _ => throw new IllegalArgumentException
+  class UseCasePage(val path: ReportableList) extends AbstractPage {
+    type PageType = UseCasePage
+    val usePageChecker = new UseCasePageChecker(path, pageSource, reportableToUrl)
   }
 
+  class ScenarioPage(val path: ReportableList) extends AbstractPage {
+    type PageType = ScenarioPage
+    new ScenarioPageChecker(path, pageSource, reportableToUrl)
+
+  }
   def findWithClass(tag: String, clazzName: String) = findAll(tagName(tag)).filter(attributeEquals("class", clazzName))
 
   def attributeEquals(name: String, value: String)(element: Element) = {
