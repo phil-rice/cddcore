@@ -31,11 +31,20 @@ class ReportCreatorTests extends AbstractTest {
     val html = rc.htmlFor(List(engine, pForTitle)).get
     new EnginePageChecker(List(engine, pForTitle, rc.report), html, rc.reportableToUrl)
   }
+
   it should "produce HTML for usecases" in {
     for (uc <- engine.children) {
-      val path = List(uc, engine,  pForTitle,rc.report)
+      val path = List(uc, engine, pForTitle, rc.report)
       val html = rc.htmlFor(path).get
       new UseCasePageChecker(path, html, rc.reportableToUrl)
+    }
+  }
+  
+  it should "produce HTML for scenarios" in {
+    for (uc <- engine.children; s <- uc.children) {
+      val path = List(s, uc, engine, pForTitle, rc.report)
+      val html = rc.htmlFor(path).get
+      new ScenarioPageChecker(path, html, rc.reportableToUrl)
     }
   }
 }

@@ -65,7 +65,7 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   def scenarioPrefix: Option[Any]
   def start(path: ReqList, e: Engine): String = ""
   def ifPrint(path: ReqList, decision: Decision, ifClassName: String) =
-    s"<div class='$ifClassName'>${nbsp(indent(path))}<span class='keyword'>if&#160;</span> <div class='because'>(${htmlEscape(decision.prettyString)})</div><!-- because --></div><!-- $ifClassName -->\n"
+    s"<div class='decision'><div class='$ifClassName'>${nbsp(indent(path))}<span class='keyword'>if&#160;</span> <div class='because'>(${htmlEscape(decision.prettyString)})</div><!-- because --></div><!-- $ifClassName -->\n"
 
   def isSelected(t: Test) = false
 
@@ -75,11 +75,11 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   }
 
   def elsePrint(path: ReqList, decision: Decision) = s"<div class='else'>${nbsp(indent(path))}<span class='keyword'>else&#160;</span></div>\n";
-  def endPrint(path: ReqList, decision: Decision) = "";
+  def endPrint(path: ReqList, decision: Decision) = "</div><!--decision-->\n";
   def end = "";
 }
 
-class HtmlIfThenPrinter(val reportableToUrl: ReportableToUrl = new FileSystemReportableToUrl, val urlMap:UrlMap = UrlMap(Map(), Map()), val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
+class HtmlIfThenPrinter(val reportableToUrl: ReportableToUrl = new FileSystemReportableToUrl, val urlMap: UrlMap = UrlMap(Map(), Map()), val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
   def ifPrint(path: ReqList, decision: Decision): String =
     ifPrint(path, decision, "because")
 

@@ -212,6 +212,13 @@ br {
 	width: auto;
 }
 
+.decision {
+	margin: 0px;
+	padding: 0px;
+	width: 100%;
+	clear: both;
+	width: 100%;
+}
 .if {
 	margin: 0px;
 	padding: 0px;
@@ -232,7 +239,6 @@ br {
 .because {
 	/*	background-color: #dfdfdf; */
 	padding: 0px;
-	width: 70%;
 	float: left;
 }
 
