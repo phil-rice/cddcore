@@ -44,10 +44,44 @@ object TddLogger {
   case class Run() extends TddMessageType("Run")
   val compile = new Compile();
   val run = new Run();
+  var defaultLogger = noLogger
 
 }
 
 trait TddLogger extends LoggerDisplayProcessor {
+  import TddLogger._
+  def newRoot(description: String)
+  def addingUnder(description: String, parentWasTrue: Boolean, parentDescription: String)
+  def addScenarioForRoot(description: String)
+  def addFirstIfThenElse(description: String)
+  def addScenarioFor[B, RFn, R](description: String, code: CodeFn[B, RFn, R])
+
+  def merge(parentDescription: String, childDescription: String, yesNo: Boolean)
+  def mergeRoot(description: String)
+
+  def executing(params: List[Any])
+  def evaluating(because: List[Any], condition: Boolean)
+  def result(result: Any)
+}
+
+class DelegatingLogger(val delegate: TddLogger) extends TddLogger {
+  def displayMap: ClassFunctionList[String] = delegate.displayMap
+
+  def newRoot(description: String) = delegate.newRoot(description)
+  def addingUnder(description: String, parentWasTrue: Boolean, parentDescription: String) = delegate.addingUnder(description, parentWasTrue, parentDescription)
+  def addScenarioForRoot(description: String) = delegate.addScenarioForRoot(description)
+  def addFirstIfThenElse(description: String) = delegate.addFirstIfThenElse(description)
+  def addScenarioFor[B, RFn, R](description: String, code: CodeFn[B, RFn, R]) = delegate.addScenarioFor(description, code)
+
+  def merge(parentDescription: String, childDescription: String, yesNo: Boolean) = delegate.merge(parentDescription, childDescription, yesNo)
+  def mergeRoot(description: String) = delegate.mergeRoot(description)
+
+  def executing(params: List[Any]) = delegate.executing(params)
+  def evaluating(because: List[Any], condition: Boolean) = delegate.evaluating(because, condition)
+  def result(result: Any) = delegate.result(result)
+}
+
+trait SimpleTddLogger extends TddLogger {
   import TddLogger._
   /** The raw log message that writes the string to an output */
   protected def message(priority: Level, msgType: TddMessageType, message: => String)
@@ -58,7 +92,6 @@ trait TddLogger extends LoggerDisplayProcessor {
   def addFirstIfThenElse(description: String) = message(Level.DEBUG, TddLogger.compile, "Adding " + description + " as first if then else")
   def addScenarioFor[B, RFn, R](description: String, code: CodeFn[B, RFn, R]) = message(Level.DEBUG, TddLogger.compile, "Adding " + description + " as extra scenario for " + code.description)
 
-  private val yesNoLookup = Map(false -> "no", true -> "yes")
   def merge(parentDescription: String, childDescription: String, yesNo: Boolean) =
     message(Level.DEBUG, TddLogger.compile, "Merging " + childDescription + " under " + yesNoLookup(yesNo) + " of " + parentDescription)
   def mergeRoot(description: String) =
@@ -68,11 +101,12 @@ trait TddLogger extends LoggerDisplayProcessor {
   def evaluating(because: List[Any], condition: Boolean) = message(Level.INFO, TddLogger.run, " Condition " + because.mkString(" or ") + " was " + condition)
   def result(result: Any) =
     message(Level.DEBUG, TddLogger.run, " Result " + this(result))
+  private val yesNoLookup = Map(false -> "no", true -> "yes")
 }
 
 class SimpleLoggerDisplayProcessor(val displayMap: ClassFunctionList[String] = ClassFunctionList()) extends LoggerDisplayProcessor
 
-class Log4JLogger(override val displayMap: ClassFunctionList[String] = ClassFunctionList()) extends TddLogger {
+class Log4JLogger(override val displayMap: ClassFunctionList[String] = ClassFunctionList()) extends SimpleTddLogger {
   import TddLogger._
 
   protected def message(priority: Level, msgType: TddMessageType, message: => String) {
@@ -82,7 +116,7 @@ class Log4JLogger(override val displayMap: ClassFunctionList[String] = ClassFunc
 
 }
 
-class TestLogger(override val displayMap: ClassFunctionList[String] = ClassFunctionList()) extends TddLogger {
+class TestLogger(override val displayMap: ClassFunctionList[String] = ClassFunctionList()) extends SimpleTddLogger {
   import TddLogger._
   private var list = List[String]()
   protected def message(priority: Level, msgType: TddMessageType, message: => String) {
@@ -94,14 +128,14 @@ class TestLogger(override val displayMap: ClassFunctionList[String] = ClassFunct
 
 }
 
-class ConsoleLogger(override val displayMap: ClassFunctionList[String] = ClassFunctionList()) extends TddLogger {
+class ConsoleLogger(override val displayMap: ClassFunctionList[String] = ClassFunctionList()) extends SimpleTddLogger {
   import TddLogger._
   protected def message(priority: Level, msgType: TddMessageType, message: => String) =
     println(String.format("%-5s %-6s %s", priority, msgType, message))
 
 }
 
-class NoLogger extends TddLogger {
+class NoLogger extends SimpleTddLogger {
   import TddLogger._
   val displayMap: ClassFunctionList[String] = ClassFunctionList()
   protected def message(priority: Level, msgType: TddMessageType, message: => String) {}

@@ -54,7 +54,7 @@ trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
   }
 }
 
-class BuilderFactory1[P, R](override val logger: TddLogger = TddLogger.noLogger) extends ABuilderFactory1[P, R] {
+class BuilderFactory1[P, R](override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory1[P, R] {
   type RealScenarioBuilder = Builder1
   def builder = new Builder1
 
@@ -83,7 +83,7 @@ trait ABuilderFactory2[P1, P2, R] extends EngineUniverse[R] with Engine2Types[P1
   }
 }
 
-class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.noLogger) extends ABuilderFactory2[P1, P2, R] {
+class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory2[P1, P2, R] {
   type RealScenarioBuilder = Builder2
   def builder = new Builder2
 
@@ -94,7 +94,7 @@ class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.noLo
   }
 }
 
-class BuilderFactory3[P1, P2, P3, R](override val logger: TddLogger = TddLogger.noLogger) extends EngineUniverse[R] with Engine3Types[P1, P2, P3, R] {
+class BuilderFactory3[P1, P2, P3, R](override val logger: TddLogger = TddLogger.defaultLogger) extends EngineUniverse[R] with Engine3Types[P1, P2, P3, R] {
 
   type RealScenarioBuilder = Builder3
   def builder = new Builder3

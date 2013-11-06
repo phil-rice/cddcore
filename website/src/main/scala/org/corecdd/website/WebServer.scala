@@ -59,10 +59,13 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
     val center = if (e.arity == e.paramDetails.size) form else <p>This engine isn't configured for live operations. Add 'param' details</p>;
 
     <div>
-      <h2>{ e.titleOrDescription("<Unnamed>") }</h2>
       { center }
-      { result }
-    </div>.toString
+      <br />
+      <table>
+        <tr><td>Params:</td><td>{ params.mkString(", ") }</td></tr>
+        <tr><td>Result:</td><td>{ result }</td></tr>
+      </table>
+    </div>.toString 
   }
 
   def getForm(baseRequest: Request, request: HttpServletRequest, e: Engine) =
@@ -85,7 +88,7 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
       val params = paramStrings.zip(e.paramDetails).map { case (param, details) => details.parser(param) }.toList
       val conclusion = e.findConclusionFor(params)
       val result = e.evaluateConclusion(params, conclusion)
-      (formHtml(baseRequest, e, paramStrings.toList, "Params: " + params.map(toString(_)) + "\n" + result), Some(params), Some(conclusion))
+      (formHtml(baseRequest, e, paramStrings.toList, result.toString), Some(params), Some(conclusion))
     } catch { case t: Throwable => t.printStackTrace(); (formHtml(baseRequest, e, List("").padTo(e.arity, ""), t.getClass + ": " + t.getMessage()), None, None) }
     HtmlRenderer(true).liveEngineHtml(reportCreator.rootUrl, params, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + e.titleOrDescription(""), e))
   }

@@ -462,6 +462,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
   }
 
   trait EvaluateEngine {
+    
     def evaluate(fn: BecauseClosure, n: RorN, log: Boolean = true): RFn = {
       val result = n match {
         case Left(r) =>
