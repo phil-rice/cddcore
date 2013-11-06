@@ -7,34 +7,7 @@ import scala.xml.Node
 import Reportable._
 import scala.language.postfixOps 
 
-object PathUtils {
-  def findUseCase(path: ReportableList) = findUseCasePath(path).head.asInstanceOf[RequirementAndHolder]
-  def findUseCasePath(path: ReportableList): ReportableList = path match {
-    case (usecase: RequirementAndHolder) :: tail => path
-    case h :: tail => findUseCasePath(tail)
-    case _ => throw new IllegalArgumentException
-  }
 
-  def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[Engine]
-  def enginePath(path: ReportableList): ReportableList = path match {
-    case (engine: Engine) :: tail => path
-    case h :: tail => enginePath(tail)
-    case _ => throw new IllegalArgumentException
-  }
-  def findProject(path: ReportableList) = projectPath(path).head.asInstanceOf[Project]
-  def projectPath(path: ReportableList): ReportableList = path match {
-    case (project: Project) :: tail => path
-    case h :: tail => projectPath(tail)
-    case _ => throw new IllegalArgumentException
-  }
-  def findReport(path: ReportableList) = reportPath(path).head.asInstanceOf[Report]
-  def reportPath(path: ReportableList): ReportableList = path match {
-    case (project: Report) :: tail => path
-    case h :: tail => reportPath(tail)
-    case _ => throw new IllegalArgumentException
-  }
-
-}
 
 trait WebPageChecker extends AssertEquals {
   import PathUtils._
