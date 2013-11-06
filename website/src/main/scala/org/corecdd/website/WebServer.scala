@@ -7,10 +7,9 @@ import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.nio.SelectChannelConnector
 import org.eclipse.jetty.servlet._
-
 import com.sun.jersey.spi.container.servlet.ServletContainer
-
 import javax.servlet.http._
+import scala.xml.Elem
 
 object WebServer {
   def defaultPort = {
@@ -46,8 +45,7 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
   def findParamNames(e: Engine) = e.paramDetails.map((x) => Some(x.displayName)).padTo(e.arity, None).zipWithIndex.map { case (None, i) => "param" + i; case (Some(x), _) => x }
   def formHtml(baseRequest: Request, e: Engine, params: List[String], result: String) = {
     val paramNames = findParamNames(e)
-    <div>
-      <h2>{ e.titleOrDescription("<Unnamed>") }</h2>
+    val form =
       <form method='post' action={ baseRequest.getUri().getPath() }>
         {
           for (i <- 0 to (e.arity - 1)) yield {
@@ -58,6 +56,11 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
         }
         <input type='submit'/>
       </form>
+    val center = if (e.arity == e.paramDetails.size) form else <p>This engine isn't configured for live operations. Add 'param' details</p>;
+
+    <div>
+      <h2>{ e.titleOrDescription("<Unnamed>") }</h2>
+      { center }
       { result }
     </div>.toString
   }
@@ -94,9 +97,9 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
     val uri = baseRequest.getUri();
     val path = uri.getPath
     val html = path match {
-      case s: String if s.endsWith("/try") =>
-        val withoutTry = s.substring(0, s.length - 4);
-        val path: List[Reportable] = urlMap(withoutTry)
+      case s: String if s.endsWith("/live") =>
+        val withoutLive = s.substring(0, s.length - 5);
+        val path: List[Reportable] = urlMap(withoutLive)
         path.head match {
           case e: Engine =>
             if (request.getMethod().equalsIgnoreCase("GET"))

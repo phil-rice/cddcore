@@ -21,7 +21,7 @@ object CategorisePerson {
   
   val categorise = Engine[Person, String]().reference("", funcSpec).
     description("This engine works out what category of customer you are").
-    param((s: String)=> s.split(",") match {case Array(savings,age) => Person(Integer.parseInt(savings), Integer.parseInt(age))}, "savings,age").
+//    param((s: String)=> s.split(",") match {case Array(savings,age) => Person(Integer.parseInt(savings), Integer.parseInt(age))}, "savings,age"). 
     code((p: Person) => throw new IllegalStateException).
 
 

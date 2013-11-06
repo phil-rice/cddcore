@@ -340,7 +340,7 @@ object HtmlRenderer {
   protected val date = "$if(reportDate)$<hr /><div class='dateTitle'>$reportDate$</div><hr /><div>$reportDate$</div>$endif$"
   protected def titleAndDescription(clazz: String, titlePattern: String) = s"<div class='$clazz'>" + a(MessageFormat.format(titlePattern, title)) + description + "</div>"
   def a(body: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$'>$endif$" + body + "$if(url)$</a>$endif$"
-  def aForTry = "$if(url)$<a href='$url$/try'>$endif$try$if(url)$</a>$endif$"
+  def aForLive = "$if(url)$<a href='$url$/live'>$endif$Live$if(url)$</a>$endif$"
 
   protected def cddLogoImg = "<img src='http://img24.imageshack.us/img24/4325/gp9j.png'  alt='CDD'/>"
 
@@ -374,7 +374,7 @@ object HtmlRenderer {
 
   val engineTemplate: StringRendererRenderer =
     ("Engine", "<div class='engine'>" +
-      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + "$if(live)$" + aForTry + "$endif$" + table("engineTable", refsRow, useCasesRow, nodesCountRow),
+      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow, nodesCountRow),
 
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
@@ -426,7 +426,7 @@ class HtmlRenderer(live: Boolean) {
     configureReportable(scenarioSummaryTemplate)
 
   def liveEngineHtml(rootUrl: Option[String], params: Option[List[Any]], conclusion: Option[Conclusion], restrict: ReportableSet = Set(), engineForm: String) = Renderer(rootUrl, restrict, live).
-    configureAttribute(Renderer.decisionTreeConfig(params, conclusion, None), Renderer.setAttribute("Engine", "engineForm", engineForm), Renderer.setAttribute("Engine", "try", true)).
+    configureAttribute(Renderer.decisionTreeConfig(params, conclusion, None), Renderer.setAttribute("Engine", "engineForm", engineForm), Renderer.setAttribute("Engine", "live", true)).
     configureReportableHolder(reportTemplate, projectTemplate, liveEngineTemplate)
 
   def usecaseHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set()) = Renderer(rootUrl, restrict, live).
