@@ -12,7 +12,6 @@ object TennisScorer {
   val changeRequest = Document(name = Some("CR24"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
 
   val scorer = Engine[Int, Int, String]().title("Tennis Kata").reference("Game_score", wikipedia).reference("", definition).
-    code((l: Int, r: Int) => "error").
     param((s: String) => Integer.parseInt(s), "Left").
     param((s: String) => Integer.parseInt(s), "Right").
     

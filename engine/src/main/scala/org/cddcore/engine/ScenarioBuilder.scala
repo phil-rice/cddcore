@@ -53,7 +53,6 @@ trait EngineTypes[R] {
   /** This is just a type synonym to save messy code */
   type Code = CodeFn[B, RFn, R]
 
-  
   def makeClosureForAssertion(params: List[Any], r: ROrException[R]): AssertionClosure
   def makeClosureForBecause(params: List[Any]): BecauseClosure
   def makeClosureForResult(params: List[Any]): ResultClosure
@@ -86,7 +85,6 @@ case class ROrException[R](value: Option[R], exception: Option[Throwable]) {
     }
   } else false
 }
-
 
 trait EngineUniverse[R] extends EngineTypes[R] {
 
@@ -379,7 +377,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (s, description) => s.copy(description = description),
         (n, description) => if (n.description.isDefined) throw CannotDefineDescriptionTwiceException(n.description.get, description.get))
 
-    def param(parser: (String) => _, name: String = s"Param${paramDetails.size}") = withCases(paramDetails = ParamDetail( name, parser) :: paramDetails)
+    def param(parser: (String) => _, name: String = s"Param${paramDetails.size}") = withCases(paramDetails = ParamDetail(name, parser) :: paramDetails)
 
     def expectException[E <: Throwable](e: E, comment: String = "") =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
@@ -462,7 +460,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
   }
 
   trait EvaluateEngine {
-    
+
     def evaluate(fn: BecauseClosure, n: RorN, log: Boolean = true): RFn = {
       val result = n match {
         case Left(r) =>
@@ -495,7 +493,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     }
   }
-  trait EngineToString extends org.cddcore.engine.Engine {
+  trait EngineToString[R] extends org.cddcore.engine.Engine [R]{
 
     def root: Either[Conclusion, Decision]
 
@@ -544,7 +542,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       toStringWith(List(), root, new DefaultIfThenPrinter())
   }
 
-  trait BuildEngine extends EvaluateEngine with EngineToString {
+  trait BuildEngine extends EvaluateEngine with EngineToString[R] {
     def validateBecause(s: Scenario) {
       s.configure
       s.because match {
@@ -797,7 +795,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       result
     }
   }
-  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine {
+  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine[R] {
     def defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>
@@ -822,10 +820,15 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       validateScenarios(root, scenarios)
 
     def findConclusionFor(params: List[Any]): Conclusion = findConclusionFor(makeClosureForBecause(params), root)
-    def evaluateConclusion(params: List[Any], conclusion: Conclusion): Any = {
+    def evaluateConclusion(params: List[Any], conclusion: Conclusion): R = {
       conclusion match {
         case c: CodeAndScenarios => makeClosureForResult(params)(c.code.rfn)
-      }     
+      }
+    }
+    def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion) = {
+      try conclusion match {
+        case c: CodeAndScenarios => ROrException(makeClosureForResult(params)(c.code.rfn))
+      } catch { case e: Throwable => ROrException(e) }
     }
 
     def constructionString: String = constructionString(defaultRoot, scenarios, new DefaultIfThenPrinter)

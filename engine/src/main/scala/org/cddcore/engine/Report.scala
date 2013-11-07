@@ -40,7 +40,7 @@ class ReportCreator[RtoUrl <: ReportableToUrl](project: RequirementAndHolder, ti
   val urlMap = reportableToUrl.makeUrlMap(report)
   val rootUrl = reportableToUrl.url(List(project, report))
 
-  protected def engine(path: ReportableList) = path.collect { case e: Engine => e }.head
+  protected def engine(path: ReportableList) = path.collect { case e: Engine[_] => e }.head
 
   def htmlFor(path: ReportableList) = {
     val r = path.head
@@ -50,7 +50,7 @@ class ReportCreator[RtoUrl <: ReportableToUrl](project: RequirementAndHolder, ti
       //        case r: Report => Some(HtmlRenderer.reportHtml(rootUrl).render(reportableToUrl, urlMap, r))
       case p: Project =>
         Some(HtmlRenderer(live).projectHtml(rootUrl).render(reportableToUrl, urlMap, Report("Project: " + p.titleOrDescription(ReportCreator.unnamed), p)))
-      case e: Engine => Some(HtmlRenderer(live).engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), engine(path))))
+      case e: Engine[_] => Some(HtmlRenderer(live).engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), engine(path))))
       case u: RequirementAndHolder => Some(HtmlRenderer(live).usecaseHtml(rootUrl, restrict = path.toSet ++ u.children).render(reportableToUrl, urlMap, Report("Usecase: " + u.titleOrDescription(ReportCreator.unnamed), engine(path))))
       case t: Test =>
         val conclusion = PathUtils.findEngine(path).findConclusionFor(t.params)
@@ -213,17 +213,17 @@ object Renderer {
       stringTemplate.setAttribute("urlId", repToUrl.urlId(path.head))
     }
   })
-  protected def engineConfig = RenderAttributeConfigurer[Engine]("Engine", (_, _, path, e, stringTemplate) => stringTemplate.setAttribute("decisionTreeNodes", e.decisionTreeNodes))
+  protected def engineConfig = RenderAttributeConfigurer[Engine[_]]("Engine", (_, _, path, e, stringTemplate) => stringTemplate.setAttribute("decisionTreeNodes", e.decisionTreeNodes))
 
   def decisionTreeConfig(params: Option[List[Any]], conclusion: Option[Conclusion], test: Option[Test]) =
-    RenderAttributeConfigurer[Engine]("Engine", (reportableToUrl, urlMap, path, e, stringTemplate) =>
+    RenderAttributeConfigurer[Engine[_]]("Engine", (reportableToUrl, urlMap, path, e, stringTemplate) =>
       stringTemplate.setAttribute("decisionTree", e.toStringWith(params match {
         case Some(p) => new HtmlWithTestIfThenPrinter(p, conclusion, test, reportableToUrl, urlMap)
         case _ => new HtmlIfThenPrinter(reportableToUrl, urlMap)
       })))
 
   def setAttribute(templateName: String, attributeName: String, value: Any) =
-    RenderAttributeConfigurer[Engine](templateName, (reportableToUrl, urlMap, path, e, stringTemplate) =>
+    RenderAttributeConfigurer[Engine[_]](templateName, (reportableToUrl, urlMap, path, e, stringTemplate) =>
       stringTemplate.setAttribute(attributeName, value))
 
   protected def reportConfig = RenderAttributeConfigurer[Report]("Report", (reportableToUrl, urlMap, path, r, stringTemplate) => {
@@ -353,9 +353,10 @@ object HtmlRenderer {
   protected val scenariosRow = "$if(childrenCount)$<tr><td class='title'>Scenarios</td><td class='value'>$childrenCount$</td></tr>$endif$"
   protected val refsRow = "$if(references)$<tr><td class='title'>References</td><td class='value'>$references: {r|$r$}; separator=\", \"$</td></tr>$endif$"
 
+  lazy val css = Files.getFromClassPath(getClass, "cdd.css")
   val reportTemplate: StringRendererRenderer = ("Report", {
     "<!DOCTYPE html><html><head><title>CDD Report: $title$</title><style>" +
-      Files.getFromClassPath(getClass, "cdd.css") + "\n</style></head>\n" +
+      css  + "\n</style></head>\n" +
       "<body>" +
       "<div class='report'>" +
       "<div class='topLine'>" +

@@ -44,6 +44,12 @@
   <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.eclipse.jetty\jetty-util\jars\jetty-util-8.0.0.M0.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.eclipse.jetty\jetty-util\srcs\jetty-util-8.0.0.M0-sources.jar"></classpathentry>
   <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.eclipse.jetty\jetty-servlet\jars\jetty-servlet-8.0.0.M0.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.eclipse.jetty\jetty-servlet\srcs\jetty-servlet-8.0.0.M0-sources.jar"></classpathentry>
   <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.eclipse.jetty\jetty-security\jars\jetty-security-8.0.0.M0.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.eclipse.jetty\jetty-security\srcs\jetty-security-8.0.0.M0-sources.jar"></classpathentry>
+  <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.json4s\json4s-native_2.10\jars\json4s-native_2.10-3.2.5.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.json4s\json4s-native_2.10\srcs\json4s-native_2.10-3.2.5-sources.jar"></classpathentry>
+  <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.json4s\json4s-core_2.10\jars\json4s-core_2.10-3.2.5.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.json4s\json4s-core_2.10\srcs\json4s-core_2.10-3.2.5-sources.jar"></classpathentry>
+  <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.json4s\json4s-ast_2.10\jars\json4s-ast_2.10-3.2.5.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.json4s\json4s-ast_2.10\srcs\json4s-ast_2.10-3.2.5-sources.jar"></classpathentry>
+  <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\com.thoughtworks.paranamer\paranamer\jars\paranamer-2.5.6.jar" sourcepath="C:\Users\Phil\.ivy2\cache\com.thoughtworks.paranamer\paranamer\srcs\paranamer-2.5.6-sources.jar"></classpathentry>
+  <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.mockito\mockito-all\jars\mockito-all-1.9.0.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.mockito\mockito-all\srcs\mockito-all-1.9.0-sources.jar"></classpathentry>
+  <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.scala-lang\scalap\jars\scalap-2.10.0.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.scala-lang\scalap\srcs\scalap-2.10.0-sources.jar"></classpathentry>
   <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.scalatest\scalatest_2.10\jars\scalatest_2.10-2.0.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.scalatest\scalatest_2.10\srcs\scalatest_2.10-2.0-sources.jar"></classpathentry>
   <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.seleniumhq.selenium\selenium-java\jars\selenium-java-2.28.0.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.seleniumhq.selenium\selenium-java\srcs\selenium-java-2.28.0-sources.jar"></classpathentry>
   <classpathentry kind="lib" path="C:\Users\Phil\.ivy2\cache\org.seleniumhq.selenium\selenium-android-driver\jars\selenium-android-driver-2.28.0.jar" sourcepath="C:\Users\Phil\.ivy2\cache\org.seleniumhq.selenium\selenium-android-driver\srcs\selenium-android-driver-2.28.0-sources.jar"></classpathentry>
@@ -87,6 +93,7 @@
   <classpathentry exported="true" path="/constraint" kind="src" combineaccessrules="false"></classpathentry>
   <classpathentry exported="true" path="/engine" kind="src" combineaccessrules="false"></classpathentry>
   <classpathentry exported="true" path="/website" kind="src" combineaccessrules="false"></classpathentry>
+  <classpathentry exported="true" path="/legacy" kind="src" combineaccessrules="false"></classpathentry>
   <classpathentry path="org.eclipse.jdt.launching.JRE_CONTAINER" kind="con"></classpathentry>
   <classpathentry path="bin" kind="output"></classpathentry>
 </classpath>

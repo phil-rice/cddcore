@@ -86,9 +86,9 @@ object PathUtils {
     case _ => throw new IllegalArgumentException
   }
 
-  def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[Engine]
+  def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[Engine[_]]
   def enginePath(path: ReportableList): ReportableList = path match {
-    case (engine: Engine) :: tail => path
+    case (engine: Engine[_]) :: tail => path
     case h :: tail => enginePath(tail)
     case _ => throw new IllegalArgumentException
   }
@@ -165,7 +165,7 @@ object Engine {
 }
 case class ParamDetail(displayName: String, parser: (String) => _)
 
-trait Engine extends Requirement with RequirementAndHolder {
+trait Engine[R] extends Requirement with RequirementAndHolder {
   import Reportable._
   def documents: List[Document]
   def decisionTreeNodes: Int
@@ -176,8 +176,13 @@ trait Engine extends Requirement with RequirementAndHolder {
   def arity: Int
   def paramDetails: List[ParamDetail]
   def findConclusionFor(params: List[Any]): Conclusion
-  def evaluateConclusion(params: List[Any], conclusion: Conclusion): Any
+  def evaluateConclusion(params: List[Any], conclusion: Conclusion): R
+  def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion): ROrException[R]
 }
+
+trait Engine1[P, R] extends Engine[R] with Function1[P, R]
+trait Engine2[P1, P2, R] extends Engine[R] with Function2[P1, P2, R]
+trait Engine3[P1, P2, P3, R] extends Engine[R] with Function3[P1, P2, P3, R]
 
 trait ConclusionOrDecision extends Reportable {
   def allConclusion: List[Conclusion]
@@ -199,7 +204,7 @@ trait Decision extends ConclusionOrDecision {
 trait Conclusion extends ConclusionOrDecision {
   def code: CodeHolder
   def scenarios: List[Test]
-  val allConclusion = List(this) 
+  val allConclusion = List(this)
 }
 
 case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, url: Option[String] = None) {

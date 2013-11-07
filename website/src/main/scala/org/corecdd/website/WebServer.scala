@@ -42,8 +42,8 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
   val reportCreator = new ReportCreator(p, live = true, reportableToUrl = new SimpleReportableToUrl)
   val urlMap = reportCreator.urlMap
 
-  def findParamNames(e: Engine) = e.paramDetails.map((x) => Some(x.displayName)).padTo(e.arity, None).zipWithIndex.map { case (None, i) => "param" + i; case (Some(x), _) => x }
-  def formHtml(baseRequest: Request, e: Engine, params: List[String], result: String) = {
+  def findParamNames(e: Engine[_]) = e.paramDetails.map((x) => Some(x.displayName)).padTo(e.arity, None).zipWithIndex.map { case (None, i) => "param" + i; case (Some(x), _) => x }
+  def formHtml(baseRequest: Request, e: Engine[_], params: List[String], result: String) = {
     val paramNames = findParamNames(e)
     val form =
       <form method='post' action={ baseRequest.getUri().getPath() }>
@@ -68,14 +68,14 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
     </div>.toString 
   }
 
-  def getForm(baseRequest: Request, request: HttpServletRequest, e: Engine) =
+  def getForm(baseRequest: Request, request: HttpServletRequest, e: Engine[_]) =
     html(baseRequest, request, e, List().padTo(e.arity, ""))
 
   def toString(o: Any) = o match {
     case h: HtmlDisplay => h.htmlDisplay
     case _ => "" + o
   }
-  def postForm(baseRequest: Request, request: HttpServletRequest, e: Engine) = {
+  def postForm(baseRequest: Request, request: HttpServletRequest, e: Engine[_]) = {
     val paramNames = findParamNames(e)
     val paramStrings =
       for (i <- 0 to e.arity - 1)
@@ -83,7 +83,7 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
     html(baseRequest, request, e, paramStrings)
   }
 
-  def html(baseRequest: Request, request: HttpServletRequest, e: Engine, paramStrings: Iterable[String]) = {
+  def html(baseRequest: Request, request: HttpServletRequest, e: Engine[_], paramStrings: Iterable[String]) = {
     val (engineForm, params, conclusion) = try {
       val params = paramStrings.zip(e.paramDetails).map { case (param, details) => details.parser(param) }.toList
       val conclusion = e.findConclusionFor(params)
@@ -104,7 +104,7 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
         val withoutLive = s.substring(0, s.length - 5);
         val path: List[Reportable] = urlMap(withoutLive)
         path.head match {
-          case e: Engine =>
+          case e: Engine[_] =>
             if (request.getMethod().equalsIgnoreCase("GET"))
               Some(getForm(baseRequest, request, e));
             else if (request.getMethod().equalsIgnoreCase("POST"))
