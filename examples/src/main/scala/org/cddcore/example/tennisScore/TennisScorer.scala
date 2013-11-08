@@ -16,7 +16,6 @@ object TennisScorer {
     param((s: String) => Integer.parseInt(s), "Right").
     
     
-    
     useCase("Winning", "A game is won by the first player to have won at least four points in total and at least two points more than the opponent.").
     scenario(4, 0).expected("left won").because((l: Int, r: Int) => (l - r) >= 2 && l >= 4).
     scenario(4, 1).expected("left won").reference("1.22", changeRequest).

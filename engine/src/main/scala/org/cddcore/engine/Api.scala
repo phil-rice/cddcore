@@ -18,6 +18,7 @@ case class UrlMap(val toUrl: Map[Reportable, String], val fromUrl: Map[String, L
   def get(url: String) = fromUrl.get(url)
   def contains(r: Reportable) = toUrl.contains(r)
   def +(kv: (List[Reportable], String)) = UrlMap(toUrl + (kv._1.head -> kv._2), fromUrl + (kv._2 -> kv._1))
+  def size = toUrl.size
 }
 
 trait Reportable {
@@ -46,24 +47,6 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
         case _ => visitor(c :: newPath)
       }
   }
-
-  def foldWithPath[Acc](path: ReportableList, initial: Acc,
-    startFn: (Acc, ReportableList) => Acc,
-    childFn: (Acc, ReportableList) => Acc,
-    endFn: (Acc, ReportableList) => Acc): Acc = {
-    val newPath = this :: path
-    var acc = startFn(initial, newPath)
-    for (c <- children)
-      c match {
-        case holder: ReportableHolder =>
-          acc = holder.foldWithPath(newPath, acc, startFn, childFn, endFn)
-        case _ =>
-          acc = childFn(acc, c :: newPath)
-      }
-    acc = endFn(acc, newPath)
-    acc
-  }
-
   def foldWithPath[Acc](path: ReportableList, initial: Acc, fn: (Acc, ReportableList) => Acc): Acc = {
     val newPath = this :: path
     var acc = fn(initial, newPath)
@@ -75,6 +58,7 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
       }
     acc
   }
+
 }
 
 object PathUtils {
@@ -165,8 +149,15 @@ object Engine {
 }
 case class ParamDetail(displayName: String, parser: (String) => _)
 
+trait DecisionTreeFolder[Acc] {
+  def apply(acc: Acc, c: Conclusion): Acc
+  def apply(acc: Acc, d: Decision): Acc
+
+}
+
 trait Engine[R] extends Requirement with RequirementAndHolder {
   import Reportable._
+  def logger: TddLogger
   def documents: List[Document]
   def decisionTreeNodes: Int
   def root: Either[Conclusion, Decision]
@@ -178,6 +169,18 @@ trait Engine[R] extends Requirement with RequirementAndHolder {
   def findConclusionFor(params: List[Any]): Conclusion
   def evaluateConclusion(params: List[Any], conclusion: Conclusion): R
   def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion): ROrException[R]
+  def fold[Acc](initialValue: Acc, folder: DecisionTreeFolder[Acc]): Acc = fold[Acc](initialValue, root, folder)
+  def fold[Acc](initialValue: Acc, root: Either[Conclusion, Decision], folder: DecisionTreeFolder[Acc]): Acc = root match {
+    case Right(d: Decision) => fold(fold(folder(initialValue, d), d.yes, folder), d.no, folder)
+    case Left(c: Conclusion) => folder(initialValue, c)
+  }
+  def walkDecisionsAndConclusion(fn: (ConclusionOrDecision) => Unit): Unit = walkDecisionsAndConclusion(root, fn)
+  def walkDecisionsAndConclusion(root: Either[Conclusion, Decision], fn: (ConclusionOrDecision) => Unit): Unit = {
+    root match {
+      case Right(d: Decision) => fn(d); walkDecisionsAndConclusion(d.yes, fn); walkDecisionsAndConclusion(d.no, fn);
+      case Left(c: Conclusion) => fn(c)
+    }
+  }
 }
 
 trait Engine1[P, R] extends Engine[R] with Function1[P, R]

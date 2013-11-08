@@ -1,10 +1,507 @@
-<div class="result">
-	<div class="indent">  </div>
-	<span class="keyword">then </span>
-	<a href="/Report1/ProjName/EngTitle/uc2/twenty.Scenario.html" class="scenarioLink">
-		<img alt="Test" title="twenty"
-			src="http://img201.imageshack.us/img201/1442/a9t.png" width="15"
-			height="15" />
-	</a>
-	<div class="conclusion">20-&gt;</div>
-</div>
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>CDD Report: Legacy: Replacement Tennis scorer</title>
+		<style>html {
+			font-family: Arial, Helvetica, sans-serif;
+			vertical-align: top;
+			word-wrap: break-word;
+			box-sizing: border-box;
+			}
+
+			div {
+			position: relative;
+			padding: 5px;
+			width: auto;
+			overflow: auto;
+			}
+
+			span {
+			position: relative;
+			padding: 0px;
+			margin: 0px;
+			}
+
+			label {
+			display: inline-block;
+			width: 99px;
+			}
+
+			table {
+			table-layout: fixed;
+			width: 100%;
+			background-color: #ffffff;
+			position: relative;
+			border-collapse: collapse;
+			margin: 0px;
+			padding: 4px;
+			border: 0px;
+			background-color: #ffffff;
+			}
+
+			td {
+			vertical-align: top;
+			margin: 0px;
+			padding: 0px;
+			border: 1px solid black;
+			}
+
+			hr {
+			margin: 0px;
+			}
+
+			br {
+			clear: both;
+			}
+
+			.report {
+			margin: 6px;
+			padding: 0px;
+			}
+
+			.topLine {
+			padding: 0px;
+			}
+
+			.cddLogo {
+			position: relative;
+			float: left;
+			}
+
+			.cddBox {
+			position: relative;
+			float: left;
+			}
+
+			.kindlySupportedBy {
+			font-size: 50%;
+			padding: 0px;
+			margin: 0px;
+			}
+
+			.reportTopBox {
+			position: relative;
+			width: 58%;
+			border: 1px solid gray;
+			padding: 0px;
+			margin: 0px;
+			float: right;
+			}
+
+			.reportTitle {
+
+			}
+
+			.reportText {
+
+			}
+
+			.reportTitle {
+			width: 100%;
+			background-color: #b29f8c;
+			padding: 0px;
+			background-color: #b29f8c;
+			}
+
+			.reportText {
+			padding: 2px;
+			font-weight: bold;
+			}
+
+			.reportDate {
+			padding: 2px;
+			}
+
+			.project {
+			position: relative;
+			margin: 4px;
+			padding: 0px;
+			border: 1px solid gray;
+			}
+
+			.projectText {
+			background-color: #b29f8c;
+			padding: 2px;
+			}
+
+			.engine {
+			width: auto;
+			margin: 0px;
+			padding: 0px;
+			border: 1px solid gray;
+			}
+
+			.engineSummary {
+			float: left;
+			width: 35%;
+			margin: 0px;
+			margin: 6px;
+			padding: 0px;
+			}
+
+			.engineText {
+			background-color: #d6c6c4;
+			padding: 2px;
+			}
+
+			.decisionTree {
+			width: 58%;
+			height: 100%;
+			float: right;
+			font-family: monospace;
+			}
+
+			.usecase {
+			position: relative;
+			margin: 6px;
+			padding: 0px;
+			border: 1px solid gray;
+			}
+
+			.usecaseSummary {
+			margin: 6px;
+			padding: 0px;
+			width: 95%;
+			}
+
+			.usecaseText {
+			background-color: #cbc8be;
+			border: 0px;
+			margin: 0px;
+			padding: 2px;
+			}
+
+			.scenario {
+			padding: 0px;
+			margin: 6px;
+			border: 1px solid gray;
+			position: relative;
+			}
+
+			.scenarioText {
+			background-color: #d1c2a4;
+			border: 1px;
+			margin: 0px;
+			padding: 2px;
+			}
+
+			.scenarioValue {
+			background-color: #d0efd0;
+			margin: 10px;
+			}
+
+			.title {
+			width: 125px;
+			}
+
+			.input {
+			width: 100%
+			}
+
+			.value {
+
+			}
+
+			.indent {
+			float: left;
+			width: auto;
+			padding: 0px;
+			}
+
+			.keyword {
+			padding: 0px;
+			font-weight: 900;
+			color: #7f0055;
+			float: left;
+			width: auto;
+			}
+
+			.decision {
+			overflow: hidden;
+			margin: 0px;
+			padding: 0px;
+			width: 100%;
+			clear: both;
+			}
+			.if {
+			margin: 0px;
+			padding: 0px;
+			width: 100%;
+			clear: both;
+			width: 100%;
+			}
+
+			.ifTrue {
+			margin: 0px;
+			padding: 0px;
+			width: 90%;
+			clear: both;
+			width: 100%;
+			border: 2px solid #FF7E00;
+			}
+			.ifTrueOnPath {
+			margin: 0px;
+			padding: 0px;
+			width: 90%;
+			clear: both;
+			width: 100%;
+			border: 2px solid green;
+			}
+
+			.because {
+			/* background-color: #dfdfdf; */
+			padding: 0px;
+			float: left;
+			}
+
+			.result {
+			padding: 0px;
+			width: 100%;
+			clear: both;
+			}
+
+			.resultWithTest {
+			padding: 0px;
+			width: 100%;
+			float: left;
+			border: 2px solid green;
+			}
+
+			.conclusion {
+			padding: 0px;
+			width: 80%;
+			float: left;
+			float: left;
+			}
+
+			.else {
+			padding: 0px;
+			margin: 2px;
+			clear: both;
+			}
+
+			.tests {
+			float: left;
+			width: auto;
+			}
+
+			.scenarioLink {
+			float: left;
+			}
+
+			.useCaseAndScenario {
+			border: 1px solid gray;
+			padding: 0px;
+			margin: 5px;
+			width: 38%;
+			height: 100%;
+			float: right;
+			}
+
+			.XmlTitle {
+			font-weight: bold;
+			}
+		</style>
+	</head>
+	<body>
+		<div class='report'>
+			<div class='topLine'>
+				<div class='cddLogo'>
+					<img src='http://img24.imageshack.us/img24/4325/gp9j.png' alt='CDD' />
+				</div>
+				<div class='cddBox'>
+					<div class='kindlySupportedBy'>Kindly supported by</div>
+					<br />
+					<!-- <a href="http://atos.net" ><img src="http://img546.imageshack.us/img546/5209/a4jz.png" 
+						alt="Atos"/></a><br /> <a href="http://www.cassidian.com/en_US" ><img src="http://img89.imageshack.us/img89/1244/wzeh.png" 
+						alt="Cassidian"/></a><br /> <a href="http://www.codelmark.co.uk/" ><img src="http://img28.imageshack.us/img28/8836/xswx.png" 
+						alt="Codel"/></a> -->
+					<a href="http://www.theagileconsultancy.com/">
+						<img src="http://img208.imageshack.us/img208/6593/p8a2.png"
+							alt="The Agile Consultancy" />
+					</a>
+				</div>
+				<div class='reportTopBox'>
+					<div class='reportTitle'>Report name</div>
+					<div class='reportText'>Legacy: Replacement Tennis scorer </div>
+					<div class='reportTitle'>Report date</div>
+					<div class='reportDate'>17:28 Thu Nov 7 2013</div>
+				</div><!--Report Top Box -->
+			</div><!-- top Line -->
+			<div class='engine'>
+				<div class='engineSummary'>
+					<div class='engineText'>
+						<a id='Engine_Engine1' href='file:///C:\Users\Phil\.cdd\Report1\Engine10.Engine.html'>Engine </a>
+						Replacement Tennis scorer
+					</div>
+					<table class='engineTable'>
+						<tr>
+							<td class='title'>Usecases</td>
+							<td class='value'>5</td>
+						</tr>
+						<tr>
+							<td class='title'>Nodes</td>
+							<td class='value'>15</td>
+						</tr>
+					</table>
+					<div class='legacyConclusion'>
+						<div class='legacyConclusionText'>
+							<a id='CodeAndScenarios_CodeAndScenarios2'
+								href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios12.CodeAndScenarios.html'>Conclusion </a>
+						</div>
+						<table class='legacyConclusionTable'></table>
+					</div><!-- legacyConclusion' -- ><div class='legacyConclusion'><div 
+						class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios3' href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios14.CodeAndScenarios.html'>Conclusion 
+						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
+						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios4' 
+						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios16.CodeAndScenarios.html'>Conclusion 
+						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
+						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios5' 
+						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios19.CodeAndScenarios.html'>Conclusion 
+						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
+						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios6' 
+						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios20.CodeAndScenarios.html'>Conclusion 
+						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
+						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios7' 
+						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios22.CodeAndScenarios.html'>Conclusion 
+						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
+						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios8' 
+						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios24.CodeAndScenarios.html'>Conclusion 
+						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
+						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios9' 
+						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios25.CodeAndScenarios.html'>Conclusion 
+						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
+						-- ></div><!-- engineSummary -->
+					<div class='decisionTree'>
+						<div class='decision'>
+							<div class='because'>
+								<div class='indent'>&#160;</div>
+								<span class='keyword'>if&#160;</span>
+								<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r)))
+								</div><!-- because -->
+							</div><!-- because -->
+							<div class='result'>
+								<div class='indent'>&#160;&#160;</div>
+								<span class='keyword'>then&#160;</span>
+								<div class='conclusion'>3 deuce</div><!-- conclusion -->
+							</div><!-- result -->
+							<div class='else'>
+								<div class='indent'>&#160;</div>
+								<span class='keyword'>else&#160;</span>
+							</div>
+							<div class='decision'>
+								<div class='because'>
+									<div class='indent'>&#160;&#160;</div>
+									<span class='keyword'>if&#160;</span>
+									<div class='because'>(l.-(r).>=(2).&amp;&amp;(l.>=(4)))</div><!-- because -->
+								</div><!-- because -->
+								<div class='result'>
+									<div class='indent'>&#160;&#160;&#160;</div>
+									<span class='keyword'>then&#160;</span>
+									<div class='conclusion'>4 left won</div><!-- conclusion -->
+								</div><!-- result -->
+								<div class='else'>
+									<div class='indent'>&#160;&#160;</div>
+									<span class='keyword'>else&#160;</span>
+								</div>
+								<div class='decision'>
+									<div class='because'>
+										<div class='indent'>&#160;&#160;&#160;</div>
+										<span class='keyword'>if&#160;</span>
+										<div class='because'>(r.-(l).>=(2).&amp;&amp;(r.>=(4)))</div><!-- because -->
+									</div><!-- because -->
+									<div class='result'>
+										<div class='indent'>&#160;&#160;&#160;&#160;</div>
+										<span class='keyword'>then&#160;</span>
+										<div class='conclusion'>4 right won</div><!-- conclusion -->
+									</div><!-- result -->
+									<div class='else'>
+										<div class='indent'>&#160;&#160;&#160;</div>
+										<span class='keyword'>else&#160;</span>
+									</div>
+									<div class='decision'>
+										<div class='because'>
+											<div class='indent'>&#160;&#160;&#160;&#160;</div>
+											<span class='keyword'>if&#160;</span>
+											<div class='because'>(l.&lt;(4).&amp;&amp;(r.&lt;(4)))</div><!-- because -->
+										</div><!-- because -->
+										<div class='decision'>
+											<div class='because'>
+												<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
+												<span class='keyword'>if&#160;</span>
+												<div class='because'>(l.==(r).&amp;&amp;(l.&lt;(3)))</div><!-- because -->
+											</div><!-- because -->
+											<div class='result'>
+												<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
+												<span class='keyword'>then&#160;</span>
+												<div class='conclusion'>0 scala.StringContext(&quot;&quot;, &quot;
+													all&quot;).s(TennisExample.lookup(l))</div><!-- conclusion -->
+											</div><!-- result -->
+											<div class='else'>
+												<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
+												<span class='keyword'>else&#160;</span>
+											</div>
+											<div class='result'>
+												<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
+												<span class='keyword'>then&#160;</span>
+												<div class='conclusion'>2 scala.StringContext(&quot;&quot;, &quot;,
+													&quot;, &quot;&quot;).s(TennisExample.lookup(l),
+													TennisExample.lookup(r))</div><!-- conclusion -->
+											</div><!-- result -->
+										</div><!--decision -->
+										<div class='else'>
+											<div class='indent'>&#160;&#160;&#160;&#160;</div>
+											<span class='keyword'>else&#160;</span>
+										</div>
+										<div class='decision'>
+											<div class='because'>
+												<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
+												<span class='keyword'>if&#160;</span>
+												<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r.+(1))))
+												</div><!-- because -->
+											</div><!-- because -->
+											<div class='result'>
+												<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
+												<span class='keyword'>then&#160;</span>
+												<div class='conclusion'>2 advantage left</div><!-- conclusion -->
+											</div><!-- result -->
+											<div class='else'>
+												<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
+												<span class='keyword'>else&#160;</span>
+											</div>
+											<div class='decision'>
+												<div class='because'>
+													<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
+													<span class='keyword'>if&#160;</span>
+													<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(r.==(l.+(1))))
+													</div><!-- because -->
+												</div><!-- because -->
+												<div class='result'>
+													<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;&#160;
+													</div>
+													<span class='keyword'>then&#160;</span>
+													<div class='conclusion'>2 advantage right</div><!-- conclusion -->
+												</div><!-- result -->
+												<div class='else'>
+													<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
+													<span class='keyword'>else&#160;</span>
+												</div>
+												<div class='result'>
+													<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;&#160;
+													</div>
+													<span class='keyword'>then&#160;</span>
+													<div class='conclusion'>0 org.cddcore.engine.UndecidedException,
+														Nothing]((() => new UndecidedException()))</div><!-- conclusion -->
+												</div><!-- result -->
+											</div><!--decision -->
+										</div><!--decision -->
+									</div><!--decision -->
+								</div><!--decision -->
+							</div><!--decision -->
+						</div><!--decision -->
+					</div><!-- decisionTree -->
+				</div><!-- engine -->
+			</div><!-- report -->
+	</body>
+</html>

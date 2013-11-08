@@ -115,6 +115,7 @@ class BuilderNodeTests extends EngineStringStringTests {
     assertEquals(None, b2.expected);
     assertEquals(0, b1.priority);
   }
+  
   it should "allow usecase title and description to be set in one go" in {
 
     val b1 = builder.useCase("one", "d1").scenario("x", "sc_title", "sc_description")

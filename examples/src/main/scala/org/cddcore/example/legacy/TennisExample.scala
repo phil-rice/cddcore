@@ -1,6 +1,8 @@
 package org.cddcore.example.legacy
 
 import org.cddcore.engine.Engine
+import scala.language.implicitConversions
+
 import org.legacycdd.legacy.Legacy
 import org.cddcore.engine.Files
 import scala.io.Source
@@ -8,6 +10,8 @@ import org.legacycdd.legacy.MemoryReporter
 import org.cddcore.engine.ROrException
 import org.legacycdd.legacy.MemoryReporterToHtml
 import java.io.File
+import org.legacycdd.legacy.LegacyItem
+import org.legacycdd.legacy.LegacyData
 
 object TennisExample {
 
@@ -27,11 +31,11 @@ object TennisExample {
     scenario(40, 42).expected("right won").
 
     useCase("Running score").description("The running score of each game is described in a manner peculiar to tennis: scores from zero to three points are described as 'love', 'fifteen', 'thirty', and 'forty' respectively.").
-    scenario(2, 3).expected("thirty, forty").because((l: Int, r: Int) => l < 4 && r < 4).code((l: Int, r: Int) => s"${lookup(l)}, ${lookup(r)}").
+    scenario(2, 3).expected("thirty, forty").because((l: Int, r: Int) => l < 4 && r < 4).code((l: Int, r: Int) => lookup(l) + ", " + lookup(r)).
     scenario(2, 1).expected("thirty, fifteen").
 
     useCase("When both have the same running score").description("The running score, if both scores are the same, is called xx all").
-    scenario(0, 0).expected("love all").because((l: Int, r: Int) => l == r && l < 3).code((l: Int, r: Int) => s"${lookup(l)} all").
+    scenario(0, 0).expected("love all").because((l: Int, r: Int) => l == r && l < 3).code((l: Int, r: Int) => lookup(l) + " all").
     scenario(2, 2).expected("thirty all").
 
     useCase("Deuce").description("If at least three points have been scored by each player, and the scores are equal, the score is 'deuce'.").expected("deuce").
@@ -48,16 +52,15 @@ object TennisExample {
     scenario(5, 6).expected("advantage right").
     scenario(3, 4).expected("advantage right").
     build
-
-  val categoriserEngine = Engine[ROrException[String], ROrException[String], String]().description("Legacy Result Categoriser").
-    code((l: ROrException[String], r: ROrException[String]) => "Fail").
-    useCase("Fail").expected("Fail").
-    scenario(ROrException("X"), ROrException("Y")).
-    code((l: ROrException[String], r: ROrException[String]) => "Fail").
-
-    useCase("Pass").expected("Pass").
-    scenario(ROrException("X"), ROrException("X")).because((l: ROrException[String], r: ROrException[String]) => l == r).
-    code((l: ROrException[String], r: ROrException[String]) => "Pass").
+  implicit def toROrException(x: String) = ROrException[String](x)
+  val categoriserEngine = Engine[LegacyData[Int, String], String]().
+    code((l: LegacyData[Int, String]) => "Fail").
+    useCase("Identical" ).
+    scenario(LegacyData(1, List(1,1), "X", "Y")).expected("Identical").because((l: LegacyData[Int, String]) => l.fail && l.p0==l.p1).
+    
+    useCase("Pass").expected("Pass"). 
+    scenario(LegacyData(1, List(1,2), "X", "X")).because((l: LegacyData[Int, String]) => l.pass).
+    code((l: LegacyData[Int, String]) => "Pass").
     build
 
   def main(args: Array[String]) {
@@ -77,10 +80,10 @@ object TennisExample {
       tennis,
       categoriserEngine,
       reporter)
-    val html = new MemoryReporterToHtml[Int].apply(reporter)
+    val html = new MemoryReporterToHtml[Int, String](categoriserEngine, tennis, reporter).apply
     println(html)
     Files.printToFile(new File("c:/Users/Phil/Desktop/tennis.html"))(_.println(html))
-
+    new MemoryReporterToHtml[Int, String](categoriserEngine, tennis, reporter).createReport()
   }
 
 }

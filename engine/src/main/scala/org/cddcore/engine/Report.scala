@@ -10,6 +10,70 @@ import Reportable.ReportableSet
 import org.cddcore.engine.tests.CddRunner
 import java.io.File
 
+object ReportWalker {
+  def childWalker = new ChildReportWalker
+  def engineConclusionWalker = new EngineConclusionWalker
+}
+trait ReportWalker {
+  import Reportable._
+  /**
+   * The head item in the initial path is 'walked down' and as more reportables are found start/end or child are called
+   *  The route taken by by the ReportFolder may vary. For example it may walk down the engine/scenario/usecase route, or it may do engine/decision/conclusion... etc
+   */
+  def foldWithPath[Acc](initialPath: ReportableList, initial: Acc,
+    startFn: (Acc, ReportableList) => Acc,
+    childFn: (Acc, ReportableList) => Acc,
+    endFn: (Acc, ReportableList) => Acc): Acc
+
+}
+
+class ChildReportWalker extends ReportWalker {
+  import Reportable._
+  def foldWithPath[Acc](path: ReportableList, initial: Acc,
+    startFn: (Acc, ReportableList) => Acc,
+    childFn: (Acc, ReportableList) => Acc,
+    endFn: (Acc, ReportableList) => Acc): Acc = {
+    val head = path.head
+    head match {
+      case holder: ReportableHolder =>
+        var acc = startFn(initial, path)
+        for (c <- holder.children)
+          acc = foldWithPath(c :: path, acc, startFn, childFn, endFn)
+        acc = endFn(acc, path)
+        acc
+      case _ => childFn(initial, path)
+    }
+  }
+}
+
+class EngineConclusionWalker extends ReportWalker {
+  import Reportable._
+  def foldWithPath[Acc](path: ReportableList, initial: Acc,
+    startFn: (Acc, ReportableList) => Acc,
+    childFn: (Acc, ReportableList) => Acc,
+    endFn: (Acc, ReportableList) => Acc): Acc = {
+    val head = path.head
+    head match {
+      case engine: Engine[_] =>
+        var acc = startFn(initial, path)
+        engine.walkDecisionsAndConclusion(engine.root, (cd: ConclusionOrDecision) => cd match {
+          case c: Conclusion => acc = childFn(acc, c :: path)
+          case d: Decision => ;
+        })
+        acc = endFn(acc, path)
+        acc
+      case holder: ReportableHolder =>
+        var acc = startFn(initial, path)
+        for (c <- holder.children)
+          acc = foldWithPath(c :: path, acc, startFn, childFn, endFn)
+        acc = endFn(acc, path)
+        acc
+      case _ => childFn(initial, path)
+    }
+  }
+
+}
+
 object ReportCreator {
   def unnamed = "<Unnamed>"
 
@@ -35,12 +99,11 @@ class FileReportCreator(project: Project, title: String, live: Boolean = false, 
 
 class ReportCreator[RtoUrl <: ReportableToUrl](project: RequirementAndHolder, title: String = null, val live: Boolean = false, val reportableToUrl: RtoUrl = new FileSystemReportableToUrl) {
   import Reportable._
+  import PathUtils._
   import Renderer._
   val report = Report(if (title == null) project.titleOrDescription("Unnamed") else title, project)
   val urlMap = reportableToUrl.makeUrlMap(report)
   val rootUrl = reportableToUrl.url(List(project, report))
-
-  protected def engine(path: ReportableList) = path.collect { case e: Engine[_] => e }.head
 
   def htmlFor(path: ReportableList) = {
     val r = path.head
@@ -50,11 +113,11 @@ class ReportCreator[RtoUrl <: ReportableToUrl](project: RequirementAndHolder, ti
       //        case r: Report => Some(HtmlRenderer.reportHtml(rootUrl).render(reportableToUrl, urlMap, r))
       case p: Project =>
         Some(HtmlRenderer(live).projectHtml(rootUrl).render(reportableToUrl, urlMap, Report("Project: " + p.titleOrDescription(ReportCreator.unnamed), p)))
-      case e: Engine[_] => Some(HtmlRenderer(live).engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), engine(path))))
-      case u: RequirementAndHolder => Some(HtmlRenderer(live).usecaseHtml(rootUrl, restrict = path.toSet ++ u.children).render(reportableToUrl, urlMap, Report("Usecase: " + u.titleOrDescription(ReportCreator.unnamed), engine(path))))
+      case e: Engine[_] => Some(HtmlRenderer(live).engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
+      case u: RequirementAndHolder => Some(HtmlRenderer(live).usecaseHtml(rootUrl, restrict = path.toSet ++ u.children).render(reportableToUrl, urlMap, Report("Usecase: " + u.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
       case t: Test =>
         val conclusion = PathUtils.findEngine(path).findConclusionFor(t.params)
-        Some(HtmlRenderer(live).scenarioHtml(rootUrl, conclusion, t, path.toSet).render(reportableToUrl, urlMap, Report("Scenario: " + t.titleOrDescription(ReportCreator.unnamed), engine(path))))
+        Some(HtmlRenderer(live).scenarioHtml(rootUrl, conclusion, t, path.toSet).render(reportableToUrl, urlMap, Report("Scenario: " + t.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
       case _ => None
     }
     optHtml
@@ -95,13 +158,32 @@ trait ReportableToUrl {
   /** Will return a human readable name for each reportable in the reversed list. Typically this is used to make a path */
   def apply(path: ReportableList, separator: String = "/"): String = path.reverse.map(apply(_)).mkString(separator)
 
+  /** We give each reportable a unique id, so that if it occurs once in an html document, we can reference it by id */
   def urlId(r: Reportable, suffix: Option[String] = None): String = r.templateName + "_" + apply(r) + suffix.collect { case s => "_" + s }.getOrElse("")
+
   def url(path: ReportableList): Option[String]
 
   def makeUrlMap(r: ReportableHolder): UrlMap =
     r.foldWithPath(List(), UrlMap(Map(), Map()), ((acc: UrlMap, path) => {
       val u = url(path);
       if (u.isDefined) acc + (path -> u.get) else acc
+    }))
+
+  def makeUrlMapWithDecisionsAndConclusions(r: ReportableHolder): UrlMap =
+    r.foldWithPath(List(), UrlMap(Map(), Map()), ((acc: UrlMap, path) => {
+      def addToMap(acc: UrlMap, path: ReportableList) = {
+        val u = url(path);
+        val withU = if (u.isDefined) acc + (path -> u.get) else acc
+        withU
+      }
+      val withU = addToMap(acc, path)
+      path.head match {
+        case e: Engine[_] => e.fold(withU, new DecisionTreeFolder[UrlMap] {
+          def apply(acc: UrlMap, c: Conclusion) = addToMap(acc, c :: path)
+          def apply(acc: UrlMap, d: Decision) = addToMap(acc, d :: path)
+        })
+        case _ => withU
+      }
     }))
 }
 
@@ -121,7 +203,7 @@ class NoReportableToUrl extends ReportableToUrl {
   override def hashCode = 0
   override def equals(other: Any) = other != null && other.isInstanceOf[NoReportableToUrl]
 }
-case class ReportableRenderer(restrict: Set[Reportable], configurers: List[RenderAttributeConfigurer] = List(), templates: Map[String, Renderer] = Map()) {
+case class ReportableRenderer(restrict: Set[Reportable], configurers: List[RenderAttributeConfigurer] = List(), templates: Map[String, Renderer] = Map(), walker: ReportWalker) {
   import Reportable._
   import Renderer._
 
@@ -131,7 +213,7 @@ case class ReportableRenderer(restrict: Set[Reportable], configurers: List[Rende
       return newRenderer.render(reportableToUrl, urlMap, holder)
     }
 
-    val result = holder.foldWithPath(List(), "",
+    val result = walker.foldWithPath(List(holder), "",
       startFn = (acc: String, path: ReportableList) =>
         acc + render(reportableToUrl, urlMap, path, path.head.templateName + "_start"),
       childFn = (acc: String, path: ReportableList) =>
@@ -185,8 +267,8 @@ object Renderer {
   val refRenderer = new ReferenceRenderer
   private val dateFormat: String = "HH:mm EEE MMM d yyyy"
   val dateFormatter = DateTimeFormat.forPattern(dateFormat);
-  def base(restrict: ReportableSet): ReportableRenderer = new ReportableRenderer(restrict)
-  def apply(rootUrl: Option[String], restrict: ReportableSet, live: Boolean) = base(restrict).configureAttribute(basic(rootUrl, live), engineConfig, reportConfig, testConfig)
+  def base(restrict: ReportableSet, walker: ReportWalker = ReportWalker.childWalker): ReportableRenderer = new ReportableRenderer(restrict, walker = walker)
+  def apply(rootUrl: Option[String], restrict: ReportableSet, live: Boolean, walker: ReportWalker = ReportWalker.childWalker) = base(restrict, walker).configureAttribute(basic(rootUrl, live), engineConfig, reportConfig, testConfig)
 
   protected def basic(rootUrl: Option[String], live: Boolean) = RenderAttributeConfigurer((repToUrl, urlMap, path, stringTemplate) => {
     val r = path.head
@@ -231,18 +313,22 @@ object Renderer {
     stringTemplate.setAttribute("title", r.reportTitle)
   })
 
+  def addParams(st: StringTemplate, attributeName: String, paramPrinter: LoggerDisplayProcessor, params: List[Any]) {
+    for (p <- params)
+      p match {
+        case h: HtmlDisplay =>
+          st.setAttribute(attributeName, ValueForRender(h))
+        case _ =>
+          st.setAttribute(attributeName, ValueForRender(paramPrinter(p)))
+      }
+  }
+
   protected def testConfig = RenderAttributeConfigurer[Test]("Scenario", (reportableToUrl, urlMap, path, t, stringTemplate) => {
     stringTemplate.setAttribute("code", ValueForRender(t.optCode.collect { case c => c.pretty } getOrElse (null)))
     stringTemplate.setAttribute("expected", ValueForRender(t.expected.getOrElse("")))
     stringTemplate.setAttribute("paramCount", t.params.size)
     stringTemplate.setAttribute("because", ValueForRender(t.because.collect { case c => c.pretty } getOrElse (null)))
-    for (p <- t.params)
-      p match {
-        case h: HtmlDisplay =>
-          stringTemplate.setAttribute("params", ValueForRender(h))
-        case _ =>
-          stringTemplate.setAttribute("params", ValueForRender(t.paramPrinter(p)))
-      }
+    addParams(stringTemplate, "params", t.paramPrinter, t.params)
   })
 
 }
@@ -338,17 +424,17 @@ object HtmlRenderer {
   protected val title = "$title$"
   protected val description = "$if(description)$$description$$endif$"
   protected val date = "$if(reportDate)$<hr /><div class='dateTitle'>$reportDate$</div><hr /><div>$reportDate$</div>$endif$"
-  protected def titleAndDescription(clazz: String, titlePattern: String) = s"<div class='$clazz'>" + a(MessageFormat.format(titlePattern, title)) + description + "</div>"
+  def titleAndDescription(clazz: String, titlePattern: String) = s"<div class='$clazz'>" + a(MessageFormat.format(titlePattern, title)) + description + "</div>"
   def a(body: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$'>$endif$" + body + "$if(url)$</a>$endif$"
   def aForLive = "$if(url)$<a href='$url$/live'>$endif$Live$if(url)$</a>$endif$"
 
   protected def cddLogoImg = "<img src='http://img24.imageshack.us/img24/4325/gp9j.png'  alt='CDD'/>"
 
-  protected val expectedRow = "<tr><td class='title'>Expected</td><td class='value'>$if(expected)$$expected$$endif$</td></tr>"
+  val expectedRow = "<tr><td class='title'>Expected</td><td class='value'>$if(expected)$$expected$$endif$</td></tr>"
   protected val codeRow = "$if(code)$<tr><td class='title'>Code</td><td class='value'>$code$</td></tr>$endif$"
   protected val becauseRow = "$if(because)$<tr><td class='title'>Because</td><td class='value'>$because$</td></tr>$endif$"
   protected val nodesCountRow = "<tr><td class='title'>Nodes</td><td class='value'>$decisionTreeNodes$</td></tr>"
-  protected val paramsRow = "<tr><td class='title'>Parameter</td><td class='value'>$params: {p|$p$}; separator=\"<hr /> \"$</td></tr>"
+  val paramsRow = "<tr><td class='title'>Parameter</td><td class='value'>$params: {p|$p$}; separator=\"<hr /> \"$</td></tr>"
   protected val useCasesRow = "$if(childrenCount)$<tr><td class='title'>Usecases</td><td class='value'>$childrenCount$</td></tr>$endif$"
   protected val scenariosRow = "$if(childrenCount)$<tr><td class='title'>Scenarios</td><td class='value'>$childrenCount$</td></tr>$endif$"
   protected val refsRow = "$if(references)$<tr><td class='title'>References</td><td class='value'>$references: {r|$r$}; separator=\", \"$</td></tr>$endif$"
@@ -356,7 +442,7 @@ object HtmlRenderer {
   lazy val css = Files.getFromClassPath(getClass, "cdd.css")
   val reportTemplate: StringRendererRenderer = ("Report", {
     "<!DOCTYPE html><html><head><title>CDD Report: $title$</title><style>" +
-      css  + "\n</style></head>\n" +
+      css + "\n</style></head>\n" +
       "<body>" +
       "<div class='report'>" +
       "<div class='topLine'>" +
@@ -386,7 +472,7 @@ object HtmlRenderer {
 
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
-      "</div><!-- engine -->\n") 
+      "</div><!-- engine -->\n")
 
   val useCaseTemplate: StringRendererRenderer =
     ("UseCase",

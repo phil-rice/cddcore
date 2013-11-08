@@ -39,7 +39,7 @@ abstract class WebServer {
 }
 
 class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
-  val reportCreator = new ReportCreator(p, live = true, reportableToUrl = new SimpleReportableToUrl)
+  val reportCreator = new ReportCreator(p, title = null, live = true, reportableToUrl = new SimpleReportableToUrl)
   val urlMap = reportCreator.urlMap
 
   def findParamNames(e: Engine[_]) = e.paramDetails.map((x) => Some(x.displayName)).padTo(e.arity, None).zipWithIndex.map { case (None, i) => "param" + i; case (Some(x), _) => x }
@@ -60,12 +60,12 @@ class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
 
     <div>
       { center }
-      <br />
+      <br/>
       <table>
         <tr><td>Params:</td><td>{ params.mkString(", ") }</td></tr>
         <tr><td>Result:</td><td>{ result }</td></tr>
       </table>
-    </div>.toString 
+    </div>.toString
   }
 
   def getForm(baseRequest: Request, request: HttpServletRequest, e: Engine[_]) =

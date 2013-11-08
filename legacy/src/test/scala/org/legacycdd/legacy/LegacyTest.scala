@@ -1,13 +1,15 @@
 package org.legacycdd.legacy
 
 import org.junit.runner.RunWith
+import 
+ scala.language.implicitConversions
 import org.cddcore.engine._
 import org.scalatest.junit.JUnitRunner
 import org.cddcore.engine.Conclusion
 import org.cddcore.engine.AbstractTest
 
 @RunWith(classOf[JUnitRunner])
-class LegacyTest extends AbstractTest  {
+class LegacyTest extends AbstractTest {
 
   val replacementEngine = Engine[Int, String]().
     useCase("").
@@ -18,33 +20,18 @@ class LegacyTest extends AbstractTest  {
   val conclusion1 = replacementEngine.root.right.get.no.left.get
   val conclusion2 = replacementEngine.root.right.get.yes.left.get
 
-  val categoriserEngine = Engine[ROrException[String], ROrException[String], String]().
+  implicit def toROrException(x: String) = ROrException[String](x)
+  val categoriserEngine = Engine[LegacyData[Int, String], String]().
     useCase("Pass").expected("pass").
-    scenario(ROrException("X"), ROrException("X")).because((l: ROrException[String], r:  ROrException[String]) => l == r).
+    scenario(LegacyData(1, List(1), "X", "X")).because((l: LegacyData[Int, String]) => l.expected == l.actual).
     useCase("Fail").expected("fail").
-    scenario(ROrException("X"), ROrException("Y")).because((l:  ROrException[String], r:  ROrException[String]) => l != r).
+    scenario(LegacyData(1, List(1), "X", "Y")).because((l: LegacyData[Int, String]) => l.expected != l.actual).
     build
-    
+
   val passConclusion = categoriserEngine.root.right.get.yes.left.get
   val failConclusion = categoriserEngine.root.right.get.no.right.get.yes.left.get
 
-  class LegacyReporterForTests [ID, R]extends LegacyReporter[ID, R] {
-    var actualIds = List[ID]()
-    var actualReplacement = List[Engine[R]]()
-    var actualCategoriser = List[Engine[String]]()
-    var actualReplacementConclusion = List[Conclusion]()
-    var actualCategoriserConclusion = List[Conclusion]()
-
-    def report(id: ID, replacement: Engine[R], replacementConclusion: Conclusion, categorise: Engine[String], categoriseConclusion: Conclusion) {
-      actualIds = id :: actualIds
-      actualReplacement = replacement :: actualReplacement
-      actualCategoriser = categorise :: actualCategoriser
-      actualReplacementConclusion = replacementConclusion :: actualReplacementConclusion
-      actualCategoriserConclusion = categoriseConclusion :: actualCategoriserConclusion
-    }
-  }
-
-  def makeLegacy(ids: Iterable[Int], reporter: LegacyReporter[Int,String]) =
+  def makeLegacy(ids: Iterable[Int], reporter: LegacyReporter[Int, String]) =
     new Legacy[Int, String](ids,
       (x: Int) => List(x),
       (x: Int) => ROrException("X".padTo(x, "X").mkString),
@@ -52,13 +39,17 @@ class LegacyTest extends AbstractTest  {
       reporter)
 
   "A Legacy" should "Execute ids and pass relevant parameters to the reporter" in {
-    var reporter = new LegacyReporterForTests[Int, String]
+    val reporter = new MemoryReporter[Int, String]
     val legacy = makeLegacy(List(1, 2, 3), reporter)
-    assertEquals(List(1, 2, 3), reporter.actualIds.reverse)
-    assertEquals(List(replacementEngine, replacementEngine, replacementEngine), reporter.actualReplacement.reverse)
-    assertEquals(List(conclusion1, conclusion2, conclusion1), reporter.actualReplacementConclusion.reverse)
-    assertEquals(List(categoriserEngine, categoriserEngine, categoriserEngine), reporter.actualCategoriser.reverse)
-    assertEquals(List(passConclusion, passConclusion, failConclusion), reporter.actualCategoriserConclusion.reverse)
+
+
+    assertEquals(List(2,1), reporter.itemsFor(passConclusion).map(_.id))
+    assertEquals(List(3), reporter.itemsFor(failConclusion).map(_.id))
+    assertEquals(List(3,1), reporter.itemsFor(conclusion1).map(_.id))
+    assertEquals(List(2), reporter.itemsFor(conclusion2).map(_.id))
+    
+    assertEquals(List(failConclusion), reporter.itemsFor(failConclusion).map(_.categoriseConclusion))
+    assertEquals(List(conclusion1), reporter.itemsFor(failConclusion).map(_.replacementConclusion))
   }
 
 } 

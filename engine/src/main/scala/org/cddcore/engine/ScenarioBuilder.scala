@@ -801,6 +801,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>
         new UndecidedException)), List(), true))
     }
+    def logger = EngineUniverse.this.logger
     override def templateName = "Engine"
     def useCases: List[UseCase];
     def children = useCases

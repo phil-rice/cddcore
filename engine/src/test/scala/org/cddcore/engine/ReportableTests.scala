@@ -21,9 +21,9 @@ trait ReportableTestFramework {
 }
 
 @RunWith(classOf[JUnitRunner])
-class ReportableTests extends AbstractTest with ReportableTestFramework{
+class ReportableTests extends AbstractTest with ReportableTestFramework {
   import Reportable._
- 
+
   "A Reportable Holder" should "have a for each method that goes over all descendants recursively" in {
     assertEquals(List(rep2, rep1), holder12.foldLeft(List[Reportable]())((acc, r) => r :: acc))
     assertEquals(List(rep5, rep4, rep3, holder345, rep2, rep1, holder12), holder_12_345.foldLeft(List[Reportable]())((acc, r) => r :: acc))
@@ -60,27 +60,6 @@ class ReportableTests extends AbstractTest with ReportableTestFramework{
     assertEquals(List(holder_12_345), map(holder_12_345))
     assertEquals(8, map.size)
   }
-  it should "fold with paths with startEnd over itself and all it's descendants" in {
-    val map = holder_12_345.foldWithPath(List(), Map[String, ReportableList](),
-      (acc: Map[String, ReportableList], list) => acc + (list.head + "_start" -> list),
-      (acc: Map[String, ReportableList], list) => acc + (list.head + "_child" -> list),
-      (acc: Map[String, ReportableList], list) => acc + (list.head + "_end" -> list))
-
-    assertEquals(List(rep1, holder12, holder_12_345), map(rep1 + "_child"))
-    assertEquals(List(rep2, holder12, holder_12_345), map(rep2 + "_child"))
-    assertEquals(List(holder12, holder_12_345), map(holder12 + "_start"))
-    assertEquals(List(holder12, holder_12_345), map(holder12 + "_end"))
-
-    assertEquals(List(rep3, holder345, holder_12_345), map(rep3 + "_child"))
-    assertEquals(List(rep4, holder345, holder_12_345), map(rep4 + "_child"))
-    assertEquals(List(rep5, holder345, holder_12_345), map(rep5 + "_child"))
-    assertEquals(List(holder345, holder_12_345), map(holder345 + "_start"))
-    assertEquals(List(holder345, holder_12_345), map(holder345 + "_end"))
-
-    assertEquals(List(holder_12_345), map(holder_12_345 + "_start"))
-    assertEquals(List(holder_12_345), map(holder_12_345 + "_end"))
-    assertEquals(11, map.size)
-  }
 
   "A FileSystemReportableToUrl" should "Make a nice name for a reportable" in {
     val toUrl = new FileSystemReportableToUrl
@@ -100,6 +79,47 @@ class ReportableTests extends AbstractTest with ReportableTestFramework{
   it should "make a url out of the path fragments" in {
     val toUrl = new FileSystemReportableToUrl
     assertEquals(Some("file:///C:\\Users\\Phil\\.cdd\\rep3\\rep2\\rep1.Req.html"), toUrl.url(List(rep1, rep2, rep3)))
+
+  }
+
+  "A ReportWalker.childWalker" should "fold with paths with startEnd over itself and all it's descendants" in {
+    val map = ReportWalker.childWalker.foldWithPath(List(holder_12_345), Map[String, ReportableList](),
+      (acc: Map[String, ReportableList], list) => acc + (list.head + "_start" -> list),
+      (acc: Map[String, ReportableList], list) => acc + (list.head + "_child" -> list),
+      (acc: Map[String, ReportableList], list) => acc + (list.head + "_end" -> list))
+
+    assertEquals(List(rep1, holder12, holder_12_345), map(rep1 + "_child"))
+    assertEquals(List(rep2, holder12, holder_12_345), map(rep2 + "_child"))
+    assertEquals(List(holder12, holder_12_345), map(holder12 + "_start"))
+    assertEquals(List(holder12, holder_12_345), map(holder12 + "_end"))
+
+    assertEquals(List(rep3, holder345, holder_12_345), map(rep3 + "_child"))
+    assertEquals(List(rep4, holder345, holder_12_345), map(rep4 + "_child"))
+    assertEquals(List(rep5, holder345, holder_12_345), map(rep5 + "_child"))
+    assertEquals(List(holder345, holder_12_345), map(holder345 + "_start"))
+    assertEquals(List(holder345, holder_12_345), map(holder345 + "_end"))
+
+    assertEquals(List(holder_12_345), map(holder_12_345 + "_start"))
+    assertEquals(List(holder_12_345), map(holder_12_345 + "_end"))
+    assertEquals(11, map.size)
+  }
+  "A ReportWalker.engineConclusionWalker" should "fold with paths with startEnd over things up to the engine then just the conclusions" in {
+    val e = Engine[Int, String]().useCase("uc1").scenario(0).expected("X").because((x: Int) => x == 0).build
+
+    type Acc = List[(ReportableList, String)]
+    val called = ReportWalker.engineConclusionWalker.foldWithPath(List(e), List[(ReportableList, String)](),
+      (acc: Acc, list) => acc :+ (list, "start"),
+      (acc: Acc, list) => acc :+ (list, "child"),
+      (acc: Acc, list) => acc :+ (list, "end"))
+
+    val d1 = e.root.right.get
+    val c1 = d1.yes.left.get
+    val c2 = d1.no.left.get
+    assertEquals((List(e), "start"), called(0))
+    assertEquals((List(c1, e), "child"), called(1))
+    assertEquals((List(c2, e), "child"), called(2))
+    assertEquals((List(e), "end"), called(3))
+    assertEquals(4, called.size)
 
   }
 
