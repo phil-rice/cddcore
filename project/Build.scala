@@ -3,11 +3,11 @@ import Keys._
 import com.typesafe.sbteclipse.plugin.EclipsePlugin.EclipseKeys
 
 
-
 object BuildSettings {
 
   val buildSettings = Defaults.defaultSettings ++ Seq(
     publishMavenStyle := true,
+
 
     publishTo <<= version { (v: String) =>
       val nexus = "https://oss.sonatype.org/"
@@ -51,6 +51,7 @@ object BuildSettings {
     EclipseKeys.withSource := true,
     EclipseKeys.eclipseOutput := Some("bin"),
     resolvers += Classpaths.typesafeResolver,
+
 // 
     libraryDependencies ++= Seq(
     "org.antlr" % "stringtemplate" % "3.2.1",
