@@ -44,7 +44,7 @@ object BuildSettings {
     unmanagedClasspath in Runtime <+= (baseDirectory) map { bd => Attributed.blank(bd / "src/main/resources") },
     organization := "org.cddcore",
     //version := "1.6.4-SNAPSHOT",
-    version := "1.6.5",
+    version := "1.7.0",
     scalacOptions ++= Seq(),
     retrieveManaged := false,
     scalaVersion := "2.10.1",
