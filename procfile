@@ -1,1 +1,1 @@
-web: target/start WebServer
+web: target/start  org.cddcore.example.ExampleWebsite
