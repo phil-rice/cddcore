@@ -35,8 +35,13 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, S
         resultPrint(path, conclusion, "result")
 
     override def resultPrint(path: ReqList, conclusion: Conclusion, resultClassName: String) = {
+      val scenarioHtml = conclusion.scenarios.map((s) => scenarioLink(urlMap, s, isSelected(s))).mkString
+      val thenHtml = urlMap.get(conclusion) match {
+        case Some(url) => s" <a href='$url'>${htmlEscape(conclusion.code.pretty)}</a>"
+        case _ => htmlEscape(conclusion.code.pretty)
+      }
       val count = rep.itemsFor(conclusion).size
-      s"<div class='$resultClassName'>${nbsp(indent(path))}<span class='keyword'>then&#160;</span><div class='conclusion'>" + count + s" <a href='${urlMap(conclusion)}'>${htmlEscape(conclusion.code.pretty)}</a></div><!-- conclusion --></div><!-- $resultClassName -->\n"
+      s"<div class='$resultClassName'>${nbsp(indent(path))}<span class='keyword'>then&#160;</span>$scenarioHtml<div class='conclusion'>" + count + thenHtml + "</div><!-- conclusion --></div><!-- $resultClassName -->\n"
     }
   }
 
@@ -132,11 +137,7 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, S
           def apply(acc: UrlMap, c: Conclusion) = {
             val initial = addToMap(reportableToUrl, acc, c :: path)
             val in1 = initial.contains(c)
-            val result = rep.itemsFor(c).foldLeft(initial)((acc, li) => {
-              val in = acc.contains(c)
-              val x = addToMap(reportableToUrl, acc, li :: path)
-              x
-            })
+            val result = rep.itemsFor(c).foldLeft(initial)((acc, li) => addToMap(reportableToUrl, acc, li :: path))
             val in = result.contains(c)
             result
           }
@@ -151,7 +152,7 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, S
     val project = new Project("Legacy Run", categorisationEngine, replacementEngine)
     val report = new Report("Legacy run", None, project)
     val urlMap = makeUrlMap(reportableToUrl, report)
-    ReportCreator.fileSystem(report).create
+    ReportCreator.fileSystem(report, optUrlMap = Some(urlMap)).create
 
     val rootUrl = urlMap.get(report)
     report.walkWithPath((path: ReportableList) => path.head match {

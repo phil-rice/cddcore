@@ -78,11 +78,11 @@ class EngineConclusionWalker extends ReportWalker {
 object ReportCreator {
   def unnamed = "<Unnamed>"
 
-  def fileSystem(r: ReportableHolder, title: String = null, live: Boolean = false) = new FileReportCreator(r, title, live, new FileSystemReportableToUrl)
+  def fileSystem(r: ReportableHolder, title: String = null, live: Boolean = false, optUrlMap: Option[UrlMap]=None) = new FileReportCreator(r, title, live, new FileSystemReportableToUrl, optUrlMap)
 
 }
 
-class FileReportCreator(r: ReportableHolder, title: String, live: Boolean = false, reportableToUrl: FileSystemReportableToUrl) extends ReportCreator[FileSystemReportableToUrl](r, title, live, reportableToUrl) {
+class FileReportCreator(r: ReportableHolder, title: String, live: Boolean = false, reportableToUrl: FileSystemReportableToUrl, optUrlMap: Option[UrlMap]) extends ReportCreator[FileSystemReportableToUrl](r, title, live, reportableToUrl, optUrlMap) {
   protected def print(path: ReportableList, html: String) {
     val file = reportableToUrl.file(path)
     println(file)
@@ -98,7 +98,7 @@ class FileReportCreator(r: ReportableHolder, title: String, live: Boolean = fals
   }
 }
 
-class ReportCreator[RtoUrl <: ReportableToUrl](r: ReportableHolder, title: String, val live: Boolean = false, val reportableToUrl: RtoUrl = new FileSystemReportableToUrl) {
+class ReportCreator[RtoUrl <: ReportableToUrl](r: ReportableHolder, title: String, val live: Boolean = false, val reportableToUrl: RtoUrl, optUrlMap: Option[UrlMap] = None) {
   import Reportable._
   import PathUtils._
   import Renderer._
@@ -108,9 +108,8 @@ class ReportCreator[RtoUrl <: ReportableToUrl](r: ReportableHolder, title: Strin
       Report(if (title == null) r.titleOrDescription("Unnamed") else title, r)
     case _ => throw new IllegalArgumentException
   }
-  val urlMap = reportableToUrl.makeUrlMap(report)
+  val urlMap = optUrlMap.getOrElse(reportableToUrl.makeUrlMap(r))
   val rootUrl = reportableToUrl.url(List(r, report).distinct)
-
   def htmlFor(path: ReportableList) = {
     val r = path.head
     if (!urlMap.contains(r))
@@ -146,7 +145,7 @@ trait ReportableToUrl {
           reqId += 1; val default = r.templateName + reqId;
           val result = Strings.urlClean(r match {
             case req: Requirement => { val result = req.titleOrDescription(default); if (result.length > 20) default else result }
-            case report: Report => { val result = report.title.getOrElse(default); if (result.length > 20) default else result  }
+            case report: Report => { val result = report.title.getOrElse(default); if (result.length > 20) default else result }
             case _ => default;
           }).replace(" ", "_")
           if (seen.contains(result)) default else result

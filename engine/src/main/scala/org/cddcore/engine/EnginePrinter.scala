@@ -60,8 +60,18 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   import HtmlForIfThenPrinter._
   import Strings._
 
-  def reportableToUrl: ReportableToUrl
   def urlMap: UrlMap
+
+  def scenarioHtml(conclusion: Conclusion, selected: (Test) => Boolean) = conclusion.scenarios.map((s) => scenarioLink(urlMap, s, selected(s))).mkString
+
+  def thenHtml(conclusion: Conclusion) = urlMap.get(conclusion) match {
+    case Some(url) =>
+      s" <a href='$url'>${htmlEscape(conclusion.code.pretty)}</a>"
+    case _ =>
+      htmlEscape(conclusion.code.pretty)
+  }
+
+  def reportableToUrl: ReportableToUrl
   def scenarioPrefix: Option[Any]
   def start(path: ReqList, e: Engine[_]): String = ""
   def ifPrint(path: ReqList, decision: Decision, ifClassName: String) =
@@ -70,8 +80,8 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
   def isSelected(t: Test) = false
 
   def resultPrint(path: ReqList, conclusion: Conclusion, resultClassName: String) = {
-    val scenarioHtml = conclusion.scenarios.map((s) => scenarioLink(urlMap, s, isSelected(s))).mkString
-    s"<div class='$resultClassName'>${nbsp(indent(path))}<span class='keyword'>then&#160;</span>$scenarioHtml<div class='conclusion'>${htmlEscape(conclusion.code.pretty)}</div><!-- conclusion --></div><!-- $resultClassName -->\n"
+    val thenHtmlForConclusion = thenHtml(conclusion)
+    s"<div class='$resultClassName'>${nbsp(indent(path))}<span class='keyword'>then&#160;</span>${scenarioHtml(conclusion, isSelected(_))}<div class='conclusion'>$thenHtmlForConclusion</div><!-- conclusion --></div><!-- $resultClassName -->\n"
   }
 
   def elsePrint(path: ReqList, decision: Decision) = s"<div class='else'>${nbsp(indent(path))}<span class='keyword'>else&#160;</span></div>\n";
@@ -106,10 +116,12 @@ class HtmlWithTestIfThenPrinter(params: List[Any], optConclusion: Option[Conclus
         ifPrint(path, decision, "if")
     }
 
-  def resultPrint(path: ReqList, conclusion: Conclusion): String =
+  def resultPrint(path: ReqList, conclusion: Conclusion): String = {
+    val url = urlMap.get(conclusion)
     if (optConclusion == Some(conclusion) || (test.isDefined && conclusion.scenarios.contains(test.get)))
       resultPrint(path, conclusion, "resultWithTest")
     else
       resultPrint(path, conclusion, "result")
+  }
 }
 

@@ -34,14 +34,14 @@ object TennisExample {
     scenario(2, 3).expected("thirty - forty").because((l: Int, r: Int) => l < 4 && r < 4).code((l: Int, r: Int) => lookup(l) + " - " + lookup(r)).
     scenario(2, 1).expected("thirty - fifteen").
 //
-//    useCase("When both have the same running score").description("The running score, if both scores are the same, is called xx all").
-//    scenario(0, 0).expected("love all").because((l: Int, r: Int) => l == r && l < 3).code((l: Int, r: Int) => lookup(l) + " all").
-//    scenario(2, 2).expected("thirty all").
+    useCase("When both have the same running score").description("The running score, if both scores are the same, is called xx all").
+    scenario(0, 0).expected("love all").code((l: Int, r: Int) => lookup(l) + " all").because((l: Int, r: Int) => l == r).
+    scenario(2, 2).expected("thirty all").
 //
-//    useCase("Deuce").description("If at least three points have been scored by each player, and the scores are equal, the score is 'deuce'.").expected("deuce").
-//    scenario(3, 3).because((l: Int, r: Int) => l >= 3 && r >= 3 && l == r).priority(1).
-//    scenario(4, 4).
-//    scenario(6, 6).
+    useCase("Deuce").description("If at least three points have been scored by each player, and the scores are equal, the score is 'deuce'.").expected("deuce").
+    scenario(3, 3).because((l: Int, r: Int) => l >= 3 && r >= 3 && l == r).priority(1).
+    scenario(4, 4).
+    scenario(6, 6).
 //
 //    useCase("Advantage").description("If at least three points have been scored by each side and a player has one more point than his opponent, the score of the game is 'advantage' for the player in the lead.").
 //    scenario(5, 4).expected("advantage left").because((l: Int, r: Int) => l >= 3 && r >= 3 && l == r + 1).
