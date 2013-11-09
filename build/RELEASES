@@ -10,3 +10,4 @@
 1.6.3 Icons changed, removed some example projects and the eclipse project
 1.6.4 Website improved, 'try' now working. Some website tests
 1.6.5 Website improved, website tests, 'try' now linked in, amber instead of green in decision tree if not in path
+1.7.0 First go at Legacy added. Website now shows the false path in decision tree

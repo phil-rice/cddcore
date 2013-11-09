@@ -188,8 +188,8 @@ trait Engine2[P1, P2, R] extends Engine[R] with Function2[P1, P2, R]
 trait Engine3[P1, P2, P3, R] extends Engine[R] with Function3[P1, P2, P3, R]
 
 trait ConclusionOrDecision extends Reportable {
-  def allConclusion: List[Conclusion]
-  protected def allConclusion(either: Either[Conclusion, Decision]): List[Conclusion] =
+  def allConclusion: Set[Conclusion]
+  protected def allConclusion(either: Either[Conclusion, Decision]): Set[Conclusion] =
     either match {
       case Left(c) => c.allConclusion
       case Right(d) => d.allConclusion
@@ -201,13 +201,15 @@ trait Decision extends ConclusionOrDecision {
   def yes: Either[Conclusion, Decision]
   def no: Either[Conclusion, Decision]
   def prettyString: String
-  lazy val allConclusion: List[Conclusion] = allConclusion(yes) ::: allConclusion(no)
+  lazy val allYesConclusion = allConclusion(yes)
+  lazy val allNoConclusion = allConclusion(no)
+  lazy val allConclusion: Set[Conclusion] = allYesConclusion ++  allNoConclusion
 }
 
 trait Conclusion extends ConclusionOrDecision {
   def code: CodeHolder
   def scenarios: List[Test]
-  val allConclusion = List(this)
+  val allConclusion = Set(this)
 }
 
 case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, url: Option[String] = None) {

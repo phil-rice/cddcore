@@ -92,15 +92,14 @@ class HtmlWithTestIfThenPrinter(params: List[Any], optConclusion: Option[Conclus
   override def isSelected(t: Test) = Some(t) == test
   def ifPrint(path: ReqList, decision: Decision): String =
     try {
-      if (engine(path).evaluateBecauseForDecision(decision, params))
-        optConclusion match {
-          case Some(c) if decision.allConclusion contains c =>
-            ifPrint(path, decision, "ifTrueOnPath")
-          case _ =>
-            ifPrint(path, decision, "ifTrue")
-        }
-      else
-        ifPrint(path, decision, "if")
+      val eval = engine(path).evaluateBecauseForDecision(decision, params)
+      val className = (eval, optConclusion) match {
+        case (true, Some(c)) if decision.allYesConclusion contains c => "ifTrueOnPath"
+        case (true, _) => "ifTrue"
+        case (false, Some(c)) if decision.allNoConclusion contains c => "ifFalseOnPath"
+        case _ => "if"
+      }
+      ifPrint(path, decision, className)
     } catch {
       case t: Throwable =>
         t.printStackTrace()
