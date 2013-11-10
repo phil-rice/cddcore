@@ -841,7 +841,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
   }
   abstract class Engine(val title: Option[String], val description: Option[String], val children: ReportableList, val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine[R] {
-    def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.useCasesForBuild, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails)
+    def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.useCasesForBuild, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails.reverse)
     val defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>

@@ -2,12 +2,20 @@ import sbt._
 import Keys._
 import com.typesafe.sbteclipse.plugin.EclipsePlugin.EclipseKeys
 
-
 object BuildSettings {
 
-  val buildSettings = Defaults.defaultSettings ++ Seq(
-    publishMavenStyle := true,
+  val JavaDoc = config("genjavadoc") extend Compile
 
+  val javadocSettings = inConfig(JavaDoc)(Defaults.configSettings) ++ Seq(
+    libraryDependencies += compilerPlugin("com.typesafe.genjavadoc" %% "genjavadoc-plugin" % "0.5" cross CrossVersion.full),
+    scalacOptions <+= target map (t => "-P:genjavadoc:out=" + (t / "java")),
+    packageDoc in Compile <<= packageDoc in JavaDoc,
+    sources in JavaDoc <<= (target, compile in Compile, sources in Compile) map ((t, c, s) => (t / "java" ** "*.java").get ++ s.filter(_.getName.endsWith(".java"))),
+    javacOptions in JavaDoc := Seq(),
+    artifactName in packageDoc in JavaDoc := ((sv, mod, art) => "" + mod.name + "_" + sv.binary + "-" + mod.revision + "-javadoc.jar"))
+
+  val buildSettings = Defaults.defaultSettings ++ javadocSettings ++ Seq(
+    publishMavenStyle := true,
 
     publishTo <<= version { (v: String) =>
       val nexus = "https://oss.sonatype.org/"
@@ -51,21 +59,21 @@ object BuildSettings {
     EclipseKeys.withSource := true,
     resolvers += Classpaths.typesafeResolver,
 
-// 
+    // 
     libraryDependencies ++= Seq(
-    "org.antlr" % "stringtemplate" % "3.2.1",
-	  "org.scalaj" % "scalaj-time_2.10.2" % "0.7",
-	  "org.hsqldb" % "hsqldb" % "2.0.0",     
-      "mysql" % "mysql-connector-java" % "5.1.6",            	  
-	  "commons-dbcp" % "commons-dbcp" % "1.2.2",            
-      "org.springframework" % "spring-jdbc" % "3.2.3.RELEASE",   
+      "org.antlr" % "stringtemplate" % "3.2.1",
+      "org.scalaj" % "scalaj-time_2.10.2" % "0.7",
+      "org.hsqldb" % "hsqldb" % "2.0.0",
+      "mysql" % "mysql-connector-java" % "5.1.6",
+      "commons-dbcp" % "commons-dbcp" % "1.2.2",
+      "org.springframework" % "spring-jdbc" % "3.2.3.RELEASE",
       "org.scala-stm" %% "scala-stm" % "0.7",
       "org.scala-lang" % "scala-reflect" % "2.10.1",
       "org.scala-lang" % "scala-compiler" % "2.10.1",
-	  "org.scalatest" % "scalatest_2.10" % "2.0" % "test",
+      "org.scalatest" % "scalatest_2.10" % "2.0" % "test",
       "log4j" % "log4j" % "1.2.17",
       "junit" % "junit" % "4.8.2"))
-	  
+
   val eclipseSettings = buildSettings ++ Seq(
     resolvers += "eclipse-repo" at "https://swt-repo.googlecode.com/svn/repo/",
     libraryDependencies ++= Seq(
@@ -76,24 +84,23 @@ object BuildSettings {
       "org.eclipse.ui" % "org.eclipse.ui.workbench" % "3.7.1.v20120104-1859",
       "org.eclipse.swt.win32.win32" % "x86" % "3.3.0-v3346",
       "org.eclipse.core" % "org.eclipse.core.runtime" % "3.6.0.v20100505"))
-	  
+
   val javanetDeps = "javanetDeps" at "http://download.java.net/maven/2/"
- 
- val websiteSettings = buildSettings ++ Seq(
+
+  val websiteSettings = buildSettings ++ Seq(
     //resolvers += "eclipse-repo" at "https://swt-repo.googlecode.com/svn/repo/",
     libraryDependencies ++= Seq(
-       "com.sun.jersey" % "jersey-server" % "1.2",
+      "com.sun.jersey" % "jersey-server" % "1.2",
       "com.sun.jersey" % "jersey-json" % "1.2",
       "org.eclipse.jetty" % "jetty-server" % "8.0.0.M0",
       "org.eclipse.jetty" % "jetty-servlet" % "8.0.0.M0",
-	  "org.seleniumhq.selenium" % "selenium-java" % "2.28.0" % "test",
-	  "org.seleniumhq.selenium" % "selenium-chrome-driver" % "2.35.0" % "test",
-	  "org.seleniumhq.selenium" % "selenium-htmlunit-driver" % "2.35.0" % "test"))
+      "org.seleniumhq.selenium" % "selenium-java" % "2.28.0" % "test",
+      "org.seleniumhq.selenium" % "selenium-chrome-driver" % "2.35.0" % "test",
+      "org.seleniumhq.selenium" % "selenium-htmlunit-driver" % "2.35.0" % "test"))
 
-  val exampleSettings = websiteSettings ++ Seq (
+  val exampleSettings = websiteSettings ++ Seq(
     libraryDependencies ++= Seq(
-       "org.json4s" %% "json4s-native" % "3.2.5"
-  ))
+      "org.json4s" %% "json4s-native" % "3.2.5"))
 }
 
 object HelloBuild extends Build {
@@ -108,9 +115,9 @@ object HelloBuild extends Build {
   lazy val constraint = Project(id = "constraint", settings = buildSettings, base = file("constraint"))
   lazy val engine = Project(id = "engine", settings = buildSettings, base = file("engine")) dependsOn (constraint)
   lazy val website = Project(id = "website", settings = websiteSettings, base = file("website")) dependsOn (constraint, engine)
-  lazy val legacy  = Project(id = "legacy", settings = buildSettings, base = file("legacy")) dependsOn (constraint, engine)
-  lazy val examples = Project(id = "examples", settings = exampleSettings, base = file("examples")) dependsOn (constraint, engine, website, legacy)  
-  lazy val root = Project(id = "root", settings = buildSettings ++ Seq(copyTask, copyDepTask), base = file(".")) aggregate (constraint, engine, examples, website,legacy)
+  lazy val legacy = Project(id = "legacy", settings = buildSettings, base = file("legacy")) dependsOn (constraint, engine)
+  lazy val examples = Project(id = "examples", settings = exampleSettings, base = file("examples")) dependsOn (constraint, engine, website, legacy)
+  lazy val root = Project(id = "root", settings = buildSettings ++ Seq(copyTask, copyDepTask), base = file(".")) aggregate (constraint, engine, examples, website, legacy)
 
   import java.io.File
 

@@ -159,4 +159,10 @@ class BuilderNodeTests extends EngineStringStringTests {
     assertEquals(2, e.priority);
   }
 
+  it should "Allow parameter details to be specified " in {
+    val parser1 = (x: String) => x.toInt
+    val parser2 = (x: String) => x.toInt + 1
+    val e = Engine[Int, Int, Int].param(parser1, "One").param(parser2, "Two").build
+    assertEquals(List(ParamDetail("One", parser1), ParamDetail("Two", parser2)), e.paramDetails)
+  }
 }
