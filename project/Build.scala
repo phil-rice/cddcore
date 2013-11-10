@@ -49,7 +49,6 @@ object BuildSettings {
     retrieveManaged := false,
     scalaVersion := "2.10.1",
     EclipseKeys.withSource := true,
-    EclipseKeys.eclipseOutput := Some("bin"),
     resolvers += Classpaths.typesafeResolver,
 
 // 
