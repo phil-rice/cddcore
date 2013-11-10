@@ -16,7 +16,7 @@ class EngineExceptionTests extends EngineStringStringTests {
     val e = evaluating { bldr.build } should produce[MultipleExceptions]
     val scenarioExceptionMap = e.scenarioExceptionMap
     //TODO Copying up the description of the scenario in here is a bad thing TM
-    val scenarios = bldr.useCases.reverse.flatMap((u) => u.scenarios.reverse)
+    val scenarios = bldr.builderData.all(classOf[UseCase]).reverse.flatMap((u) => u.scenarios.reverse)
     val sOne = scenarios(0)
     val stwo = scenarios(1)
     val sThree = scenarios(2)

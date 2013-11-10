@@ -40,7 +40,7 @@ trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
 
   trait ABuilder1 extends ScenarioBuilder {
     def scenario(p: P, title: String = null, description: String = null) = newScenario(title, description, List(p))
-    def build = new Engine(title, description, optCode, priority, references, documents, paramDetails.reverse) with Engine1[P, R] {
+    def build = new Engine(builderData) with Engine1[P, R] {
       def arity = 1
       def useCases = useCasesForBuild
       def apply(p: P): R = {
@@ -49,7 +49,7 @@ trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
         val result: R = rfn(p)
         logResult(result)
       }
-      override def toString() = toStringWithScenarios 
+      override def toString() = toStringWithScenarios
     }
   }
 }
@@ -58,10 +58,9 @@ class BuilderFactory1[P, R](override val logger: TddLogger = TddLogger.defaultLo
   type RealScenarioBuilder = Builder1
   def builder = new Builder1
 
-  class Builder1(val title: Option[String] = None, val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int = 0, val references: List[Reference] = List(), val documents: List[Document] = List(), val paramDetails: List[ParamDetail] = List()) extends ABuilder1 {
+  class Builder1(val builderData: ScenarioBuilderData = ScenarioBuilderData()) extends ABuilder1 {
     def thisAsBuilder = this
-    def copy(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference], documents: List[Document], ParamDetail: List[ParamDetail]) =
-      new Builder1(title, description, useCases, optCode, expected, priority, references, documents, ParamDetail)
+    def copy(builderData: ScenarioBuilderData) = new Builder1(builderData)
   }
 }
 
@@ -69,7 +68,7 @@ trait ABuilderFactory2[P1, P2, R] extends EngineUniverse[R] with Engine2Types[P1
 
   trait ABuilder2 extends ScenarioBuilder {
     def scenario(p1: P1, p2: P2, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2))
-    def build = new Engine(title, description, optCode, priority, references, documents, paramDetails.reverse) with Engine2[P1, P2, R] {
+    def build = new Engine(builderData) with Engine2[P1, P2, R] {
       def arity = 2
       def useCases = useCasesForBuild
       def apply(p1: P1, p2: P2): R = {
@@ -87,10 +86,9 @@ class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.defa
   type RealScenarioBuilder = Builder2
   def builder = new Builder2
 
-  class Builder2(val title: Option[String] = None, val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int = 0, val references: List[Reference] = List(), val documents: List[Document] = List(), val paramDetails: List[ParamDetail] = List()) extends ABuilder2 {
+  class Builder2(val builderData: ScenarioBuilderData = ScenarioBuilderData()) extends ABuilder2 {
     def thisAsBuilder = this
-    def copy(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference], documents: List[Document], ParamDetail: List[ParamDetail]) =
-      new Builder2(title, description, useCases, optCode, expected, priority, references, documents, ParamDetail)
+    def copy(builderData: ScenarioBuilderData) = new Builder2(builderData)
   }
 }
 
@@ -99,12 +97,11 @@ class BuilderFactory3[P1, P2, P3, R](override val logger: TddLogger = TddLogger.
   type RealScenarioBuilder = Builder3
   def builder = new Builder3
 
-  class Builder3(val title: Option[String] = None, val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int = 0, val references: List[Reference] = List(), val documents: List[Document] = List(), val paramDetails: List[ParamDetail]= List()) extends ScenarioBuilder {
+  class Builder3(val builderData: ScenarioBuilderData = ScenarioBuilderData()) extends ScenarioBuilder {
     def thisAsBuilder = this
-    def copy(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference], documents: List[Document], ParamDetail: List[ParamDetail]) =
-      new Builder3(title, description, useCases, optCode, expected, priority, references, documents, ParamDetail)
+    def copy(builderData: ScenarioBuilderData) = new Builder3(builderData)
     def scenario(p1: P1, p2: P2, p3: P3, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2, p3))
-    def build = new Engine(title, description, optCode, priority, references, documents, paramDetails.reverse) with Engine3[P1, P2, P3, R] {
+    def build = new Engine(builderData) with Engine3[P1, P2, P3, R] {
       def arity = 3
       def useCases = useCasesForBuild
       def apply(p1: P1, p2: P2, p3: P3): R = {
@@ -115,5 +112,5 @@ class BuilderFactory3[P1, P2, P3, R](override val logger: TddLogger = TddLogger.
       }
       override def toString() = toStringWithScenarios
     }
-}
+  }
 }

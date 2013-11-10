@@ -29,7 +29,7 @@ class EngineSecondScenarioTests extends EngineStringStringTests {
       scenario("AB").expected("X")
 
     val e = b.build
-    val u1 = b.useCases
+    val u1 = b.builderData.children
     val u2 = b.useCasesForBuild
     val s1 = e.scenarios
     val w = e.scenarios(0); assertEquals(List("W"), w.params)

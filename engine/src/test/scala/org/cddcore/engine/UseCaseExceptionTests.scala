@@ -8,12 +8,13 @@ class UseCaseExpectedTests extends EngineStringStringTests {
 
   "A Builder" should "add an expected straight after the usecase declaration to the use case" in {
     val b1 = builderWithUseCase.expected("X")
-    val useCase = b1.useCases(0)
+    val useCase = b1.builderData.children(0).asInstanceOf[UseCase]
     assertEquals(Some(ROrException[String]("X")), useCase.expected)
   }
+  
   "A Builder" should "not add an expected straight after a scenario  to the use case" in {
     val b1 = builderWithUseCase.scenario("a").expected("X")
-    val useCase = b1.useCases(0)
+    val useCase = b1.builderData.children(0).asInstanceOf[UseCase]
     assertEquals(None, useCase.expected)
   }
 

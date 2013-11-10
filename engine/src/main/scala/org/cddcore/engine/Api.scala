@@ -36,6 +36,8 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
     }
   }
 
+  def all[R <: Reportable](rClass: Class[R]) = foldLeft[List[R]](List())((acc, r) => if (rClass.isAssignableFrom(r.getClass)) r.asInstanceOf[R] :: acc else acc)
+
   def walkWithPath(visitor: (ReportableList) => Unit): Unit = walkWithPath(List(), visitor)
 
   protected def walkWithPath(path: ReportableList, visitor: (ReportableList) => Unit): Unit = {
@@ -203,7 +205,7 @@ trait Decision extends ConclusionOrDecision {
   def prettyString: String
   lazy val allYesConclusion = allConclusion(yes)
   lazy val allNoConclusion = allConclusion(no)
-  lazy val allConclusion: Set[Conclusion] = allYesConclusion ++  allNoConclusion
+  lazy val allConclusion: Set[Conclusion] = allYesConclusion ++ allNoConclusion
 }
 
 trait Conclusion extends ConclusionOrDecision {

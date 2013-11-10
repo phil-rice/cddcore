@@ -14,7 +14,7 @@ class UndecidedException extends Exception
 class CanOnlyAddDocumentToBuilderException extends Exception
 class CannotFindDocumentException(msg: String) extends Exception(msg)
 class ExceptionAddingScenario(msg: String, t: Throwable) extends EngineException(msg, t)
-
+import Reportable._
 //TODO Very unhappy with EngineTest. It's a global variable. I don't know how else to interact with Junit though
 object EngineTest {
   def testing = _testing
@@ -292,16 +292,16 @@ trait EngineUniverse[R] extends EngineTypes[R] {
   }
 
   val scenarioLens = Lens[RealScenarioBuilder, Scenario](
-    (b) => b.children match {
-      case u :: ut => u.scenarios match {
+    (b) => b.builderData.children match {
+      case (u: UseCase) :: ut => u.scenarios match {
         case s :: st => s
         case _ => throw new NeedScenarioException
       }
       case _ => throw new NeedUseCaseException
     },
-    (b, s) => b.children match {
-      case u :: ut => u.scenarios match {
-        case sold :: st => b.copy(b.title, b.description, u.copy(scenarios = s :: st) :: ut, b.optCode, b.expected, b.priority, b.references)
+    (b, s) => b.builderData.children match {
+      case (u: UseCase) :: ut => u.scenarios match {
+        case sold :: st => b.copy(children = u.copy(scenarios = s :: st) :: ut)
         case _ => throw new NeedScenarioException
       }
       case _ => throw new NeedUseCaseException
@@ -311,8 +311,21 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def children = scenarios
   }
 
-  trait ScenarioBuilder extends BuilderNode with ReportableHolder {
+  /** This holds the data that the scenario builder is building. It is a separate class mainly to allow code insight to be nicer for the scenarioBuilder. For example we want the description method to add a description on the builder, while we want to be able to access the description from other classes. Code insight is nicer with just one description*/
+  case class ScenarioBuilderData(
+    title: Option[String] = None,
+    description: Option[String] = None,
+    children: ReportableList = List(),
+    expected: Option[ROrException[R]] = None,
+    optCode: Option[Code] = None,
+    priority: Int = 0,
+    documents: List[Document] = List(),
+    paramDetails: List[ParamDetail] = List(),
+    references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder
 
+  trait ScenarioBuilder {
+
+    def builderData: ScenarioBuilderData
     def validateBecause(s: Scenario) = {
       s.configure
       s.because match {
@@ -323,41 +336,36 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     }
 
-    protected def documents: List[Document]
-    protected def useCases: List[UseCase]
-    def children = useCases
-    protected def paramDetails: List[ParamDetail]
-
-    override def templateName = "Engine"
-
-    def set[X](x: X, bFn: (RealScenarioBuilder, X) => ScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) = {
-      useCases match {
+    protected def set[X](x: X, bFn: (RealScenarioBuilder, X) => ScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) =
+      builderData.children match {
         case Nil =>
-          checkFn(thisAsBuilder, x); bFn(thisAsBuilder, x).asInstanceOf[RealScenarioBuilder]
-        case h :: tail =>
+          checkFn(builderData, x); bFn(thisAsBuilder, x).asInstanceOf[RealScenarioBuilder]
+        case (h: UseCase) :: tail =>
           val newHead = h.scenarios match {
             case Nil =>
               checkFn(h, x); uFn(h, x)
             case s :: tail => checkFn(s, x); h.copy(scenarios = sFn(s, x) :: tail)
           }
-          copy(useCases = newHead :: tail)
+          copy(children = newHead :: tail)
       }
-    }
 
-    def copy(title: Option[String] = this.title,
-      description: Option[String] = this.description,
-      useCases: List[UseCase] = this.useCases,
-      optCode: Option[Code] = this.optCode,
-      expected: Option[ROrException[R]] = expected,
-      priority: Int = priority,
-      references: List[Reference] = references,
-      documents: List[Document] = documents,
-      paramDetails: List[ParamDetail] = paramDetails): RealScenarioBuilder;
+    def copy(builderData: ScenarioBuilderData): RealScenarioBuilder
+
+    def copy(title: Option[String] = builderData.title,
+      description: Option[String] = builderData.description,
+      children: ReportableList = builderData.children,
+      optCode: Option[Code] = builderData.optCode,
+      expected: Option[ROrException[R]] = builderData.expected,
+      priority: Int = builderData.priority,
+      references: List[Reference] = builderData.references,
+      documents: List[Document] = builderData.documents,
+      paramDetails: List[ParamDetail] = builderData.paramDetails): RealScenarioBuilder =
+      copy(ScenarioBuilderData(title, description, children, expected, optCode, priority, documents, paramDetails, references))
 
     protected def thisAsBuilder: RealScenarioBuilder
 
     def document(documents: Document*) = {
-      set[List[Document]](documents.toList ++ this.documents,
+      set[List[Document]](documents.toList ++ this.builderData.documents,
         (b, d) =>
           b.copy(documents = d),
         (u, d) => throw new CanOnlyAddDocumentToBuilderException,
@@ -379,7 +387,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (s, description) => s.copy(description = description),
         (n, description) => if (n.description.isDefined) throw CannotDefineDescriptionTwiceException(n.description.get, description.get))
 
-    def param(parser: (String) => _, name: String = s"Param${paramDetails.size}") = copy(paramDetails = ParamDetail(name, parser) :: paramDetails)
+    def param(parser: (String) => _, name: String = s"Param${builderData.paramDetails.size}") = copy(paramDetails = ParamDetail(name, parser) :: builderData.paramDetails)
 
     def expectException[E <: Throwable](e: E, comment: String = "") =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
@@ -409,7 +417,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (u, priority) => u.copy(priority = priority),
         (s, priority) => s.copy(priority = priority))
 
-    protected def findDocument(documentName: String) = documents.find((d) => d.name == Some(documentName)) match {
+    protected def findDocument(documentName: String) = builderData.documents.find((d) => d.name == Some(documentName)) match {
       case Some(d) => d
       case None => throw new CannotFindDocumentException(documentName);
     }
@@ -420,7 +428,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def reference(ref: String, document: Option[Document] = None): RealScenarioBuilder =
       set[Reference](
         Reference(ref, document),
-        (b, r) => b.copy(references = r :: b.references),
+        (b, r) => b.copy(references = r :: b.builderData.references),
         (u, r) => u.copy(references = r :: u.references),
         (s, r) => s.copy(references = r :: s.references))
 
@@ -431,7 +439,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       })
 
     protected def withUseCase(useCaseTitle: String, useCaseDescription: Option[String]) =
-      copy(useCases = UseCase(title = Some(useCaseTitle), description = useCaseDescription) :: useCases);
+      copy(children = UseCase(title = Some(useCaseTitle), description = useCaseDescription) :: builderData.children);
 
     def useCase(useCaseTitle: String) = withUseCase(useCaseTitle, None)
     def useCase(useCaseTitle: String, useCaseDescription: String) = withUseCase(useCaseTitle, Some(useCaseDescription))
@@ -440,21 +448,23 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def assertion(a: Assertion[A], comment: String = "") = scenarioLens.mod(thisAsBuilder, (s) => s.copy(assertions = a.copy(comment = comment) :: s.assertions))
 
     def useCasesForBuild: List[UseCase] =
-      useCases.map(u => u.copy(
-        scenarios = u.scenarios.map((s) =>
-          (s.expected, u.expected) match {
-            case (None, Some(e)) => s.copy(expected = Some(e))
-            case _ => s
-          }).reverse,
-        references = u.references.reverse)).reverse;
+      builderData.children.collect {
+        case u: UseCase => u.copy(
+          scenarios = u.scenarios.map((s) =>
+            (s.expected, u.expected) match {
+              case (None, Some(e)) => s.copy(expected = Some(e))
+              case _ => s
+            }).reverse,
+          references = u.references.reverse)
+      }.reverse;
 
     def scenariosForBuild: List[Scenario] = useCasesForBuild.flatMap((u) => u.scenarios);
 
-    protected def newScenario(scenarioTitle: String, scenarioDescription: String, params: List[Any]) = useCases match {
-      case h :: t => {
+    protected def newScenario(scenarioTitle: String, scenarioDescription: String, params: List[Any]) = builderData.children match {
+      case (h: UseCase) :: t => {
         val titleString = if (scenarioTitle == null) None else Some(scenarioTitle);
         val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
-        copy(useCases = h.copy(scenarios = Scenario(titleString, descriptionString, params, logger) :: h.scenarios) :: t)
+        copy(children = h.copy(scenarios = Scenario(titleString, descriptionString, params, logger) :: h.scenarios) :: t)
       }
       case _ => throw new NeedUseCaseException
     }
@@ -797,6 +807,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
   }
   abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine[R] {
+    def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails)
     def defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>

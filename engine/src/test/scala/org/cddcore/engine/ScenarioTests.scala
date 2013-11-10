@@ -30,7 +30,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   "The ScenarioBuilder" should "allow the scenario lens to set /get the scenario" in {
     val expected = new Scenario(None, None, List(), logger)
     val newBuilder = scenarioLens.set(builderWithScenario, expected);
-    assert(List(expected) == newBuilder.children.head.scenarios, newBuilder.children.head.scenarios) //i.e. this has replaced the head scenario
+    assertEquals(List(expected) , newBuilder.builderData.children.head.asInstanceOf[UseCase].scenarios)
     assert(expected == scenarioLens.get(newBuilder), scenarioLens.get(newBuilder))
   }
 
