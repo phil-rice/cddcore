@@ -7,6 +7,7 @@ import org.cddcore.engine._
 @RunWith(classOf[JUnitRunner])
 class BuilderNodeTests extends EngineStringStringTests {
   val c: Code = (s: String) => "x"
+  val b: Because[B] = (s: String) => true
 
   val doc1 = Document(name = Some("x"))
 
@@ -19,7 +20,7 @@ class BuilderNodeTests extends EngineStringStringTests {
     assertEquals(Some(ROrException[String]("x")), b1.builderData.expected);
     assertEquals(Some(ROrException[String](new RuntimeException)), b2.builderData.expected);
     assertEquals(2, b1.builderData.priority);
-  } 
+  }
 
   it should "throw exceptions if values are set twice" in {
     val b1 = builder.title("title").description("a description").code(c).expected("x").priority(2);
@@ -97,14 +98,15 @@ class BuilderNodeTests extends EngineStringStringTests {
   }
 
   "A scenario" should "have its builder nodes setable" in {
-    val b1 = builder.useCase("one").scenario("x").title("one").description("d").code(c).expected("x").priority(2);
-    val b2 = builder.useCase("two").scenario("x", "two").code(c).expectException(new RuntimeException).priority(2);
+    val b1 = builder.useCase("one").scenario("x").title("one").description("d").because(b).code(c).expected("x").priority(2);
+    val b2 = builder.useCase("two").scenario("x", "two").because(b).code(c).expectException(new RuntimeException).priority(2);
     val s1 = b1.builderData.all(classOf[UseCase])(0).scenarios(0);
     val s2 = b2.builderData.all(classOf[UseCase])(0).scenarios(0);
     assertEquals(Some("one"), s1.title);
     assertEquals(Some("two"), s2.title);
     assertEquals(Some("d"), s1.description);
     assertEquals(Some(c), s1.optCode);
+    assertEquals(Some(b), s1.because);
     assertEquals(Some(ROrException[String]("x")), s1.expected);
     assertEquals(Some(ROrException[String](new RuntimeException)), s2.expected);
     assertEquals(2, s1.priority);
@@ -115,7 +117,7 @@ class BuilderNodeTests extends EngineStringStringTests {
     assertEquals(None, b2.builderData.expected);
     assertEquals(0, b1.builderData.priority);
   }
-  
+
   it should "allow usecase title and description to be set in one go" in {
 
     val b1 = builder.useCase("one", "d1").scenario("x", "sc_title", "sc_description")
@@ -125,13 +127,14 @@ class BuilderNodeTests extends EngineStringStringTests {
   }
 
   it should "throw exceptions if values are set twice" in {
-    val b1 = builder.useCase("one").scenario("x").title("one").description("d").code(c).expected("x").priority(2);
-    val b2 = builder.useCase("two").scenario("x", "two").code(c).expectException(new RuntimeException).priority(2);
+    val b1 = builder.useCase("one").scenario("x").title("one").description("d").because(b).code(c).expected("x").priority(2);
+    val b2 = builder.useCase("two").scenario("x", "two").because(b).code(c).expectException(new RuntimeException).priority(2);
 
     evaluating { b1.title("again") } should produce[CannotDefineTitleTwiceException]
     evaluating { b2.title("again") } should produce[CannotDefineTitleTwiceException]
     evaluating { b1.description("again") } should produce[CannotDefineDescriptionTwiceException]
     evaluating { b1.code(c) } should produce[CannotDefineCodeTwiceException]
+    evaluating { b1.because(b) } should produce[CannotDefineBecauseTwiceException]
     evaluating { b1.expected("again") } should produce[CannotDefineExpectedTwiceException]
     evaluating { b1.expectException(new RuntimeException) } should produce[CannotDefineExpectedTwiceException]
   }

@@ -152,6 +152,10 @@ trait EngineUniverse[R] extends EngineTypes[R] {
   object CannotDefineCodeTwiceException {
     def apply(original: Code, beingAdded: Code) = new CannotDefineCodeTwiceException(s"Original Code:\n${original}\nBeingAdded\n${beingAdded}", original, beingAdded);
   }
+  class CannotDefineBecauseTwiceException(msg: String, val original: Because[B], val beingAdded: Because[B]) extends EngineException(msg, null)
+  object CannotDefineBecauseTwiceException {
+    def apply(original: Because[B], beingAdded: Because[B]) = new CannotDefineBecauseTwiceException(s"Original Because:\n${original}\nBeingAdded\n${beingAdded}", original, beingAdded);
+  }
 
   object ScenarioConflictingWithDefaultException {
     def apply(actual: ROrException[R], s: Scenario) =
@@ -301,7 +305,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     },
     (b, s) => b.builderData.children match {
       case (u: UseCase) :: ut => u.scenarios match {
-        case sold :: st => b.copy(children = u.copy(scenarios = s :: st) :: ut)
+        case sold :: st => b.copy(b.builderData.copy(children = u.copy(scenarios = s :: st) :: ut))
         case _ => throw new NeedScenarioException
       }
       case _ => throw new NeedUseCaseException
@@ -349,6 +353,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
   trait ScenarioBuilder {
 
     def builderData: ScenarioBuilderData
+
     protected def set[X](x: X, bFn: (RealScenarioBuilder, X) => ScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) =
       builderData.children match {
         case Nil =>
@@ -363,9 +368,10 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         case _ => throw new IllegalStateException
       }
 
+    /** You should probably not call this explicitly. This makes a copy of the builder with new data. The builder is an immutable object, so this is how data is actually 'changed' when you call methods like description */
     def copy(builderData: ScenarioBuilderData): RealScenarioBuilder
 
-    def copy(title: Option[String] = builderData.title,
+    protected def copy(title: Option[String] = builderData.title,
       description: Option[String] = builderData.description,
       children: ReportableList = builderData.children,
       optCode: Option[Code] = builderData.optCode,
@@ -378,6 +384,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     protected def thisAsBuilder: RealScenarioBuilder
 
+    /** This adds the documents you specify to the documents that the builder 'knows about'. Currently the documents are only used by references.*/
     def document(documents: Document*) = {
       set[List[Document]](documents.toList ++ this.builderData.documents,
         (b, d) =>
@@ -387,6 +394,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (n, d) => {});
 
     }
+    /** Set the title of the 'last thing to be mentioned' i.e. the builder/usecase/scenario. Throws CannotDefineTitleTwiceException if title already set. The title is used when creating reports */
     def title(title: String): RealScenarioBuilder =
       set[Option[String]](Some(title),
         (b, title) => b.copy(title = title),
@@ -394,6 +402,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (s, title) => s.copy(title = title),
         (n, title) => if (n.title.isDefined) throw CannotDefineTitleTwiceException(n.title.get, title.get))
 
+    /** Set the description of the 'last thing to be mentioned' i.e. the builder/usecase/scenario. Throws CannotDefineDescriptionTwiceException if title already set. The description is used when creating reports */
     def description(description: String): RealScenarioBuilder =
       set[Option[String]](Some(description),
         (b, description) => b.copy(description = description),
@@ -401,8 +410,14 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (s, description) => s.copy(description = description),
         (n, description) => if (n.description.isDefined) throw CannotDefineDescriptionTwiceException(n.description.get, description.get))
 
+    /** This is only used when using the 'live' website option. It turns a string into a parameter, and gives the parameter a 'nice' name on the website */
     def param(parser: (String) => _, name: String = s"Param${builderData.paramDetails.size}") = copy(paramDetails = ParamDetail(name, parser) :: builderData.paramDetails)
 
+    /**
+     * Set the 'expected' of the 'last thing to be mentioned' to be an exception. i.e. the builder/usecase/scenario. Throws CannotDefineExpectedTwiceException if expected already set.
+     *
+     *  Note that the engine will currently only check the type of the message, not the message itself, and that you must have a 'code' to throw the exception
+     */
     def expectException[E <: Throwable](e: E, comment: String = "") =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
         (b, newE) => b.copy(expected = newE),
@@ -410,6 +425,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (s, newE) => s.copy(expected = newE),
         (n, newE) => if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newE.get))
 
+    /** Set the 'expected' of the 'last thing to be mentioned' to be this value. i.e. the builder/usecase/scenario. Throws CannotDefineExpectedTwiceException if expected already set. If you haven't set a code, then this will also act as the code*/
     def expected(e: R): RealScenarioBuilder =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
         (b, newExpected) => b.copy(expected = newExpected),
@@ -417,6 +433,15 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (s, newExpected) => s.copy(expected = newExpected),
         (n, newExpected) => if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newExpected.get))
 
+    /**
+     * This is optional, as it defaults to returning 'expected'. The code is the code that you would use to generate the expected.
+     *
+     *  The TennisScorer is a good example of where this is needed :
+     * <pre>     scenario(2, 3).expected("thirty, forty").code((l: Int, r: Int) => s"${lookup(l)}, ${lookup(r)}").</pre>
+     *
+     *  Although in this case 'thirty forty' is the expected, we want to calculate the value so that it can be generalised for other inputs
+     *
+     */
     def code(c: Code, comment: String = "") =
       set[Option[Code]](Some(c),
         (b, newCode) => b.copy(optCode = newCode),
@@ -424,6 +449,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (s, newCode) => s.copy(optCode = newCode),
         (n, newCode) => if (n.optCode.isDefined) throw CannotDefineCodeTwiceException(n.optCode.get, newCode.get))
 
+    /** Set the 'priority' of the 'last thing to be mentioned' to be this value. i.e. the builder/usecase/scenario. This determines the 'rule ordering' of the scenarios. If you don't like the produced decision tree, you can increase /decrease the priority of a scenario with the because clause you want to move     */
     def priority(priority: Int): RealScenarioBuilder =
       set[Int](
         priority,
@@ -436,9 +462,13 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       case None => throw new CannotFindDocumentException(documentName);
     }
 
+    /** Adds a reference to the 'last thing to be mentioned'. References are currently just used in the reports. If the documentName isn't in the list of doucments, this will throw a  CannotFindDocumentException*/
     def reference(ref: String, documentName: String): RealScenarioBuilder = reference(ref, findDocument(documentName))
+
+    /** Adds a reference to the 'last thing to be mentioned'. References are currently just used in the reports. */
     def reference(ref: String, document: Document): RealScenarioBuilder = reference(ref, Some(document))
 
+    /** Adds a reference to the 'last thing to be mentioned'. This is just the 'ref' string, without a document */
     def reference(ref: String, document: Option[Document] = None): RealScenarioBuilder =
       set[Reference](
         Reference(ref, document),
@@ -446,8 +476,11 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (u, r) => u.copy(references = r :: u.references),
         (s, r) => s.copy(references = r :: s.references))
 
+    /** Set the 'because' of the 'last thing to be mentioned' to be this value. i.e. the builder/usecase/scenario. Throws CannotDefineBecauseTwiceException if expected already set. If you haven't set a code, then this will also act as the code*/
     def because(b: Because[B], comment: String = "") = scenarioLens.mod(thisAsBuilder,
       (s) => {
+        if (s.because.isDefined)
+          throw CannotDefineBecauseTwiceException(s.because.get, b)
         validateBecause(s);
         s.copy(because = Some(b.copy(comment = comment)))
       })
@@ -455,13 +488,19 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     protected def withUseCase(useCaseTitle: String, useCaseDescription: Option[String]) =
       copy(children = UseCase(title = Some(useCaseTitle), description = useCaseDescription) :: builderData.children);
 
+    /** Starts the definition of a new case. A use case can be thought of as a list of scenarios */
     def useCase(useCaseTitle: String) = withUseCase(useCaseTitle, None)
+    /** Starts the definition of a new case. A use case can be thought of as a list of scenarios */
     def useCase(useCaseTitle: String, useCaseDescription: String) = withUseCase(useCaseTitle, Some(useCaseDescription))
 
+    /**
+     * This method is used if you are action on mutable parameters. The cgnFn is called to setup the parameters prior to them being used in the because clause
+     *
+     *   The cfgFn is only used while building the engine. An example use would be when the parameter is a mutable object like a Swing JTextArea. The cfgFn would setup the textarea to have the correct values
+     */
     def configuration[K](cfg: CfgFn) = scenarioLens.mod(thisAsBuilder, (s) => s.copy(configuration = Some(cfg)))
+    /** An assertion is an extra test to be run. The assertions must be true for the scenario when the engine has been built. The function you pass in to it takes the parameters and the result of the engine, and returns a boolean*/
     def assertion(a: Assertion[A], comment: String = "") = scenarioLens.mod(thisAsBuilder, (s) => s.copy(assertions = a.copy(comment = comment) :: s.assertions))
-
-    //    def scenariosForBuild: List[Scenario] = useCasesForBuild.flatMap((u) => u.scenarios);
 
     protected def newScenario(scenarioTitle: String, scenarioDescription: String, params: List[Any]) = builderData.children match {
       case (h: UseCase) :: t => {
