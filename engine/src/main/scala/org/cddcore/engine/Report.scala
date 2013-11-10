@@ -108,7 +108,7 @@ class ReportCreator[RtoUrl <: ReportableToUrl](r: ReportableHolder, title: Strin
       Report(if (title == null) r.titleOrDescription("Unnamed") else title, r)
     case _ => throw new IllegalArgumentException
   }
-  val urlMap = optUrlMap.getOrElse(reportableToUrl.makeUrlMap(r))
+  val urlMap = optUrlMap.getOrElse(reportableToUrl.makeUrlMap(report))
   val rootUrl = reportableToUrl.url(List(r, report).distinct)
   def htmlFor(path: ReportableList) = {
     val r = path.head

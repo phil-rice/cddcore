@@ -60,7 +60,7 @@ class BuilderFactory1[P, R](override val logger: TddLogger = TddLogger.defaultLo
 
   class Builder1(val title: Option[String] = None, val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int = 0, val references: List[Reference] = List(), val documents: List[Document] = List(), val paramDetails: List[ParamDetail] = List()) extends ABuilder1 {
     def thisAsBuilder = this
-    def withCases(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference], documents: List[Document], ParamDetail: List[ParamDetail]) =
+    def copy(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference], documents: List[Document], ParamDetail: List[ParamDetail]) =
       new Builder1(title, description, useCases, optCode, expected, priority, references, documents, ParamDetail)
   }
 }
@@ -89,7 +89,7 @@ class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.defa
 
   class Builder2(val title: Option[String] = None, val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int = 0, val references: List[Reference] = List(), val documents: List[Document] = List(), val paramDetails: List[ParamDetail] = List()) extends ABuilder2 {
     def thisAsBuilder = this
-    def withCases(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference], documents: List[Document], ParamDetail: List[ParamDetail]) =
+    def copy(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference], documents: List[Document], ParamDetail: List[ParamDetail]) =
       new Builder2(title, description, useCases, optCode, expected, priority, references, documents, ParamDetail)
   }
 }
@@ -101,7 +101,7 @@ class BuilderFactory3[P1, P2, P3, R](override val logger: TddLogger = TddLogger.
 
   class Builder3(val title: Option[String] = None, val description: Option[String] = None, val useCases: List[UseCase] = List(), val optCode: Option[Code] = None, val expected: Option[ROrException[R]] = None, val priority: Int = 0, val references: List[Reference] = List(), val documents: List[Document] = List(), val paramDetails: List[ParamDetail]= List()) extends ScenarioBuilder {
     def thisAsBuilder = this
-    def withCases(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference], documents: List[Document], ParamDetail: List[ParamDetail]) =
+    def copy(title: Option[String], description: Option[String], useCases: List[UseCase], optCode: Option[Code], expected: Option[ROrException[R]], priority: Int, references: List[Reference], documents: List[Document], ParamDetail: List[ParamDetail]) =
       new Builder3(title, description, useCases, optCode, expected, priority, references, documents, ParamDetail)
     def scenario(p1: P1, p2: P2, p3: P3, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2, p3))
     def build = new Engine(title, description, optCode, priority, references, documents, paramDetails.reverse) with Engine3[P1, P2, P3, R] {

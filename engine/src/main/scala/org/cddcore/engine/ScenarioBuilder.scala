@@ -300,7 +300,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     },
     (b, s) => b.useCases match {
       case u :: ut => u.scenarios match {
-        case sold :: st => b.withCases(b.title, b.description, u.copy(scenarios = s :: st) :: ut, b.optCode, b.expected, b.priority, b.references)
+        case sold :: st => b.copy(b.title, b.description, u.copy(scenarios = s :: st) :: ut, b.optCode, b.expected, b.priority, b.references)
         case _ => throw new NeedScenarioException
       }
       case _ => throw new NeedUseCaseException
@@ -338,11 +338,11 @@ trait EngineUniverse[R] extends EngineTypes[R] {
               checkFn(h, x); uFn(h, x)
             case s :: tail => checkFn(s, x); h.copy(scenarios = sFn(s, x) :: tail)
           }
-          withCases(useCases = newHead :: tail)
+          copy(useCases = newHead :: tail)
       }
     }
 
-    def withCases(title: Option[String] = this.title,
+    def copy(title: Option[String] = this.title,
       description: Option[String] = this.description,
       useCases: List[UseCase] = this.useCases,
       optCode: Option[Code] = this.optCode,
@@ -357,7 +357,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def document(documents: Document*) = {
       set[List[Document]](documents.toList ++ this.documents,
         (b, d) =>
-          b.withCases(documents = d),
+          b.copy(documents = d),
         (u, d) => throw new CanOnlyAddDocumentToBuilderException,
         (s, d) => throw new CanOnlyAddDocumentToBuilderException,
         (n, d) => {});
@@ -365,37 +365,37 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
     def title(title: String): RealScenarioBuilder =
       set[Option[String]](Some(title),
-        (b, title) => b.withCases(title = title),
+        (b, title) => b.copy(title = title),
         (u, title) => u.copy(title = title),
         (s, title) => s.copy(title = title),
         (n, title) => if (n.title.isDefined) throw CannotDefineTitleTwiceException(n.title.get, title.get))
 
     def description(description: String): RealScenarioBuilder =
       set[Option[String]](Some(description),
-        (b, description) => b.withCases(description = description),
+        (b, description) => b.copy(description = description),
         (u, description) => u.copy(description = description),
         (s, description) => s.copy(description = description),
         (n, description) => if (n.description.isDefined) throw CannotDefineDescriptionTwiceException(n.description.get, description.get))
 
-    def param(parser: (String) => _, name: String = s"Param${paramDetails.size}") = withCases(paramDetails = ParamDetail(name, parser) :: paramDetails)
+    def param(parser: (String) => _, name: String = s"Param${paramDetails.size}") = copy(paramDetails = ParamDetail(name, parser) :: paramDetails)
 
     def expectException[E <: Throwable](e: E, comment: String = "") =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
-        (b, newE) => b.withCases(expected = newE),
+        (b, newE) => b.copy(expected = newE),
         (u, newE) => u.copy(expected = newE),
         (s, newE) => s.copy(expected = newE),
         (n, newE) => if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newE.get))
 
     def expected(e: R): RealScenarioBuilder =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
-        (b, newExpected) => b.withCases(expected = newExpected),
+        (b, newExpected) => b.copy(expected = newExpected),
         (u, newExpected) => u.copy(expected = newExpected),
         (s, newExpected) => s.copy(expected = newExpected),
         (n, newExpected) => if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newExpected.get))
 
     def code(c: Code, comment: String = "") =
       set[Option[Code]](Some(c),
-        (b, newCode) => b.withCases(optCode = newCode),
+        (b, newCode) => b.copy(optCode = newCode),
         (u, newCode) => u.copy(optCode = newCode),
         (s, newCode) => s.copy(optCode = newCode),
         (n, newCode) => if (n.optCode.isDefined) throw CannotDefineCodeTwiceException(n.optCode.get, newCode.get))
@@ -403,7 +403,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def priority(priority: Int): RealScenarioBuilder =
       set[Int](
         priority,
-        (b, priority) => b.withCases(priority = priority),
+        (b, priority) => b.copy(priority = priority),
         (u, priority) => u.copy(priority = priority),
         (s, priority) => s.copy(priority = priority))
 
@@ -418,7 +418,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def reference(ref: String, document: Option[Document] = None): RealScenarioBuilder =
       set[Reference](
         Reference(ref, document),
-        (b, r) => b.withCases(references = r :: b.references),
+        (b, r) => b.copy(references = r :: b.references),
         (u, r) => u.copy(references = r :: u.references),
         (s, r) => s.copy(references = r :: s.references))
 
@@ -429,7 +429,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       })
 
     protected def withUseCase(useCaseTitle: String, useCaseDescription: Option[String]) =
-      withCases(useCases = UseCase(title = Some(useCaseTitle), description = useCaseDescription) :: useCases);
+      copy(useCases = UseCase(title = Some(useCaseTitle), description = useCaseDescription) :: useCases);
 
     def useCase(useCaseTitle: String) = withUseCase(useCaseTitle, None)
     def useCase(useCaseTitle: String, useCaseDescription: String) = withUseCase(useCaseTitle, Some(useCaseDescription))
@@ -453,7 +453,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       case h :: t => {
         val titleString = if (scenarioTitle == null) None else Some(scenarioTitle);
         val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
-        withCases(useCases = h.copy(scenarios = Scenario(titleString, descriptionString, params, logger) :: h.scenarios) :: t)
+        copy(useCases = h.copy(scenarios = Scenario(titleString, descriptionString, params, logger) :: h.scenarios) :: t)
       }
       case _ => throw new NeedUseCaseException
     }
