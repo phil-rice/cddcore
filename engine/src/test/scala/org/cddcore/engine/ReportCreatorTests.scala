@@ -41,10 +41,11 @@ class ReportCreatorTests extends AbstractTest {
   }
 
   it should "produce HTML for scenarios" in {
-    for (uc <- engine.children; s <- uc.children) {
-      val path = List(s, uc, engine, pForTitle, rc.report)
-      val html = rc.htmlFor(path).get
-      new ScenarioPageChecker(path, html, rc.reportableToUrl)
-    }
+    rc.report.walkWithPath((path) => path match {
+      case (s: Test) ::  _ =>
+        val html = rc.htmlFor(path).get
+        new ScenarioPageChecker(path, html, rc.reportableToUrl)
+      case _ =>{}
+    })
   }
 }

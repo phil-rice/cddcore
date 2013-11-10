@@ -42,7 +42,6 @@ trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
     def scenario(p: P, title: String = null, description: String = null) = newScenario(title, description, List(p))
     def build = new Engine(builderData) with Engine1[P, R] {
       def arity = 1
-      def useCases = useCasesForBuild
       def apply(p: P): R = {
         logParams(p)
         val rfn: RFn = evaluate((b) => b(p), root);
@@ -59,7 +58,7 @@ class BuilderFactory1[P, R](override val logger: TddLogger = TddLogger.defaultLo
   def builder = new Builder1
 
   class Builder1(val builderData: ScenarioBuilderData = ScenarioBuilderData()) extends ABuilder1 {
-    def thisAsBuilder = this
+    protected def thisAsBuilder = this
     def copy(builderData: ScenarioBuilderData) = new Builder1(builderData)
   }
 }
@@ -70,7 +69,6 @@ trait ABuilderFactory2[P1, P2, R] extends EngineUniverse[R] with Engine2Types[P1
     def scenario(p1: P1, p2: P2, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2))
     def build = new Engine(builderData) with Engine2[P1, P2, R] {
       def arity = 2
-      def useCases = useCasesForBuild
       def apply(p1: P1, p2: P2): R = {
         logParams(p1, p2)
         val rfn: RFn = evaluate((b) => b(p1, p2), root);
@@ -87,7 +85,7 @@ class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.defa
   def builder = new Builder2
 
   class Builder2(val builderData: ScenarioBuilderData = ScenarioBuilderData()) extends ABuilder2 {
-    def thisAsBuilder = this
+    protected def thisAsBuilder = this
     def copy(builderData: ScenarioBuilderData) = new Builder2(builderData)
   }
 }
@@ -98,12 +96,11 @@ class BuilderFactory3[P1, P2, P3, R](override val logger: TddLogger = TddLogger.
   def builder = new Builder3
 
   class Builder3(val builderData: ScenarioBuilderData = ScenarioBuilderData()) extends ScenarioBuilder {
-    def thisAsBuilder = this
+    protected def thisAsBuilder = this
     def copy(builderData: ScenarioBuilderData) = new Builder3(builderData)
     def scenario(p1: P1, p2: P2, p3: P3, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2, p3))
     def build = new Engine(builderData) with Engine3[P1, P2, P3, R] {
       def arity = 3
-      def useCases = useCasesForBuild
       def apply(p1: P1, p2: P2, p3: P3): R = {
         logParams(p1, p2)
         val rfn: RFn = evaluate((b) => b(p1, p2, p3), root);

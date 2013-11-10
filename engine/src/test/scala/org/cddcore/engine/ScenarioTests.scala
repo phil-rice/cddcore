@@ -76,7 +76,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   "A built engine" should "have all the scenarios in it's list of scenarios" in {
     val b = builderWithScenario.expected(firstResult)
     val engine = build(b)
-    assertEquals("UseCases", b.useCasesForBuild, engine.useCases)
+    assertEquals("UseCases", b.builderData.useCasesForBuild, engine.useCases)
     val expectedScenario = Scenario(None, None, firstParams, logger, Some(ROrException[R](firstResult)));
     assertEquals(List(expectedScenario), engine.scenarios)
   }

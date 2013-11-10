@@ -57,11 +57,11 @@ trait CddRunner extends Runner with EngineUniverse[Any] with NotActuallyFactory[
 
     engineMap = engineMap + (engineDescription -> engine)
 
-    for (u <- engine.useCases) yield {
+    for (u <- engine.useCases.reverse) yield {
       val useCaseDescription = Description.createSuiteDescription(Strings.clean(u.title.getOrElse("")))
       engineDescription.addChild(useCaseDescription)
 
-      for (s <- u.scenarios) yield {
+      for (s <- u.scenarios.reverse) yield {
         val name = s.titleString + " => " + logger(s.expected.getOrElse("")) + " " + s.becauseString
         val cleanedName = Strings.clean(name)
         println("   " + cleanedName)

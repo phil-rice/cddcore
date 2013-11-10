@@ -46,8 +46,8 @@ class EngineDefaultTests extends EngineStringStringTests {
       scenario("B").because("B").expected("Y").
       scenario("C").because("C").expected("Z")
     val e = evaluating { bldr.build } should produce[ScenarioConflictException]
-    val defaultScenario = bldr.scenariosForBuild(0)
-    val lastScenario = bldr.scenariosForBuild(2)
+    val defaultScenario = bldr.builderData.scenariosForBuild(0)
+    val lastScenario = bldr.builderData.scenariosForBuild(2)
     assertEquals(defaultScenario, e.scenario)
     assertEquals(lastScenario, e.beingAdded)
   }

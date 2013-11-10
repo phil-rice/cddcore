@@ -78,7 +78,7 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testStarted: Engine",
       "testStarted: uc1",
       "testStarted: d1 => exp <<p String> => p.==<two>>",
-      "testFailure: d1 => exp <<p String> => p.==<two>>: ((p: String) => p.==(\"two\")) is not true for Scenario(d1, one, because=((p: String) => p.==(\"two\")), expected=exp)\nDetailed:\n  List(one)",
+      "testFailure: d1 => exp <<p String> => p.==<two>>: ((p: String) => p.==(\"two\")) is not true for Scenario(d1, one, because=((p: String) => p.==(\"two\")), expected=exp)\nDetailed:\n  List(one)\n",
       "testFinished: uc1",
       "testFinished: Engine",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))

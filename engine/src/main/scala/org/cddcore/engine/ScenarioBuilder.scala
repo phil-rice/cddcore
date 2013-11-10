@@ -321,21 +321,34 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     priority: Int = 0,
     documents: List[Document] = List(),
     paramDetails: List[ParamDetail] = List(),
-    references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder
+    references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
+
+    lazy val useCasesForBuild: List[UseCase] =
+      children.collect {
+        case u: UseCase => u.copy(
+          scenarios = u.scenarios.map((s) =>
+            (s.expected, u.expected) match {
+              case (None, Some(e)) => s.copy(expected = Some(e))
+              case _ => s
+            }),
+          references = u.references.reverse)
+      };
+
+    lazy val scenariosForBuild = useCasesForBuild.flatMap(_.scenarios.reverse)
+  }
+  def validateBecause(s: Scenario) = {
+    s.configure
+    s.because match {
+      case Some(b) =>
+        if (!makeClosureForBecause(s.params).apply(b.because))
+          throw new ScenarioBecauseException(s.becauseString + " is not true for " + ExceptionScenarioPrinter.full(s) + "\n", s);
+      case None =>
+    }
+  }
 
   trait ScenarioBuilder {
 
     def builderData: ScenarioBuilderData
-    def validateBecause(s: Scenario) = {
-      s.configure
-      s.because match {
-        case Some(b) =>
-          if (!makeClosureForBecause(s.params).apply(b.because))
-            throw new ScenarioBecauseException(s.becauseString + " is not true for " + ExceptionScenarioPrinter.full(s) + "\n", s);
-        case None =>
-      }
-    }
-
     protected def set[X](x: X, bFn: (RealScenarioBuilder, X) => ScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) =
       builderData.children match {
         case Nil =>
@@ -347,6 +360,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
             case s :: tail => checkFn(s, x); h.copy(scenarios = sFn(s, x) :: tail)
           }
           copy(children = newHead :: tail)
+        case _ => throw new IllegalStateException
       }
 
     def copy(builderData: ScenarioBuilderData): RealScenarioBuilder
@@ -447,18 +461,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def configuration[K](cfg: CfgFn) = scenarioLens.mod(thisAsBuilder, (s) => s.copy(configuration = Some(cfg)))
     def assertion(a: Assertion[A], comment: String = "") = scenarioLens.mod(thisAsBuilder, (s) => s.copy(assertions = a.copy(comment = comment) :: s.assertions))
 
-    def useCasesForBuild: List[UseCase] =
-      builderData.children.collect {
-        case u: UseCase => u.copy(
-          scenarios = u.scenarios.map((s) =>
-            (s.expected, u.expected) match {
-              case (None, Some(e)) => s.copy(expected = Some(e))
-              case _ => s
-            }).reverse,
-          references = u.references.reverse)
-      }.reverse;
-
-    def scenariosForBuild: List[Scenario] = useCasesForBuild.flatMap((u) => u.scenarios);
+    //    def scenariosForBuild: List[Scenario] = useCasesForBuild.flatMap((u) => u.scenarios);
 
     protected def newScenario(scenarioTitle: String, scenarioDescription: String, params: List[Any]) = builderData.children match {
       case (h: UseCase) :: t => {
@@ -554,15 +557,6 @@ trait EngineUniverse[R] extends EngineTypes[R] {
   }
 
   trait BuildEngine extends EvaluateEngine with EngineToString[R] {
-    def validateBecause(s: Scenario) {
-      s.configure
-      s.because match {
-        case Some(b) =>
-          if (!makeClosureForBecause(s.params).apply(b.because))
-            throw new ScenarioBecauseException(s.becauseString + " is not true for " + ExceptionScenarioPrinter.full(s), s);
-        case None =>
-      }
-    }
 
     protected def checkExpectedMatchesAction(root: RorN, s: Scenario) {
       s.configure
@@ -611,6 +605,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
             case e: ThreadDeath =>
               throw e
             case e: Throwable =>
+              e.printStackTrace()
               buildFromScenarios(root, tail, seMap + (c -> e))
           }
 
@@ -806,18 +801,17 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       result
     }
   }
-  abstract class Engine(val title: Option[String], val description: Option[String], val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine[R] {
-    def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails)
-    def defaultRoot: RorN = optCode match {
+  abstract class Engine(val title: Option[String], val description: Option[String], val children: ReportableList, val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine[R] {
+    def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.useCasesForBuild, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails)
+    val defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>
         new UndecidedException)), List(), true))
     }
     def logger = EngineUniverse.this.logger
     override def templateName = "Engine"
-    def useCases: List[UseCase];
-    def children = useCases
-    lazy val scenarios: List[Scenario] = useCases.flatMap(_.scenarios)
+    val useCases: List[UseCase] = all(classOf[UseCase])
+    val scenarios: List[Scenario] = all(classOf[Scenario])
 
     private val rootAndExceptionMap = buildRoot(defaultRoot, scenarios)
     val root: RorN = rootAndExceptionMap._1

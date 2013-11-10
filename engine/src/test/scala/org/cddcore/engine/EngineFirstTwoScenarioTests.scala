@@ -13,8 +13,19 @@ class EngineFirstTwoScenarioTests extends EngineStringStringTests {
     assertEquals("Z", engineWithDefault("B"))
   }
 
-  
-  
+  it should " allow the first use not to have a because, and become the default value when we add a second scenario in a second use case" in {
+    val e = Engine[Int, String]().
+      useCase("").scenario(1).expected("x").
+      useCase("").scenario(2).expected("y").because((x: Int) => x == 2).
+      build
+  }
+  it should " allow the first use not to have a because, and become the default value when we add a second scenario in same used case" in {
+    val e = Engine[Int, String]().
+      useCase("").scenario(1).expected("x").
+      scenario(2).expected("y").because((x: Int) => x == 2).
+      build
+  }
+
   it should "produce a simple if then with two scenarios" in {
     val b = builderWithDefault.scenario("B").because("B").expected("X");
     val e = b.build
