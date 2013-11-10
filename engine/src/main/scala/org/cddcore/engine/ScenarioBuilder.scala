@@ -290,15 +290,16 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def apply(s: Scenario) = map(s)
     def contains(s: Scenario) = map.contains(s)
   }
+
   val scenarioLens = Lens[RealScenarioBuilder, Scenario](
-    (b) => b.useCases match {
+    (b) => b.children match {
       case u :: ut => u.scenarios match {
         case s :: st => s
         case _ => throw new NeedScenarioException
       }
       case _ => throw new NeedUseCaseException
     },
-    (b, s) => b.useCases match {
+    (b, s) => b.children match {
       case u :: ut => u.scenarios match {
         case sold :: st => b.copy(b.title, b.description, u.copy(scenarios = s :: st) :: ut, b.optCode, b.expected, b.priority, b.references)
         case _ => throw new NeedScenarioException
@@ -322,12 +323,13 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     }
 
-    def documents: List[Document]
-    def useCases: List[UseCase]
+    protected def documents: List[Document]
+    protected def useCases: List[UseCase]
     def children = useCases
-    def paramDetails: List[ParamDetail]
+    protected def paramDetails: List[ParamDetail]
 
     override def templateName = "Engine"
+
     def set[X](x: X, bFn: (RealScenarioBuilder, X) => ScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) = {
       useCases match {
         case Nil =>
@@ -352,7 +354,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       documents: List[Document] = documents,
       paramDetails: List[ParamDetail] = paramDetails): RealScenarioBuilder;
 
-    def thisAsBuilder: RealScenarioBuilder
+    protected def thisAsBuilder: RealScenarioBuilder
 
     def document(documents: Document*) = {
       set[List[Document]](documents.toList ++ this.documents,
@@ -407,7 +409,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (u, priority) => u.copy(priority = priority),
         (s, priority) => s.copy(priority = priority))
 
-    def findDocument(documentName: String) = documents.find((d) => d.name == Some(documentName)) match {
+    protected def findDocument(documentName: String) = documents.find((d) => d.name == Some(documentName)) match {
       case Some(d) => d
       case None => throw new CannotFindDocumentException(documentName);
     }
@@ -446,10 +448,9 @@ trait EngineUniverse[R] extends EngineTypes[R] {
           }).reverse,
         references = u.references.reverse)).reverse;
 
-    def scenariosForBuild: List[Scenario] =
-      useCasesForBuild.flatMap((u) => u.scenarios);
+    def scenariosForBuild: List[Scenario] = useCasesForBuild.flatMap((u) => u.scenarios);
 
-    def newScenario(scenarioTitle: String, scenarioDescription: String, params: List[Any]) = useCases match {
+    protected def newScenario(scenarioTitle: String, scenarioDescription: String, params: List[Any]) = useCases match {
       case h :: t => {
         val titleString = if (scenarioTitle == null) None else Some(scenarioTitle);
         val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
@@ -493,7 +494,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     }
   }
-  trait EngineToString[R] extends org.cddcore.engine.Engine [R]{
+  trait EngineToString[R] extends org.cddcore.engine.Engine[R] {
 
     def root: Either[Conclusion, Decision]
 
