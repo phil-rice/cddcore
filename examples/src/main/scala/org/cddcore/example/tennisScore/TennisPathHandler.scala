@@ -1,5 +1,4 @@
 package org.cddcore.example.tennisScore
-import javax.ws.rs._
 import org.corecdd.website._
 import org.cddcore.engine.Engine
 import org.cddcore.engine.Engine2

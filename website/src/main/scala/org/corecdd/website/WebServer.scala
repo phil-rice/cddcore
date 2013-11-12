@@ -1,12 +1,12 @@
 package org.corecdd.website
 
 import org.eclipse.jetty.server.nio.SelectChannelConnector
+
 import org.eclipse.jetty.servlet.ServletHolder
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.server._
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.handler.AbstractHandler
-import com.sun.jersey.spi.container.servlet.ServletContainer
 import org.cddcore.engine.RequirementAndHolder
 
 object WebServer {

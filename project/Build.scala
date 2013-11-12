@@ -42,7 +42,7 @@ object BuildSettings {
     unmanagedClasspath in Runtime <+= (baseDirectory) map { bd => Attributed.blank(bd / "src/main/resources") },
     organization := "org.cddcore",
     //version := "1.6.4-SNAPSHOT",
-    version := "1.7.1",
+    version := "1.7.2",
     scalacOptions ++= Seq(),
     retrieveManaged := false,
     scalaVersion := "2.10.1",
@@ -80,8 +80,6 @@ object BuildSettings {
   val websiteSettings = buildSettings ++ Seq(
     //resolvers += "eclipse-repo" at "https://swt-repo.googlecode.com/svn/repo/",
     libraryDependencies ++= Seq(
-      "com.sun.jersey" % "jersey-server" % "1.2",
-      "com.sun.jersey" % "jersey-json" % "1.2",
       "org.eclipse.jetty" % "jetty-server" % "8.0.0.M0",
       "org.eclipse.jetty" % "jetty-servlet" % "8.0.0.M0",
       "org.seleniumhq.selenium" % "selenium-java" % "2.28.0" % "test",

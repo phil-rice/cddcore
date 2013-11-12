@@ -2,13 +2,14 @@ package org.corecdd.website
 
 import org.cddcore.engine._
 
+
+
 import org.cddcore.engine.RequirementAndHolder
 import org.eclipse.jetty.server._
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.nio.SelectChannelConnector
 import org.eclipse.jetty.servlet._
-import com.sun.jersey.spi.container.servlet.ServletContainer
 import javax.servlet.http._
 import scala.xml.Elem
 
