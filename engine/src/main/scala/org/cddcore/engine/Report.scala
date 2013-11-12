@@ -78,7 +78,7 @@ class EngineConclusionWalker extends ReportWalker {
 object ReportCreator {
   def unnamed = "<Unnamed>"
 
-  def fileSystem(r: ReportableHolder, title: String = null, live: Boolean = false, optUrlMap: Option[UrlMap]=None) = new FileReportCreator(r, title, live, new FileSystemReportableToUrl, optUrlMap)
+  def fileSystem(r: ReportableHolder, title: String = null, live: Boolean = false, reportableToUrl: FileSystemReportableToUrl = new FileSystemReportableToUrl, optUrlMap: Option[UrlMap] = None) = new FileReportCreator(r, title, live, reportableToUrl, optUrlMap)
 
 }
 

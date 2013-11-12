@@ -10,7 +10,7 @@ trait ReporterToHtml {
   def apply(rep: Rep): String
 }
 
-class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, String], String], replacementEngine: Engine[R], rep: MemoryReporter[ID, R], maxItems: Int = 5) {
+class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R], String], replacementEngine: Engine[R], rep: MemoryReporter[ID, R], maxItems: Int = 5) {
   type Rep = MemoryReporter[ID, _]
   import Reportable._
   import Renderer._
@@ -46,10 +46,9 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, S
   }
 
   val idRow = "<tr class='legacyTR'><td class='title'>ID</td><td class='value'>$if(legacyItemId)$" + a("$legacyItemId$") + "$endif$</td></tr>"
+  def descriptionRow =
+    "$if(legacyDescription)$<tr class='legacyTR'><td class='title'>Description</td><td class='value'>$legacyDescription$</td></tr>$endif$"
   val actualRow = "<tr><td class='title'>Actual</td><td class='value'>$if(actual)$$actual$$endif$</td></tr>"
-  def legacyItemSummary: StringRenderer =
-    ("LegacyItem",
-      "<div class='legacyItem'><div class='legacyItemTable'>" + table("legacyItemTable", idRow, paramsRow, expectedRow, actualRow) + "</div></div>")
 
   class EngineConclusionLegacyWalker() extends ReportWalker {
     import Reportable._
@@ -103,7 +102,12 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, S
     addParams(stringTemplate, "params", replacementEngine.logger, li.params)
     stringTemplate.setAttribute("expected", li.expected)
     stringTemplate.setAttribute("actual", li.actual)
+    if (li.description.isDefined)
+      stringTemplate.setAttribute("legacyDescription", li.description.get)
   })
+  def legacyItemSummary: StringRenderer =
+    ("LegacyItem",
+      "<div class='legacyItem'><div class='legacyItemTable'>" + table("legacyItemTable", idRow, descriptionRow, paramsRow, expectedRow, actualRow) + "</div></div>")
 
   def legacyHtml(rep: Rep, rootUrl: Option[String], restrict: ReportableSet = Set()) = Renderer(rootUrl, restrict, false, new EngineConclusionLegacyWalker).
     configureAttribute(legacyDecisionTreeConfig(rep, Set()), legacyConclusionConfig, legacyItemConfig).
@@ -152,7 +156,7 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, S
     val project = new Project("Legacy Run", categorisationEngine, replacementEngine)
     val report = new Report("Legacy run", None, project)
     val urlMap = makeUrlMap(reportableToUrl, report)
-    ReportCreator.fileSystem(report, optUrlMap = Some(urlMap)).create
+    ReportCreator.fileSystem(report, reportableToUrl = reportableToUrl, optUrlMap = Some(urlMap)).create
 
     val rootUrl = urlMap.get(report)
     report.walkWithPath((path: ReportableList) => path.head match {

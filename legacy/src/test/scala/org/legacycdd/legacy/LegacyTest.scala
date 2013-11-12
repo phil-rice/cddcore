@@ -23,9 +23,9 @@ class LegacyTest extends AbstractTest {
   implicit def toROrException(x: String) = ROrException[String](x)
   val categoriserEngine = Engine[LegacyData[Int, String], String]().
     useCase("Pass").expected("pass").
-    scenario(LegacyData(1, List(1), "X", "X")).because((l: LegacyData[Int, String]) => l.expected == l.actual).
+    scenario(LegacyData(1, List(1),None,  "X", "X")).because((l: LegacyData[Int, String]) => l.expected == l.actual).
     useCase("Fail").expected("fail").
-    scenario(LegacyData(1, List(1), "X", "Y")).because((l: LegacyData[Int, String]) => l.expected != l.actual).
+    scenario(LegacyData(1, List(1), None, "X", "Y")).because((l: LegacyData[Int, String]) => l.expected != l.actual).
     build
 
   val passConclusion = categoriserEngine.root.right.get.yes.left.get
