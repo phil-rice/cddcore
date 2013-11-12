@@ -17,45 +17,24 @@ object WebServer {
     println("Port[" + port + "]")
     port
   }
-  def apply(port: Int, packages: String*): WebServer = new WebServerFromPackage(port, packages.toList)
 
-  def apply(handler: Handler, port: Int = defaultPort): WebServer = new WebServerWithHandler(port, handler)
-  def apply(port: Int, p: RequirementAndHolder, handlers: CddPathHandler*): WebServer = new WebServerWithHandler(port, new CddHandler(p, handlers.toList))
-  def apply(p: RequirementAndHolder): WebServer = apply(defaultPort, p, new FavIconHandler, new RootPathHandler, new LivePathHandler, new PathHandler)
+  def defaultPathHandlers = List(new FavIconHandler, new RootPathHandler, new LivePathHandler, new PathHandler)
+  
+  def apply(port: Int, p: RequirementAndHolder, handlers: List[CddPathHandler] = defaultPathHandlers): WebServer = new WebServer(port, new CddHandler(p, handlers))
+  def withPreHandlers(port: Int, p: RequirementAndHolder, handlers: CddPathHandler*): WebServer = new WebServer(port, new CddHandler(p, handlers.toList ::: defaultPathHandlers))
+  def apply( p: RequirementAndHolder): WebServer = new WebServer(defaultPort, new CddHandler(p, defaultPathHandlers))
 
-  def apply(packages: String*): WebServer = {
-    apply(defaultPort, packages: _*)
-  }
 }
 
-abstract class WebServer {
+class WebServer(val port: Int, val handler: Handler) {
+
   val server = new Server(port);
+  server.setHandler(handler)
   def launch {
     start; server.join
   }
-  def start
+  def start = server.start
   def stop = server.stop
-  def port: Int
 }
 
-class WebServerWithHandler(val port: Int, val handler: Handler) extends WebServer {
-  def start {
-    server.setHandler(handler);
-    server.start();
-  }
-}
 
-class WebServerFromPackage(val port: Int, packages: List[String]) extends WebServer {
-
-  def start() {
-    val connector = new SelectChannelConnector()
-    server.addConnector(connector)
-    val holder: ServletHolder = new ServletHolder(classOf[ServletContainer])
-    holder.setInitParameter("com.sun.jersey.config.property.resourceConfigClass", "com.sun.jersey.api.core.PackagesResourceConfig")
-    holder.setInitParameter("com.sun.jersey.config.property.packages", packages.mkString(";"))
-    val context = new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS)
-    context.addServlet(holder, "/*")
-    server.start
-  }
-
-}

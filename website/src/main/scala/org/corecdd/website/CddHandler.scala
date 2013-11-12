@@ -12,7 +12,7 @@ import com.sun.jersey.spi.container.servlet.ServletContainer
 import javax.servlet.http._
 import scala.xml.Elem
 
-class HandlerContext(val root: RequirementAndHolder, val reportCreator: ReportCreator[SimpleReportableToUrl], val fullUri: String, val uriPath: String) {
+class HandlerContext(val root: RequirementAndHolder, val reportCreator: ReportCreator[SimpleReportableToUrl], val method: String, val fullUri: String, val uriPath: String) {
   import PathUtils._
   val reportableToUrl = reportCreator.reportableToUrl
   val urlMap = reportCreator.urlMap
@@ -26,6 +26,7 @@ trait CddPathHandler {
   def findUriPath(uri: String): String = uri
   def paramsINeed(context: HandlerContext): List[String] = List()
   def html(context: HandlerContext, params: List[(String, String)]): String
+  def getParam(params: List[(String, String)], name: String) = params.find(_._1 == name).getOrElse(throw new IllegalArgumentException(name))._2
 }
 
 case class Param(name: String, valueAsString: String, value: Any)
@@ -43,7 +44,7 @@ class CddHandler(p: RequirementAndHolder, pathHandlers: List[CddPathHandler]) ex
           baseRequest.setHandled(true);
           response.setContentType("text/html;charset=utf-8");
           response.setStatus(HttpServletResponse.SC_OK);
-          val context = new HandlerContext(p, reportCreator, path, ph.findUriPath(path))
+          val context = new HandlerContext(p, reportCreator, baseRequest.getMethod(), path, ph.findUriPath(path))
           val paramsINeed = ph.paramsINeed(context)
           val paramsNameAndValue = paramsINeed.map((name) => (name, baseRequest.getParameter(name)))
           val html = ph.html(context, paramsNameAndValue)
