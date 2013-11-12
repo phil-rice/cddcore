@@ -14,7 +14,7 @@ object ExampleWebsite {
       CategorisePerson.categorise,
       ProcessChequeXml.processCheque,
       TennisScorer.scorer)
-    WebServer(new CddHandler(project)).launch
+    WebServer(project).launch
   }
 
 }

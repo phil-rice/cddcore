@@ -135,9 +135,9 @@ trait Structure[S, Result] extends HtmlDisplay {
   }
 
   protected def structuresToString(pathMap: PathMap[S, Result], structureTitle: (S) => String, separator: String = "\n") =
-    pathMap.roots.keys.toList.sortBy(structureTitle(_)).map((s) => structureTitle(s) //        separator + {
-    //      pathMap.roots(s).foldLeft(IndentAndString("    ", ""))((acc, r) => selfAndChildren(s, pathMap, separator)(acc, List(r)))
-    //    }.string
-    ).mkString(separator)
+    pathMap.roots.keys.toList.sortBy(structureTitle(_)).map((s) => structureTitle(s) + separator
+      + {
+        pathMap.roots(s).foldLeft(IndentAndString("    ", ""))((acc, r) => selfAndChildren(s, pathMap, separator)(acc, List(r)))
+      }.string).mkString(separator)
 
 }

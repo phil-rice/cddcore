@@ -63,7 +63,7 @@ object Xml {
     println(f1())
     println(f2())
   }
-}
+} 
 
 trait XmlSituation extends Structure[Elem, NodeSeq] {
   type XmlFragment = Fragment[Elem, NodeSeq, _, _]

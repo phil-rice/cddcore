@@ -20,6 +20,7 @@ import org.cddcore.engine.Engine
 import org.cddcore.engine.UseCasePageChecker
 import org.cddcore.engine.RequirementAndHolder
 import org.cddcore.engine.Test
+import org.corecdd.website.WebServerWithHandler
 
 @RunWith(classOf[JUnitRunner])
 class ExampleWebsiteTest extends AbstractWebsiteTest with BeforeAndAfterAll {
@@ -29,11 +30,10 @@ class ExampleWebsiteTest extends AbstractWebsiteTest with BeforeAndAfterAll {
     ProcessChequeXml.processCheque,
     TennisScorer.scorer)
 
-  val cddHandler = new CddHandler(project)
+  val server = WebServer(project);
+  val cddHandler = server.asInstanceOf[WebServerWithHandler].handler.asInstanceOf[CddHandler]
   val report = cddHandler.reportCreator.report
   val reportableToUrl = cddHandler.reportCreator.reportableToUrl
-
-  val server = WebServer(cddHandler);
 
   def projectPageAtIndex = { go to (host); new ProjectPage(List(project, report)) }
 

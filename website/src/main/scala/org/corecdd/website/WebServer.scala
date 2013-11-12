@@ -1,15 +1,13 @@
 package org.corecdd.website
 
-import org.cddcore.engine._
-import org.cddcore.engine.RequirementAndHolder
+import org.eclipse.jetty.server.nio.SelectChannelConnector
+import org.eclipse.jetty.servlet.ServletHolder
+import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.server._
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.handler.AbstractHandler
-import org.eclipse.jetty.server.nio.SelectChannelConnector
-import org.eclipse.jetty.servlet._
 import com.sun.jersey.spi.container.servlet.ServletContainer
-import javax.servlet.http._
-import scala.xml.Elem
+import org.cddcore.engine.RequirementAndHolder
 
 object WebServer {
   def defaultPort = {
@@ -22,6 +20,8 @@ object WebServer {
   def apply(port: Int, packages: String*): WebServer = new WebServerFromPackage(port, packages.toList)
 
   def apply(handler: Handler, port: Int = defaultPort): WebServer = new WebServerWithHandler(port, handler)
+  def apply(port: Int, p: RequirementAndHolder, handlers: CddPathHandler*): WebServer = new WebServerWithHandler(port, new CddHandler(p, handlers.toList))
+  def apply(p: RequirementAndHolder): WebServer = apply(defaultPort, p, new FavIconHandler, new RootPathHandler, new LivePathHandler, new PathHandler)
 
   def apply(packages: String*): WebServer = {
     apply(defaultPort, packages: _*)
@@ -38,91 +38,7 @@ abstract class WebServer {
   def port: Int
 }
 
-class CddHandler(p: RequirementAndHolder) extends AbstractHandler {
-  val reportCreator = new ReportCreator(p, title = null, live = true, reportableToUrl = new SimpleReportableToUrl)
-  val urlMap = reportCreator.urlMap
-
-  def findParamNames(e: Engine[_]) = e.paramDetails.map((x) => Some(x.displayName)).padTo(e.arity, None).zipWithIndex.map { case (None, i) => "param" + i; case (Some(x), _) => x }
-  def formHtml(baseRequest: Request, e: Engine[_], params: List[String], result: String) = {
-    val paramNames = findParamNames(e)
-    val form =
-      <form method='post' action={ baseRequest.getUri().getPath() }>
-        {
-          for (i <- 0 to (e.arity - 1)) yield {
-            val name: String = paramNames(i);
-            <label id={ name }>{ name } </label>
-            <input name={ name } id={ name } type='text' value={ params(i) }/><br/>
-          }
-        }
-        <input type='submit'/>
-      </form>
-    val center = if (e.arity == e.paramDetails.size) form else <p>This engine isn't configured for live operations. Add 'param' details</p>;
-
-    <div>
-      { center }
-      <br/>
-      <table>
-        <tr><td>Params:</td><td>{ params.mkString(", ") }</td></tr>
-        <tr><td>Result:</td><td>{ result }</td></tr>
-      </table>
-    </div>.toString
-  }
-
-  def getForm(baseRequest: Request, request: HttpServletRequest, e: Engine[_]) =
-    html(baseRequest, request, e, List().padTo(e.arity, ""))
-
-  def toString(o: Any) = o match {
-    case h: HtmlDisplay => h.htmlDisplay
-    case _ => "" + o
-  }
-  def postForm(baseRequest: Request, request: HttpServletRequest, e: Engine[_]) = {
-    val paramNames = findParamNames(e)
-    val paramStrings =
-      for (i <- 0 to e.arity - 1)
-        yield request.getParameterValues(paramNames(i))(0)
-    html(baseRequest, request, e, paramStrings)
-  }
-
-  def html(baseRequest: Request, request: HttpServletRequest, e: Engine[_], paramStrings: Iterable[String]) = {
-    val (engineForm, params, conclusion) = try {
-      val params = paramStrings.zip(e.paramDetails).map { case (param, details) => details.parser(param) }.toList
-      val conclusion = e.findConclusionFor(params)
-      val result = e.evaluateConclusion(params, conclusion)
-      (formHtml(baseRequest, e, paramStrings.toList, result.toString), Some(params), Some(conclusion))
-    } catch { case t: Throwable => t.printStackTrace(); (formHtml(baseRequest, e, List("").padTo(e.arity, ""), t.getClass + ": " + t.getMessage()), None, None) }
-    HtmlRenderer(true).liveEngineHtml(reportCreator.rootUrl, params, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + e.titleOrDescription(""), e))
-  }
-
-  def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse) = {
-    response.setContentType("text/html;charset=utf-8");
-    response.setStatus(HttpServletResponse.SC_OK);
-    baseRequest.setHandled(true);
-    val uri = baseRequest.getUri();
-    val path = uri.getPath
-    val html = path match {
-      case s: String if s.endsWith("/live") =>
-        val withoutLive = s.substring(0, s.length - 5);
-        val path: List[Reportable] = urlMap(withoutLive)
-        path.head match {
-          case e: Engine[_] =>
-            if (request.getMethod().equalsIgnoreCase("GET"))
-              Some(getForm(baseRequest, request, e));
-            else if (request.getMethod().equalsIgnoreCase("POST"))
-              Some(postForm(baseRequest, request, e));
-        }
-      case "/" =>
-        reportCreator.htmlFor(List(p, reportCreator.report))
-      case p =>
-        urlMap.get(p).flatMap(reportCreator.htmlFor(_))
-    }
-    html match {
-      case Some(h) => response.getWriter().println(h);
-      case _ => ;
-    }
-  }
-}
-
-class WebServerWithHandler(val port: Int, handler: Handler) extends WebServer {
+class WebServerWithHandler(val port: Int, val handler: Handler) extends WebServer {
   def start {
     server.setHandler(handler);
     server.start();
