@@ -68,25 +68,23 @@ class XmlTest extends AbstractTest with XmlTestMother {
   "An Xml Situation with one fragments" should "produce a decent toString" in {
     assertEquals("xmlSituationOneFragment(\n" +
       "  one = 1\n" +
-      "  Xml: x  <root>       <one>1</one>       <two>2</two>       <repeated>1</repeated>       <repeated>2</repeated>       <repeated>3</repeated>     </root>\n" +
-      "    \\one = 1\n" +
-      ")", new xmlSituationOneFragment(x).toString)
+      "  Xml: x\n  <root>       <one>1</one>       <two>2</two>       <repeated>1</repeated>       <repeated>2</repeated>       <repeated>3</repeated>     </root>\n" +
+      "\\one = 1)", new xmlSituationOneFragment(x).toString)
   }
 
   "An Xml Situation" should "report No Convertor when not configured properly" in {
     assertEquals("xmlSituationWithoutType(\n" +
       "  one = No Convertor\n" +
-      "  Xml: x  <root>       <one>1</one>       <two>2</two>       <repeated>1</repeated>       <repeated>2</repeated>       <repeated>3</repeated>     </root>\n" +
-      "    \\one = No Convertor\n" +
-      ")", new xmlSituationWithoutType(x).toString)
+      "  Xml: x\n  <root>       <one>1</one>       <two>2</two>       <repeated>1</repeated>       <repeated>2</repeated>       <repeated>3</repeated>     </root>\n" +
+      "\\one = No Convertor)", 
+      new xmlSituationWithoutType(x).toString)
   }
 
   "An Xml Situation" should "handle the Elem not being a variable" in {
     assertEquals("xmlSituationWithoutVariable(\n" +
       "  notIn = \n" +
       "  Xml:   <root>       <one>1</one>       <two>2</two>       <repeated>1</repeated>       <repeated>2</repeated>       <repeated>3</repeated>     </root>\n" +
-      "    \\absent = \n" +
-      ")", new xmlSituationWithoutVariable().toString)
+      "\\absent)", new xmlSituationWithoutVariable().toString)
   }
 
   "An Xml Situation with simple repeating blocks and a fold" should "produce a decent toString" in {
@@ -96,11 +94,10 @@ class XmlTest extends AbstractTest with XmlTestMother {
       "  repeatedInteger = 123\n" +
       "  repeatedString = 123\n" +
       "  two = 2\n" +
-      "  Xml: x  <root>       <one>1</one>       <two>2</two>       <repeated>1</repeated>       <repeated>2</repeated>       <repeated>3</repeated>     </root>\n" +
-      "    \\one = 1\n" +
-      "    \\two = 2\n" +
-      "    \\repeated = 123,123,6\n" +
-      ")", new xmlSituationThreeFragment(x).toString)
+      "  Xml: x\n  <root>       <one>1</one>       <two>2</two>       <repeated>1</repeated>       <repeated>2</repeated>       <repeated>3</repeated>     </root>\n" +
+      "\\one = 1\n" +
+      "\\two = 2\n" +
+      "\\repeated = 123,123,6)", new xmlSituationThreeFragment(x).toString)
   }
 
   "An Xml Situation with nested blocks" should "evaluate fragments" in {
@@ -122,11 +119,10 @@ class XmlTest extends AbstractTest with XmlTestMother {
       "  repeatedNestedList = List(4, 3, 2, 1)\n" +
       "  repeatedNestedString = 1234\n" +
       "  repeatedString = 1234\n" +
-      "  Xml: x  <root>               <repeated><nested>1</nested><nested>2</nested></repeated>               <repeated><nested>3</nested><nested>4</nested></repeated>               <repeated></repeated>             </root>\n" +
-      "    \\repeated = 1234,1234,1234,NumberFormatException For input string: \"\"\n" +
-      "      \\repeated\\nested = 10,List(4, 3, 2, 1)\n" +
-      "      \\repeated\\nested = 10,List(4, 3, 2, 1)\n" +
-      ")", situation.toString)
+      "  Xml: x\n  <root>               <repeated><nested>1</nested><nested>2</nested></repeated>               <repeated><nested>3</nested><nested>4</nested></repeated>               <repeated></repeated>             </root>\n" +
+      "\\repeated = 1234,1234,1234,NumberFormatException\n" +
+      "..\\nested = 10,List(4, 3, 2, 1)\n" +
+      "..\\nested = 10,List(4, 3, 2, 1))", situation.toString)
   }
 
   "An Xml Situation with a fragment that isn't present" should "produce a decent toString" in {
@@ -134,8 +130,7 @@ class XmlTest extends AbstractTest with XmlTestMother {
     assertEquals("xmlSituationOneFragmentNotFound(\n" +
       "  notIn = \n" +
       "  Xml:   <root>       <one>1</one>       <two>2</two>       <repeated>1</repeated>       <repeated>2</repeated>       <repeated>3</repeated>     </root>\n" +
-      "    \\absent = \n" +
-      ")", situation.toString)
+      "\\absent)", situation.toString)
   }
 }
 

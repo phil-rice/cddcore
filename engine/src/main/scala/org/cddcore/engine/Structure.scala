@@ -68,8 +68,7 @@ case class Path(linked: Boolean, element: String) {
 }
 
 case class MapOfList[K, V](val map: Map[K, List[V]] = Map[K, List[V]]()) {
-  val emptyList = List[V]()
-  def apply(k: K) = map.getOrElse(k, emptyList)
+  def apply(k: K) = map.getOrElse(k, Nil)
   def put(k: K, v: V) =
     MapOfList(map + (k -> (map.get(k) match {
       case Some(oldList) => v :: oldList
@@ -135,6 +134,26 @@ trait Structure[S, Result] extends HtmlDisplay {
   }
 
   protected def structuresToString(pathMap: PathMap[S, Result], structureTitle: (S) => String, separator: String = "\n") =
+    pathMap.roots.keys.toList.sortBy(structureTitle(_)).map((s) => structureTitle(s)
+      + {
+        val allPaths = pathMap.roots(s).flatMap((root) => Maps.walkSelfAndChildrenPaths(pathMap.map(s).map)(List(root)))
+        allPaths.map((pathList) => {
+          val last = pathList.last
+          val fullPaths = pathMap.fullPaths(s)
+          val fragments = fullPaths.filter(_.paths.reverse == last)
+          val fragmentString = fragments.map((f) => try {
+            f.convertor match {
+              case Some(c) => f.apply
+              case _ => "No Convertor"
+            }
+          } catch { case e: Throwable => e.getClass.getSimpleName }).mkString(",")
+          val fullFragmentString = if (fragmentString.length() > 0) " = " + fragmentString else "";
+
+          pathList.tail.map((x) => "..").mkString + last.last + fullFragmentString
+        })
+      }.mkString(separator)).mkString(separator)
+
+  protected def structuresToStringOld(pathMap: PathMap[S, Result], structureTitle: (S) => String, separator: String = "\n") =
     pathMap.roots.keys.toList.sortBy(structureTitle(_)).map((s) => structureTitle(s) + separator
       + {
         pathMap.roots(s).foldLeft(IndentAndString("    ", ""))((acc, r) => selfAndChildren(s, pathMap, separator)(acc, List(r)))

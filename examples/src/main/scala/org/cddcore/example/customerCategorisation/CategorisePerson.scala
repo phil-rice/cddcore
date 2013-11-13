@@ -25,7 +25,7 @@ object CategorisePerson {
       param((s: String)=> s.split(",") match {case Array(savings,age) => Person(Integer.parseInt(savings), Integer.parseInt(age))}, "Savings,Age"). 
     useCase("Young people are not eligible", " A person under 16 cannot use this system").expected("person.child").
     scenario(Person(savings = 10000, ageInYears = 10), "Child aged 10, and loads of money").
-    because((p: Person) => p.tooYoung).
+    because((p: Person) => p.ageInYears < 16).
     scenario(Person(savings = 100, ageInYears = 15), "Child aged 15").
 
     useCase("Poor people").expected("person.poor").

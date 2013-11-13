@@ -23,6 +23,7 @@ object WebServer {
   def apply(port: Int, p: RequirementAndHolder, handlers: List[CddPathHandler] = defaultPathHandlers): WebServer = new WebServer(port, new CddHandler(p, handlers))
   def withPreHandlers(port: Int, p: RequirementAndHolder, handlers: CddPathHandler*): WebServer = new WebServer(port, new CddHandler(p, handlers.toList ::: defaultPathHandlers))
   def apply( p: RequirementAndHolder): WebServer = new WebServer(defaultPort, new CddHandler(p, defaultPathHandlers))
+  def apply( handler: CddHandler): WebServer = new WebServer(defaultPort, handler)
 
 }
 

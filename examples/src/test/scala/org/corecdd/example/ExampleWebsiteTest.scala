@@ -30,7 +30,7 @@ class ExampleWebsiteTest extends AbstractWebsiteTest with BeforeAndAfterAll {
     TennisScorer.scorer)
 
   val server = WebServer(project);
-  val cddHandler: CddHandler = null; //server.asInstanceOf[WebServerWithHandler].handler.asInstanceOf[CddHandler]
+  val cddHandler: CddHandler = new CddHandler(project, WebServer.defaultPathHandlers);
   val report = cddHandler.reportCreator.report
   val reportableToUrl = cddHandler.reportCreator.reportableToUrl
 
@@ -73,7 +73,7 @@ class ExampleWebsiteTest extends AbstractWebsiteTest with BeforeAndAfterAll {
       recover = _.clickLogo)
   }
 
-  it should "allow each scenarion on the project page to be display" in {
+  it should "allow each scenario on the project page to be display" in {
     clickAllLinks[ProjectPage, ScenarioPage, Test](projectPageAtIndex,
       (pp) => projectPageToEnginePath(pp).flatMap((path) => path.head.asInstanceOf[Engine[_]].children.flatMap { case uc: RequirementAndHolder => uc.children.map { case s: Test => s :: uc :: path } }),
       click = _.clickScenario(_),

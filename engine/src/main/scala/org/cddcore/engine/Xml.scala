@@ -75,10 +75,10 @@ trait XmlSituation extends Structure[Elem, NodeSeq] {
   protected lazy val fragmentsToString = findFragmentsToString(fragmentFields.fieldMap, (e) => e.mkString(","))
   protected lazy val xmlsToString = structuresToString(pathMap, (s) => {
     val f = xmlFields.findFieldWithValue(s) match {
-      case Some(f) => f.getName
+      case Some(f) => f.getName+"\n"
       case _ => ""
     }
-    "  Xml: " + f + "  " + s.toString.replace('\n', ' ')
+    "  Xml: " + f + "  " + s.toString.replace('\n', ' ') +"\n"
   })
 
   override def toString() = {
