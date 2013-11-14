@@ -148,6 +148,43 @@ object Engine {
   def state[S, P, R]() = new BuilderFactory2[S, P, (S, R)]().builder;
   def state[S, P1, P2, R]() = new BuilderFactory3[S, P1, P2, (S, R)]().builder;
 
+  private var _traceBuilder: ThreadLocal[Option[TraceBuilder]] = new ThreadLocal[Option[TraceBuilder]] {
+    override def initialValue = None
+  }
+
+  def call(e: Engine[_], params: List[Any]) = {
+    _traceBuilder.get match {
+      case Some(tb) => _traceBuilder.set(Some(tb.nest(e, params)))
+      case None =>
+    }
+  }
+
+  def endCall(conclusion: Conclusion, result: Any) {
+    _traceBuilder.get match {
+      case Some(tb) => _traceBuilder.set(Some(tb.finished(conclusion, result)))
+      case None =>
+    }
+
+  }
+  def trace[T](x: => T): Tuple2[T, List[TraceItem]] = {
+    try {
+      _traceBuilder.set(Some(new TraceBuilder(List())));
+      val result = x
+      (result, _traceBuilder.get.get.items)
+    } finally
+      _traceBuilder.set(None);
+  }
+
+  def testing = _testing
+  private var _testing = false
+  def test[T](x: () => T) = {
+    _testing = true;
+    try {
+      x()
+    } finally
+      _testing = false
+  }
+
 }
 case class ParamDetail(displayName: String, parser: (String) => _)
 

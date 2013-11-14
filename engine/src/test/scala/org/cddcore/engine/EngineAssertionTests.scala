@@ -8,7 +8,7 @@ import org.cddcore.engine._
 class EngineAssertionTests extends EngineStringStringTests {
 
   "Assertions" should "be executed one when testing" in {
-    EngineTest.test { () => checkAssertionExecuted(1) }
+    Engine.test { () => checkAssertionExecuted(1) }
   }
 
   "Assertions" should "be executed twice when not testing - one once building scenario, and once at end " in {

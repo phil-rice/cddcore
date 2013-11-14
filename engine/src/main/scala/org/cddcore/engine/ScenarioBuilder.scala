@@ -15,20 +15,6 @@ class CanOnlyAddDocumentToBuilderException extends Exception
 class CannotFindDocumentException(msg: String) extends Exception(msg)
 class ExceptionAddingScenario(msg: String, t: Throwable) extends EngineException(msg, t)
 import Reportable._
-//TODO Very unhappy with EngineTest. It's a global variable. I don't know how else to interact with Junit though
-object EngineTest {
-  def testing = _testing
-  private var _testing = false
-
-  def test[T](x: () => T) = {
-    _testing = true;
-    try {
-      x()
-    } finally
-      _testing = false
-  }
-
-}
 trait EngineTypes[R] {
   /** A is a function from the parameters of the engine, and the result to a boolean. It checks that some property is true */
   type A
@@ -514,17 +500,17 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
   trait EvaluateEngine {
 
-    def evaluate(fn: BecauseClosure, n: RorN, log: Boolean = true): RFn = {
+    def evaluate(fn: BecauseClosure, n: RorN, log: Boolean = true): CodeAndScenarios = {
       val result = n match {
         case Left(r) =>
-          val result = r.code.rfn
+          val result = r
           result
         case Right(n) => evaluate(fn, n, log)
       }
       result
     }
 
-    protected def findConclusionFor(fn: BecauseClosure, n: RorN): Conclusion = {
+    protected def findConclusionFor(fn: BecauseClosure, n: RorN): CodeAndScenarios = {
       n match {
         case Left(c: Conclusion) => c;
         case Right(r) =>
@@ -536,7 +522,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     }
 
-    private def evaluate(fn: BecauseClosure, n: EngineNode, log: Boolean): RFn = {
+    private def evaluate(fn: BecauseClosure, n: EngineNode, log: Boolean): CodeAndScenarios = {
       val condition = n.evaluateBecause(fn)
       if (log)
         logger.evaluating(n.because, condition)
@@ -600,7 +586,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     protected def checkExpectedMatchesAction(root: RorN, s: Scenario) {
       s.configure
       val bec = makeClosureForBecause(s.params)
-      val rFn: RFn = evaluate(bec, root, false)
+      val rFn: RFn = evaluate(bec, root, false).code.rfn
       val actualFromScenario: ROrException[R] = safeCall(makeClosureForResult(s.params), rFn)
       if (s.expected.isEmpty)
         throw NoExpectedException(s)
@@ -611,7 +597,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     protected def validateScenario(root: RorN, s: Scenario) {
       s.configure
       val bec = makeClosureForBecause(s.params)
-      val rFn: RFn = evaluate(bec, root, false)
+      val rFn: RFn = evaluate(bec, root, false).code.rfn
       val actualFromScenario: ROrException[R] = safeCall(makeClosureForResult(s.params), rFn)
       if (s.expected.isEmpty)
         throw NoExpectedException(s)
@@ -654,7 +640,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     def validateScenarios(root: RorN, scenarios: List[Scenario]) {
       if (root == null)
-        if (EngineTest.testing)
+        if (Engine.testing)
           return
         else
           throw new NullPointerException("Cannot validate scenario as root doesn't exist")
@@ -662,7 +648,10 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         s.configure
         val bc = makeClosureForBecause(s.params)
         val fnr = makeClosureForResult(s.params)
-        val resultFn: RFn = evaluate(bc, root, false);
+        val conclusionNode = evaluate(bc, root, false);
+        if (!conclusionNode.scenarios.contains(s))
+          throw new RuntimeException(s"$s came to wrong node $conclusionNode")
+        val resultFn: RFn = conclusionNode.code.rfn;
         val result = safeCall(fnr, resultFn)
         val fna = makeClosureForAssertion(s.params, result)
         for (a <- s.assertions) {
@@ -862,7 +851,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         case Right(n) => sum + countDecisionTreeNodes(n.yes, 0) + countDecisionTreeNodes(n.no, 0) + 1
       }
 
-    if (!EngineTest.testing)
+    if (!Engine.testing)
       validateScenarios(root, scenarios)
 
     def findConclusionFor(params: List[Any]): Conclusion = findConclusionFor(makeClosureForBecause(params), root)
@@ -879,11 +868,14 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     def constructionString: String = constructionString(defaultRoot, scenarios, new DefaultIfThenPrinter)
 
-    def logParams(p: Any*) =
-      logger.executing(p.toList)
+    def logParams(params: =>List[Any]) = {
+      logger.executing(params)
+      Engine.call(this, params)
+    }
 
-    def logResult(fn: => R): R = {
-      val result: R = fn;
+    def logResult(fn: => (Conclusion, R)): R = {
+      val (conclusion, result )= fn;
+      Engine.endCall(conclusion, result)
       logger.result(result)
       result
     }
@@ -904,7 +896,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         case s :: rest =>
           val newRootAndExceptionMap = buildFromScenarios(root, scenarios, ScenarioExceptionMap());
           val (newRoot, seMap) = newRootAndExceptionMap
-          if (!EngineTest.testing) {
+          if (!Engine.testing) {
             seMap.size match {
               case 0 => ;
               case 1 => throw seMap.values.head
@@ -923,7 +915,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     def applyParam(root: RorN, params: List[Any], log: Boolean): R = {
       val bec = makeClosureForBecause(params)
-      val rfn = evaluate(bec, root, log)
+      val rfn = evaluate(bec, root, log).code.rfn
       makeClosureForResult(params)(rfn)
     }
 

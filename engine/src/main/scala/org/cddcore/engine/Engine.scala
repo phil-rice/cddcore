@@ -43,10 +43,11 @@ trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
     def build = new Engine(builderData) with Engine1[P, R] {
       def arity = 1
       def apply(p: P): R = {
-        logParams(p)
-        val rfn: RFn = evaluate((b) => b(p), root);
+        logParams(List(p))
+        val conclusion = evaluate((b) => b(p), root);
+        val rfn: RFn = conclusion.code.rfn
         val result: R = rfn(p)
-        logResult(result)
+        logResult((conclusion, result))
       }
       override def toString() = toStringWithScenarios
     }
@@ -70,10 +71,11 @@ trait ABuilderFactory2[P1, P2, R] extends EngineUniverse[R] with Engine2Types[P1
     def build = new Engine(builderData) with Engine2[P1, P2, R] {
       def arity = 2
       def apply(p1: P1, p2: P2): R = {
-        logParams(p1, p2)
-        val rfn: RFn = evaluate((b) => b(p1, p2), root);
+        logParams(List(p1, p2))
+        val conclusion = evaluate((b) => b(p1, p2), root);
+        val rfn: RFn = conclusion.code.rfn
         val result: R = rfn(p1, p2)
-        logResult(result)
+        logResult((conclusion, result))
       }
       override def toString() = toStringWithScenarios
     }
@@ -102,10 +104,11 @@ class BuilderFactory3[P1, P2, P3, R](override val logger: TddLogger = TddLogger.
     def build = new Engine(builderData) with Engine3[P1, P2, P3, R] {
       def arity = 3
       def apply(p1: P1, p2: P2, p3: P3): R = {
-        logParams(p1, p2)
-        val rfn: RFn = evaluate((b) => b(p1, p2, p3), root);
+        logParams(List(p1, p2))
+        val conclusion = evaluate((b) => b(p1, p2, p3), root);
+        val rfn: RFn = conclusion.code.rfn
         val result: R = rfn(p1, p2, p3)
-        logResult(result)
+        logResult((conclusion, result))
       }
       override def toString() = toStringWithScenarios
     }
