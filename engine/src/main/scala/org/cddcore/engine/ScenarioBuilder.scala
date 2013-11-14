@@ -879,6 +879,12 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       logger.result(result)
       result
     }
+    def logFailed(fn: => (Conclusion, Throwable)): R = {
+    		val (conclusion, exception )= fn;
+    		Engine.failedCall(conclusion, exception)
+//    		logger.result(result)
+    		throw exception
+    }
 
     def constructionString(root: RorN, cs: List[Scenario], printer: IfThenPrinter) =
       increasingScenariosList(cs).reverse.map((cs) =>

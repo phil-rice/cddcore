@@ -45,9 +45,13 @@ trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
       def apply(p: P): R = {
         logParams(List(p))
         val conclusion = evaluate((b) => b(p), root);
-        val rfn: RFn = conclusion.code.rfn
-        val result: R = rfn(p)
-        logResult((conclusion, result))
+        try {
+          val rfn: RFn = conclusion.code.rfn
+          val result: R = rfn(p)
+          logResult((conclusion, result))
+        } catch {
+          case e: Throwable => logFailed((conclusion, e))
+        }
       }
       override def toString() = toStringWithScenarios
     }

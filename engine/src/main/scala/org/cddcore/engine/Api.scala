@@ -164,13 +164,20 @@ object Engine {
       case Some(tb) => _traceBuilder.set(Some(tb.finished(conclusion, result)))
       case None =>
     }
-
   }
-  def trace[T](x: => T): Tuple2[T, List[TraceItem]] = {
+  def failedCall(conclusion: Conclusion, exception: Throwable) {
+    _traceBuilder.get match {
+      case Some(tb) => _traceBuilder.set(Some(tb.failed(conclusion, exception)))
+      case None =>
+    }
+  }
+  def trace[T](x: => T): Tuple2[ROrException[T], List[TraceItem]] = {
     try {
       _traceBuilder.set(Some(new TraceBuilder(List())));
-      val result = x
-      (result, _traceBuilder.get.get.items)
+      try {
+        val result = x
+        (ROrException(result), _traceBuilder.get.get.items)
+      } catch { case e: Throwable => (ROrException(e), _traceBuilder.get.get.items) }
     } finally
       _traceBuilder.set(None);
   }
@@ -205,6 +212,13 @@ trait Engine[R] extends Requirement with RequirementAndHolder {
   def evaluateBecauseForDecision(decision: Decision, params: List[Any]): Boolean
   def arity: Int
   def paramDetails: List[ParamDetail]
+  def apply(params: List[Any]): R = {
+    Engine.call(this, params)
+    val conclusion = findConclusionFor(params)
+    val result = evaluateConclusion(params, conclusion)
+    Engine.endCall(conclusion, result);
+    result
+  }
   def findConclusionFor(params: List[Any]): Conclusion
   def evaluateConclusion(params: List[Any], conclusion: Conclusion): R
   def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion): ROrException[R]
