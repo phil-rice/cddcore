@@ -281,28 +281,18 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def contains(s: Scenario) = map.contains(s)
   }
 
-  val scenarioLens = Lens[RealScenarioBuilder, Scenario](
-    (b) => b.builderData.children match {
-      case (u: UseCase) :: ut => u.scenarios match {
-        case s :: st => s
-        case _ => throw new NeedScenarioException
-      }
-      case _ => throw new NeedUseCaseException
-    },
-    (b, s) => b.builderData.children match {
-      case (u: UseCase) :: ut => u.scenarios match {
-        case sold :: st => b.copy(b.builderData.copy(children = u.copy(scenarios = s :: st) :: ut))
-        case _ => throw new NeedScenarioException
-      }
-      case _ => throw new NeedUseCaseException
-    })
-
-  case class UseCase(title: Option[String] = None, description: Option[String] = None, scenarios: List[Scenario] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Int = 0, references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
-    def children = scenarios
+  //  val scenarioLens = Lens[RealScenarioBuilder, Scenario](
+  //    (b) => b.builderData.children match {
+  //      case (u: UseCase) :: ut => u.children match {
+  //        case (s: Scenario) :: st => s
+  //        case _ => throw new NeedScenarioException
+  case class UseCase(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Int = 0, references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
+    override def toString = "UseCase(" + titleString + " children=" + children.mkString(",") + ")"
   }
 
   /** This holds the data that the scenario builder is building. It is a separate class mainly to allow code insight to be nicer for the scenarioBuilder. For example we want the description method to add a description on the builder, while we want to be able to access the description from other classes. Code insight is nicer with just one description*/
   case class ScenarioBuilderData(
+    depth: Int = 0,
     title: Option[String] = None,
     description: Option[String] = None,
     children: ReportableList = List(),
@@ -316,15 +306,17 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     lazy val useCasesForBuild: List[UseCase] =
       children.collect {
         case u: UseCase => u.copy(
-          scenarios = u.scenarios.map((s) =>
-            (s.expected, u.expected) match {
-              case (None, Some(e)) => s.copy(expected = Some(e))
-              case _ => s
-            }),
+          children = u.children.collect {
+            case s: Scenario =>
+              (s.expected, u.expected) match {
+                case (None, Some(e)) => s.copy(expected = Some(e))
+                case _ => s
+              }
+          },
           references = u.references.reverse)
       };
 
-    lazy val scenariosForBuild = useCasesForBuild.flatMap(_.scenarios.reverse)
+    lazy val scenariosForBuild = useCasesForBuild.flatMap(_.children.reverse)
   }
   def validateBecause(s: Scenario) = {
     s.configure
@@ -340,24 +332,67 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     def builderData: ScenarioBuilderData
 
-    protected def set[X](x: X, bFn: (RealScenarioBuilder, X) => ScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) =
-      builderData.children match {
-        case Nil =>
-          checkFn(builderData, x); bFn(thisAsBuilder, x).asInstanceOf[RealScenarioBuilder]
-        case (h: UseCase) :: tail =>
-          val newHead = h.scenarios match {
-            case Nil =>
-              checkFn(h, x); uFn(h, x)
-            case s :: tail => checkFn(s, x); h.copy(scenarios = sFn(s, x) :: tail)
+    protected def set[X](x: X, bFn: (ScenarioBuilder, X) => ScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) =
+      setWithDepth(0, this, x, bFn, uFn, sFn, checkFn).asInstanceOf[RealScenarioBuilder]
+
+    protected def setWithDepth[Node, X](
+      depth: Int,
+      node: Node,
+      x: X,
+      bFn: (RealScenarioBuilder, X) => ScenarioBuilder,
+      uFn: (UseCase, X) => UseCase,
+      sFn: (Scenario, X) => Scenario,
+      checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}): Node =
+      {
+        def descend(children: List[Reportable]): List[Reportable] =
+          children match {
+            case (useCase: UseCase) :: tail => setWithDepth(depth + 1, useCase, x, bFn, uFn, sFn, checkFn) :: tail
+            case (scenario: Scenario) :: tail => setWithDepth(depth + 1, scenario, x, bFn, uFn, sFn, checkFn) :: tail
           }
-          copy(children = newHead :: tail)
-        case _ => throw new IllegalStateException
+
+        if (depth == builderData.depth) {
+          node match {
+            case builder: ScenarioBuilder => { checkFn(builder.builderData, x); bFn(thisAsBuilder, x).asInstanceOf[Node] }
+            case useCase: UseCase => { checkFn(useCase, x); uFn(useCase, x).asInstanceOf[Node] }
+            case scenario: Scenario => { checkFn(scenario, x); sFn(scenario, x).asInstanceOf[Node] }
+          }
+        } else
+          node match {
+            case builder: ScenarioBuilder => builder.copy(children = descend(builder.builderData.children)).asInstanceOf[Node]
+            case useCase: UseCase => useCase.copy(children = descend(useCase.children)).asInstanceOf[Node]
+          }
       }
 
-    /** You should probably not call this explicitly. This makes a copy of the builder with new data. The builder is an immutable object, so this is how data is actually 'changed' when you call methods like description */
-    def copy(builderData: ScenarioBuilderData): RealScenarioBuilder
+    protected def getParent: Option[Object] = if (builderData.depth == 0) None else Some(getParentAt(1, this))
+    def buildTarget: Object = if (builderData.depth == 0) this else getBuildTarget(0, this)
 
-    protected def copy(title: Option[String] = builderData.title,
+    protected def getBuildTarget(depth: Int, node: Object): Object = {
+      def getBuildTargetFromChildren(children: List[Reportable]): Object = if (children.isEmpty) throw new IllegalStateException else getBuildTarget(depth + 1, children.head)
+      if (depth == builderData.depth)
+        node
+      else node match {
+        case b: ScenarioBuilder => getBuildTargetFromChildren(b.builderData.children)
+        case r: ReportableHolder => getBuildTargetFromChildren(r.children)
+      }
+
+    }
+
+    protected def getParentAt(depth: Int, parent: Object): Object = {
+      def getParentFromChildren(children: List[Reportable]) = if (children.isEmpty) throw new IllegalStateException else
+        getParentAt(depth + 1, children.head)
+      if (depth == builderData.depth)
+        parent
+      else parent match {
+        case b: ScenarioBuilder => getParentFromChildren(b.builderData.children)
+        case r: ReportableHolder => getParentFromChildren(r.children)
+      }
+    }
+    /** You should probably not call this explicitly. This makes a copy of the builder with new data. The builder is an immutable object, so this is how data is actually 'changed' when you call methods like description */
+    protected def copy(builderData: ScenarioBuilderData): RealScenarioBuilder
+
+    protected def copy(
+      depth: Int = builderData.depth,
+      title: Option[String] = builderData.title,
       description: Option[String] = builderData.description,
       children: ReportableList = builderData.children,
       optCode: Option[Code] = builderData.optCode,
@@ -366,7 +401,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       references: List[Reference] = builderData.references,
       documents: List[Document] = builderData.documents,
       paramDetails: List[ParamDetail] = builderData.paramDetails): RealScenarioBuilder =
-      copy(ScenarioBuilderData(title, description, children, expected, optCode, priority, documents, paramDetails, references))
+      copy(ScenarioBuilderData(depth, title, description, children, expected, optCode, priority, documents, paramDetails, references))
 
     protected def thisAsBuilder: RealScenarioBuilder
 
@@ -462,40 +497,97 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         (u, r) => u.copy(references = r :: u.references),
         (s, r) => s.copy(references = r :: s.references))
 
-    /** Set the 'because' of the 'last thing to be mentioned' to be this value. i.e. the builder/usecase/scenario. Throws CannotDefineBecauseTwiceException if expected already set. If you haven't set a code, then this will also act as the code*/
-    def because(b: Because[B], comment: String = "") = scenarioLens.mod(thisAsBuilder,
-      (s) => {
-        if (s.because.isDefined)
-          throw CannotDefineBecauseTwiceException(s.because.get, b)
-        validateBecause(s);
-        s.copy(because = Some(b.copy(comment = comment)))
-      })
+    /**
+     * This method is used if you are action on mutable parameters. The cgnFn is called to setup the parameters prior to them being used in the because clause
+     *
+     *   The cfgFn is only used while building the engine. An example use would be when the parameter is a mutable object like a Swing JTextArea. The cfgFn would setup the textarea to have the correct values
+     */
+    def configuration[K](cfg: CfgFn) = set[CfgFn](cfg,
+      (_, _) => throw new NeedScenarioException,
+      (_, _) => throw new NeedScenarioException,
+      (s, c) => s.copy(configuration = Some(c)))
 
-    protected def withUseCase(useCaseTitle: String, useCaseDescription: Option[String]) =
-      copy(children = UseCase(title = Some(useCaseTitle), description = useCaseDescription) :: builderData.children);
+    /** An assertion is an extra test to be run. The assertions must be true for the scenario when the engine has been built. The function you pass in to it takes the parameters and the result of the engine, and returns a boolean*/
+    def assertion(a: Assertion[A], comment: String = "") =
+      set[Assertion[A]](a,
+        (_, _) => throw new NeedScenarioException,
+        (_, _) => throw new NeedScenarioException,
+        (s, r) => s.copy(assertions = a.copy(comment = comment) :: s.assertions))
+
+    /** Set the 'because' of the 'last thing to be mentioned' to be this value. i.e. the builder/usecase/scenario. Throws CannotDefineBecauseTwiceException if expected already set. If you haven't set a code, then this will also act as the code*/
+    def because(b: Because[B], comment: String = "") =
+      set[Because[B]](b.copy(comment = comment),
+        (_, _) => throw new NeedScenarioException,
+        (_, _) => throw new NeedScenarioException,
+        (s, b) => {
+          if (s.because.isDefined)
+            throw CannotDefineBecauseTwiceException(s.because.get, b)
+          validateBecause(s);
+          s.copy(because = Some(b))
+        })
+    protected def withUseCase(useCaseTitle: String, useCaseDescription: Option[String]) = {
+      def newUseCase(parentDepth: Int) = {
+        val childDepth = parentDepth + 1
+        val useCase = UseCase(Some(useCaseTitle), useCaseDescription)
+        val atParentDepth = copy(depth = parentDepth)
+        val result = atParentDepth.set[UseCase](useCase,
+          (b, u) =>
+            b.copy(children = u :: b.builderData.children),
+          (uc, u) =>
+            u.copy(children = u :: uc.children),
+          (_, _) => throw new IllegalStateException).copy(depth = childDepth)
+        result
+      }
+      val p = getParent
+      val me = buildTarget
+      val depth = builderData.depth
+      (p, me) match {
+        case (None, sb: ScenarioBuilder) => newUseCase(depth)
+        case (Some(sb: ScenarioBuilder), u: UseCase) => newUseCase(depth - 1)
+        case (Some(sb: ScenarioBuilder), s: Scenario) => newUseCase(depth - 1)
+        case (Some(uc: UseCase), s: Scenario) => newUseCase(depth - 2)
+      }
+      //      copy(children = UseCase(title = Some(useCaseTitle), description = useCaseDescription) :: builderData.children);
+    }
 
     /** Starts the definition of a new case. A use case can be thought of as a list of scenarios */
     def useCase(useCaseTitle: String) = withUseCase(useCaseTitle, None)
     /** Starts the definition of a new case. A use case can be thought of as a list of scenarios */
     def useCase(useCaseTitle: String, useCaseDescription: String) = withUseCase(useCaseTitle, Some(useCaseDescription))
 
-    /**
-     * This method is used if you are action on mutable parameters. The cgnFn is called to setup the parameters prior to them being used in the because clause
-     *
-     *   The cfgFn is only used while building the engine. An example use would be when the parameter is a mutable object like a Swing JTextArea. The cfgFn would setup the textarea to have the correct values
-     */
-    def configuration[K](cfg: CfgFn) = scenarioLens.mod(thisAsBuilder, (s) => s.copy(configuration = Some(cfg)))
-    /** An assertion is an extra test to be run. The assertions must be true for the scenario when the engine has been built. The function you pass in to it takes the parameters and the result of the engine, and returns a boolean*/
-    def assertion(a: Assertion[A], comment: String = "") = scenarioLens.mod(thisAsBuilder, (s) => s.copy(assertions = a.copy(comment = comment) :: s.assertions))
-
-    protected def newScenario(scenarioTitle: String, scenarioDescription: String, params: List[Any]) = builderData.children match {
-      case (h: UseCase) :: t => {
+    protected def newScenario(scenarioTitle: String, scenarioDescription: String, params: List[Any]): RealScenarioBuilder = {
+      def newScenario(parent: Object, parentsDepth: Int, childDepth: Int) = {
         val titleString = if (scenarioTitle == null) None else Some(scenarioTitle);
         val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
-        copy(children = h.copy(scenarios = Scenario(titleString, descriptionString, params, logger) :: h.scenarios) :: t)
+        val scenario = new Scenario(titleString, descriptionString, params, logger)
+        copy(depth = parentsDepth).set[Scenario](scenario,
+          (b, s) => b.copy(children = s :: b.builderData.children),
+          (u, s) => u.copy(children = s :: u.children),
+          (_, _) => throw new IllegalStateException).copy(depth = childDepth)
       }
-      case _ => throw new NeedUseCaseException
+      val depth = builderData.depth
+      val p = getParent
+      val m = buildTarget
+      (p, m) match {
+        case (None, sb: ScenarioBuilder) =>
+          newScenario(this, 0, 1)
+        case (Some(parent: ScenarioBuilder), u: UseCase) =>
+          newScenario(parent, 1, 2)
+        case (Some(parent: UseCase), s: Scenario) =>
+          newScenario(parent, 1, 2)
+        case _ =>
+          throw new RuntimeException(s"Don't know how to match $p, $m")
+      }
     }
+
+    //      builderData.children match {
+    //      case (h: UseCase) :: t => {
+    //        val titleString = if (scenarioTitle == null) None else Some(scenarioTitle);
+    //        val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
+    //        copy(children = h.copy(children = Scenario(titleString, descriptionString, params, logger) :: h.scenarios) :: t)
+    //      }
+    //      case _ => throw new NeedUseCaseException
+    //    }
   }
 
   trait EvaluateEngine {
@@ -868,22 +960,22 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     def constructionString: String = constructionString(defaultRoot, scenarios, new DefaultIfThenPrinter)
 
-    def logParams(params: =>List[Any]) = {
+    def logParams(params: => List[Any]) = {
       logger.executing(params)
       Engine.call(this, params)
     }
 
     def logResult(fn: => (Conclusion, R)): R = {
-      val (conclusion, result )= fn;
+      val (conclusion, result) = fn;
       Engine.endCall(conclusion, result)
       logger.result(result)
       result
     }
     def logFailed(fn: => (Conclusion, Throwable)): R = {
-    		val (conclusion, exception )= fn;
-    		Engine.failedCall(conclusion, exception)
-//    		logger.result(result)
-    		throw exception
+      val (conclusion, exception) = fn;
+      Engine.failedCall(conclusion, exception)
+      //    		logger.result(result)
+      throw exception
     }
 
     def constructionString(root: RorN, cs: List[Scenario], printer: IfThenPrinter) =

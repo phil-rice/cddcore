@@ -1,0 +1,28 @@
+object MutlipleTrueSample{
+
+   val e = MultiplyTrue[Int, String]().description("This is the main engine that holds little engines").
+             engine(MultipleTrue.oneResult).
+                usecase("Odd/Even").
+                    scenario(2).expected( "even").
+                    scenario(1).expected("odd).because((x: Int) =  x%2 == 1)
+             engine(MutipleTrue.zeroOrOneResult).
+                usecase("Three is a factor. This only returns something if three actually is a factor").
+                    scenario(3).expected( "three").because((x: Int) =  x%2 == 1)
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   val e = MultiplyTrue[Int, String](MultiplyTrue.set /** or list .. or */).description("This is the main engine that holds little engines")
+   
+   
+   
+   
+      
+}

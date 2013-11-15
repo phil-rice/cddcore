@@ -27,15 +27,15 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
     assert(c.description == None, c.description)
   }
 
-  "The ScenarioBuilder" should "allow the scenario lens to set /get the scenario" in {
-    val expected = new Scenario(None, None, List(), logger)
-    val newBuilder = scenarioLens.set(builderWithScenario, expected);
-    assertEquals(List(expected) , newBuilder.builderData.children.head.asInstanceOf[UseCase].scenarios)
-    assert(expected == scenarioLens.get(newBuilder), scenarioLens.get(newBuilder))
-  }
+//  "The ScenarioBuilder" should "allow the scenario lens to set /get the scenario" in {
+//    val expected = new Scenario(None, None, List(), logger)
+//    val newBuilder = scenarioLens.set(builderWithScenario, expected);
+//    assertEquals(List(expected) , newBuilder.builderData.children.head.asInstanceOf[UseCase].scenarios)
+//    assert(expected == scenarioLens.get(newBuilder), scenarioLens.get(newBuilder))
+//  }
 
   it should "add expected when produces is called" in {
-    val c = scenarioLens.get(builderWithScenario.expected(firstResult))
+    val c = firstScenario(builderWithScenario.expected(firstResult))
     assert(c.params == firstParams)
     assert(c.optCode == None)
     assert(c.because == None)
@@ -44,7 +44,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   }
 
   it should "add code when byCalling is called" in {
-    val c = scenarioLens.get(builderWithScenario.expected(firstResult).code(codeFn))
+    val c = firstScenario(builderWithScenario.expected(firstResult).code(codeFn))
     assert(c.params == firstParams)
     val expectedCode = Some(new CodeFn(codeFn, "AbstractScenarioTests.this.codeFn"))
     assertEquals(expectedCode, c.optCode)
@@ -54,7 +54,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   }
 
   it should "add because when because is called" in {
-    val c = scenarioLens.get(builderWithScenario.expected(firstResult).because(because))
+    val c = firstScenario(builderWithScenario.expected(firstResult).because(because))
     assert(c.params == firstParams)
     assert(c.optCode == None)
     val expected = Some(new Because(because, "AbstractScenarioTests.this.because"))
@@ -64,12 +64,12 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   }
 
   it should "use expected as actualCode if code isn't specified" in {
-    val c = scenarioLens.get(builderWithScenario.expected(firstResult))
+    val c = firstScenario(builderWithScenario.expected(firstResult))
     checkExpected(c);
   }
 
   it should "use code as actualCode if specified" in {
-    val c = scenarioLens.get(builderWithScenario.code(codeFn))
+    val c = firstScenario(builderWithScenario.code(codeFn))
     checkRfn(c)
   }
 

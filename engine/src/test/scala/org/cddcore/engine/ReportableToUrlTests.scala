@@ -71,7 +71,10 @@ class ReportableToUrlTests extends AbstractTest with ReportableTestFramework {
   it should "make a urlMap from reportables and decision / conclusions " in {
     val e = Engine[Int, String]().
       useCase("").scenario(1).expected("x").
-      useCase("").scenario(2).expected("y").because((x: Int) => x == 2).
+      useCase("").
+      scenario(2).
+      expected("y").
+      because((x: Int) => x == 2).
       build
     val reportableToUrl = new SimpleReportableToUrl
     val urlMap = reportableToUrl.makeUrlMapWithDecisionsAndConclusions(e)

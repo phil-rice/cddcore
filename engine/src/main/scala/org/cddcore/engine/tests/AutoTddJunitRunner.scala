@@ -61,14 +61,15 @@ trait CddRunner extends Runner with EngineUniverse[Any] with NotActuallyFactory[
       val useCaseDescription = Description.createSuiteDescription(Strings.clean(u.title.getOrElse("")))
       engineDescription.addChild(useCaseDescription)
 
-      for (s <- u.scenarios.reverse) yield {
-        val name = s.titleString + " => " + logger(s.expected.getOrElse("")) + " " + s.becauseString
-        val cleanedName = Strings.clean(name)
-        println("   " + cleanedName)
-        val scenarioDescription = Description.createSuiteDescription(cleanedName)
-        useCaseDescription.addChild(scenarioDescription)
-        ScenarioMap = ScenarioMap + (scenarioDescription -> s.asInstanceOf[Scenario])
-
+      for (c <- u.children.reverse) yield c match {
+        case s: Test => {
+          val name = s.titleString + " => " + logger(s.expected.getOrElse("")) + " " + s.becauseString
+          val cleanedName = Strings.clean(name)
+          println("   " + cleanedName)
+          val scenarioDescription = Description.createSuiteDescription(cleanedName)
+          useCaseDescription.addChild(scenarioDescription)
+          ScenarioMap = ScenarioMap + (scenarioDescription -> s.asInstanceOf[Scenario])
+        }
       }
     }
   }
@@ -198,7 +199,7 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
 
   def recordEngine(clazz: Class[Any], engineDescription: Description, engine: Engine) {
     val project = Project("Junit_" + engine.titleOrDescription("Unnamed"), engine)
-      ReportCreator.fileSystem( project).create
+    ReportCreator.fileSystem(project).create
   }
 
   trait SomeTrait { def someMethod: String }

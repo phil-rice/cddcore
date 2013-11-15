@@ -109,7 +109,7 @@ trait Test extends Requirement {
   def optCode: Option[CodeHolder]
   def expected: Option[ROrException[_]]
   def because: Option[CodeHolder]
-
+  def becauseString: String
   def params: List[Any]
   def paramPrinter: LoggerDisplayProcessor
 }

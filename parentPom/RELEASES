@@ -13,3 +13,4 @@
 1.7.0 First go at Legacy added. Website now shows the false path in decision tree
 1.7.1 Improved the code insight you get from a builder. README and Scaladoc
 1.7.2 Refactored the website code to allow examples to show requirements
+1.7.3 Can now make traces, although not using them yet

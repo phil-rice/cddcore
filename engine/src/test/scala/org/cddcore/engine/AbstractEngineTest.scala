@@ -8,7 +8,7 @@ import scala.xml.Node
 import org.scalatest.Matchers
 
 trait AssertEquals {
-  def assertEquals[T1, T2](expected: T1, actual: T2) { 
+  def assertEquals[T1, T2](expected: T1, actual: T2) {
     def msg = "\nExpected\n" + expected + "\nActual\n" + actual
     if (expected.isInstanceOf[String] & actual.isInstanceOf[String]) {
       val expectedString = expected.asInstanceOf[String];
@@ -57,6 +57,9 @@ trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R] with Nod
       assert(c.becauseString == a, "Expected: [" + a + "]\nBecauseString = [" + c.becauseString + "]\n\nActual " + c + "\n   Scenarios: " + engine.scenarios + "\nEngine:\n" + engine)
     }
   }
+  def firstScenario(b: ScenarioBuilder): Scenario = b.builderData.all(classOf[Scenario])(0)
+  def firstScenario(e: ReportableHolder): Scenario = e.all(classOf[Scenario])(0)
+
   def assertEngineMatches(e: Engine, n2: RorN) {
     val actual = compareNodes(e.root.asInstanceOf[RorN], n2)
     assert(actual == List(), "\n" + actual.mkString("\n\n") + "\n\nExpected:\n" + n2 + "\n\nRoot:\n" + e.root)
@@ -88,7 +91,7 @@ trait AbstractEngine3Test[P1, P2, P3, R] extends BuilderFactory3[P1, P2, P3, R] 
 
 trait FirstScenarioTest[R] extends AbstractEngineTest[R] {
   def builderWithScenario: RealScenarioBuilder;
-  def firstScenario: Scenario = scenarioLens.get(builderWithScenario)
+  def firstScenario: Scenario = firstScenario(builderWithScenario)
   def firstParams: List[Any]
 }
 
