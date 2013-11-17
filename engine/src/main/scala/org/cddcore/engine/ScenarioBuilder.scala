@@ -303,7 +303,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     paramDetails: List[ParamDetail] = List(),
     references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
 
-    lazy val useCasesForBuild: List[UseCase] =
+    lazy val childrenModifiedForBuild: List[Reportable] =
       children.collect {
         case u: UseCase => u.copy(
           children = u.children.collect {
@@ -314,9 +314,9 @@ trait EngineUniverse[R] extends EngineTypes[R] {
               }
           },
           references = u.references.reverse)
+        case s: Scenario => s
       };
 
-    lazy val scenariosForBuild = useCasesForBuild.flatMap(_.children.reverse)
   }
   def validateBecause(s: Scenario) = {
     s.configure
@@ -573,6 +573,8 @@ trait EngineUniverse[R] extends EngineTypes[R] {
           newScenario(this, 0, 1)
         case (Some(parent: ScenarioBuilder), u: UseCase) =>
           newScenario(parent, 1, 2)
+        case (Some(parent: ScenarioBuilder), s: Scenario) =>
+          newScenario(parent, 0, 1)
         case (Some(parent: UseCase), s: Scenario) =>
           newScenario(parent, 1, 2)
         case _ =>
@@ -922,7 +924,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
   }
   abstract class Engine(val title: Option[String], val description: Option[String], val children: ReportableList, val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine[R] {
-    def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.useCasesForBuild, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails.reverse)
+    def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.childrenModifiedForBuild, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails.reverse)
     val defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>

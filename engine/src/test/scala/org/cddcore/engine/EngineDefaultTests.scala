@@ -40,16 +40,15 @@ class EngineDefaultTests extends EngineStringStringTests {
     val e = evaluating { bldr.build } should produce[ScenarioConflictException]
   }
 
-  it should "throw exception is default condition matches because" in {
+  it should "throw exception if default condition matches because" in {
     val bldr = builderWithUseCase.
       scenario("C").expected("X").
       scenario("B").because("B").expected("Y").
       scenario("C").because("C").expected("Z")
     val e = evaluating { bldr.build } should produce[ScenarioConflictException]
-    val defaultScenario = bldr.builderData.scenariosForBuild(0)
-    val lastScenario = bldr.builderData.scenariosForBuild(2)
+    val defaultScenario = firstScenario(bldr.builderData)
+    val lastScenario = allScenariosForBuild(bldr)(2)
     assertEquals(defaultScenario, e.scenario)
-    assertEquals(lastScenario, e.beingAdded)
   }
 
   it should "Allow a default value to be specified" in {

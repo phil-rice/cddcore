@@ -3,6 +3,8 @@ package org.cddcore.engine
 object Reportable {
   type ReportableList = List[Reportable]
   type ReportableSet = Set[Reportable]
+  
+  def allTests(list: List[Reportable]): List[Test] = list.flatMap(_ match {case t: Test => List(t); case rh: ReportableHolder => allTests(rh.children)})
 
 }
 

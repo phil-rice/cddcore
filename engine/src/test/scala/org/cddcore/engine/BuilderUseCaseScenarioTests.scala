@@ -24,7 +24,6 @@ class BuilderUseCaseScenarioTests extends AbstractTest {
     val bu = Engine[Int, String]().useCase("uc1")
     val bs = bu.scenario(0)
 
-    
     val b = bs.expected("z")
     val e = b.build
 
@@ -38,7 +37,7 @@ class BuilderUseCaseScenarioTests extends AbstractTest {
     assertEquals(2, bs.builderData.depth)
     assertEquals(2, b.builderData.depth)
     assertEquals(sb, b.buildTarget)
-    
+
   }
 
   it should "allow another useCase to be added" in {
@@ -56,8 +55,7 @@ class BuilderUseCaseScenarioTests extends AbstractTest {
     assertEquals(List(uc2, uc1), b.builderData.children)
     assertEquals(uc2, b.buildTarget)
   }
-  
-  
+
   it should "allow usecase / scenario / usecase  to be added" in {
     val b1 = Engine[Int, String]().useCase("uc1").scenario(1).expected("x")
     val b2 = b1.useCase("uc2")
@@ -66,7 +64,6 @@ class BuilderUseCaseScenarioTests extends AbstractTest {
     val uc1 = useCases(0)
     val uc2 = useCases(1)
     assertEquals(uc2, b2.buildTarget)
-    
   }
 
   it should "allow usecase / scenario / usecase  /scenario to be added" in {
@@ -76,7 +73,15 @@ class BuilderUseCaseScenarioTests extends AbstractTest {
     val b4 = b3.useCase("uc3").scenario(3).expected("x")
     val useCases = b4.builderData.all(classOf[RequirementAndHolder])
     assertEquals(List("uc1", "uc2", "uc3"), useCases.map(_.titleString))
+  }
 
+  it should "allow scenarios without usecases to be added" in {
+    val e = Engine[Int, String]().
+      scenario(1).expected("one").because((x: Int) => x == 1).
+      scenario(2).expected("two").because((x: Int) => x == 2).
+      build
+    assertEquals("one", e(1))
+    assertEquals("two", e(2))
   }
 
 }

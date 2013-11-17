@@ -57,6 +57,7 @@ trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R] with Nod
       assert(c.becauseString == a, "Expected: [" + a + "]\nBecauseString = [" + c.becauseString + "]\n\nActual " + c + "\n   Scenarios: " + engine.scenarios + "\nEngine:\n" + engine)
     }
   }
+  def allScenariosForBuild(b: ScenarioBuilder) = Reportable.allTests( b.builderData.childrenModifiedForBuild)
   def firstScenario(b: ScenarioBuilder): Scenario = b.builderData.all(classOf[Scenario])(0)
   def firstScenario(e: ReportableHolder): Scenario = e.all(classOf[Scenario])(0)
 
