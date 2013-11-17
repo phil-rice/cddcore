@@ -113,6 +113,16 @@ trait Requirement extends Reportable {
   def references: List[Reference]
 }
 
+trait ChildEngine extends RequirementAndHolder {
+  lazy val scenarios = all(classOf[Test])
+  lazy val useCases = all(classOf[UseCase])
+}
+
+trait UseCase extends RequirementAndHolder {
+  def optCode: Option[CodeHolder]
+  def expected: Option[ROrException[_]]
+}
+
 trait Test extends Requirement {
   def optCode: Option[CodeHolder]
   def expected: Option[ROrException[_]]

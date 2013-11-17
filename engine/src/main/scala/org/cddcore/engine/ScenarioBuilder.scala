@@ -281,13 +281,12 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def contains(s: Scenario) = map.contains(s)
   }
 
-  //  val scenarioLens = Lens[RealScenarioBuilder, Scenario](
-  //    (b) => b.builderData.children match {
-  //      case (u: UseCase) :: ut => u.children match {
-  //        case (s: Scenario) :: st => s
-  //        case _ => throw new NeedScenarioException
-  case class UseCase(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
+  case class UseCaseDescription(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: List[Reference] = List()) extends BuilderNode with UseCase {
+    override val templateName = "UseCase"
     override def toString = "UseCase(" + titleString + " children=" + children.mkString(",") + ")"
+  }
+  case class ChildEngineDescription(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: List[Reference] = List()) extends BuilderNode with ChildEngine {
+    override def toString = "ChildEngine(" + titleString + " children=" + children.mkString(",") + ")"
   }
 
   /** This holds the data that the scenario builder is building. It is a separate class mainly to allow code insight to be nicer for the scenarioBuilder. For example we want the description method to add a description on the builder, while we want to be able to access the description from other classes. Code insight is nicer with just one description*/
@@ -303,17 +302,18 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     paramDetails: List[ParamDetail] = List(),
     references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
 
-  def firstExpected(path: ReportableList): Option[ROrException[R]] = path.foldLeft[Option[ROrException[R]]](None)((acc, r: Reportable) =>
-    (acc, r) match {
-      case (None, (s: Scenario)) => s.expected
-      case (None, (u: UseCase)) => u.expected
-      case (None, (sb: ScenarioBuilderData)) => sb.expected
-      case (acc, _) => acc
-    });
-    
+    def firstExpected(path: ReportableList): Option[ROrException[R]] = path.foldLeft[Option[ROrException[R]]](None)((acc, r: Reportable) =>
+      (acc, r) match {
+        case (None, (s: Scenario)) => s.expected
+        case (None, (u: UseCaseDescription)) => u.expected
+        case (None, (sb: ScenarioBuilderData)) => sb.expected
+        case (acc, _) => acc
+      });
+
     protected def modifyChildForBuild(path: ReportableList): Reportable = path.head match {
+      case ce: ChildEngineDescription => ce.copy(children = modifyChildrenForBuild(ce.children, path))
+      case u: UseCaseDescription => u.copy(children = modifyChildrenForBuild(u.children, path))
       case s: Scenario => s.copy(priority = PathUtils.maxPriority(path), expected = firstExpected(path))
-      case u: UseCase => u.copy(children = modifyChildrenForBuild(u.children, path))
     }
     protected def modifyChildrenForBuild(children: List[Reportable], path: ReportableList): ReportableList = children.map((r) => modifyChildForBuild(r :: path))
 
@@ -334,34 +334,38 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     def builderData: ScenarioBuilderData
 
-    protected def set[X](x: X, bFn: (ScenarioBuilder, X) => ScenarioBuilder, uFn: (UseCase, X) => UseCase, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) =
-      setWithDepth(0, this, x, bFn, uFn, sFn, checkFn).asInstanceOf[RealScenarioBuilder]
+    protected def set[X](x: X, bFn: (ScenarioBuilder, X) => ScenarioBuilder, ceFn: (ChildEngineDescription, X) => ChildEngineDescription, uFn: (UseCaseDescription, X) => UseCaseDescription, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) =
+      setWithDepth(0, this, x, bFn, ceFn, uFn, sFn, checkFn).asInstanceOf[RealScenarioBuilder]
 
     protected def setWithDepth[Node, X](
       depth: Int,
       node: Node,
       x: X,
-      bFn: (RealScenarioBuilder, X) => ScenarioBuilder,
-      uFn: (UseCase, X) => UseCase,
+      bFn: (ScenarioBuilder, X) => ScenarioBuilder,
+      ceFn: (ChildEngineDescription, X) => ChildEngineDescription,
+      uFn: (UseCaseDescription, X) => UseCaseDescription,
       sFn: (Scenario, X) => Scenario,
       checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}): Node =
       {
         def descend(children: List[Reportable]): List[Reportable] =
           children match {
-            case (useCase: UseCase) :: tail => setWithDepth(depth + 1, useCase, x, bFn, uFn, sFn, checkFn) :: tail
-            case (scenario: Scenario) :: tail => setWithDepth(depth + 1, scenario, x, bFn, uFn, sFn, checkFn) :: tail
+            case (childEngine: ChildEngineDescription) :: tail => setWithDepth(depth + 1, childEngine, x, bFn, ceFn, uFn, sFn, checkFn) :: tail
+            case (useCase: UseCase) :: tail => setWithDepth(depth + 1, useCase, x, bFn, ceFn, uFn, sFn, checkFn) :: tail
+            case (scenario: Scenario) :: tail => setWithDepth(depth + 1, scenario, x, bFn, ceFn, uFn, sFn, checkFn) :: tail
           }
 
         if (depth == builderData.depth) {
           node match {
-            case builder: ScenarioBuilder => { checkFn(builder.builderData, x); bFn(thisAsBuilder, x).asInstanceOf[Node] }
-            case useCase: UseCase => { checkFn(useCase, x); uFn(useCase, x).asInstanceOf[Node] }
+            case builder: ScenarioBuilder => { checkFn(builder.builderData, x); bFn(builder, x).asInstanceOf[Node] }
+            case childEngine: ChildEngineDescription => { checkFn(childEngine, x); ceFn(childEngine, x).asInstanceOf[Node] }
+            case useCase: UseCaseDescription => { checkFn(useCase, x); uFn(useCase, x).asInstanceOf[Node] }
             case scenario: Scenario => { checkFn(scenario, x); sFn(scenario, x).asInstanceOf[Node] }
           }
         } else
           node match {
             case builder: ScenarioBuilder => builder.copy(children = descend(builder.builderData.children)).asInstanceOf[Node]
-            case useCase: UseCase => useCase.copy(children = descend(useCase.children)).asInstanceOf[Node]
+            case childEngine: ChildEngineDescription => childEngine.copy(children = descend(childEngine.children)).asInstanceOf[Node]
+            case useCase: UseCaseDescription => useCase.copy(children = descend(useCase.children)).asInstanceOf[Node]
           }
       }
 
@@ -412,6 +416,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       set[List[Document]](documents.toList ++ this.builderData.documents,
         (b, d) =>
           b.copy(documents = d),
+        (ce, d) => throw new CanOnlyAddDocumentToBuilderException,
         (u, d) => throw new CanOnlyAddDocumentToBuilderException,
         (s, d) => throw new CanOnlyAddDocumentToBuilderException,
         (n, d) => {});
@@ -421,6 +426,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def title(title: String): RealScenarioBuilder =
       set[Option[String]](Some(title),
         (b, title) => b.copy(title = title),
+        (ce, title) => ce.copy(title = title),
         (u, title) => u.copy(title = title),
         (s, title) => s.copy(title = title),
         (n, title) => if (n.title.isDefined) throw CannotDefineTitleTwiceException(n.title.get, title.get))
@@ -429,6 +435,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def description(description: String): RealScenarioBuilder =
       set[Option[String]](Some(description),
         (b, description) => b.copy(description = description),
+        (ce, description) => ce.copy(description = description),
         (u, description) => u.copy(description = description),
         (s, description) => s.copy(description = description),
         (n, description) => if (n.description.isDefined) throw CannotDefineDescriptionTwiceException(n.description.get, description.get))
@@ -444,6 +451,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def expectException[E <: Throwable](e: E, comment: String = "") =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
         (b, newE) => b.copy(expected = newE),
+        (ce, newE) => ce.copy(expected = newE),
         (u, newE) => u.copy(expected = newE),
         (s, newE) => s.copy(expected = newE),
         (n, newE) => if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newE.get))
@@ -452,6 +460,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def expected(e: R): RealScenarioBuilder =
       set[Option[ROrException[R]]](Some(ROrException[R](e)),
         (b, newExpected) => b.copy(expected = newExpected),
+        (ce, newExpected) => ce.copy(expected = newExpected),
         (u, newExpected) => u.copy(expected = newExpected),
         (s, newExpected) => s.copy(expected = newExpected),
         (n, newExpected) => if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newExpected.get))
@@ -468,6 +477,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def code(c: Code, comment: String = "") =
       set[Option[Code]](Some(c),
         (b, newCode) => b.copy(optCode = newCode),
+        (ce, newCode) => ce.copy(optCode = newCode),
         (u, newCode) => u.copy(optCode = newCode),
         (s, newCode) => s.copy(optCode = newCode),
         (n, newCode) => if (n.optCode.isDefined) throw CannotDefineCodeTwiceException(n.optCode.get, newCode.get))
@@ -477,6 +487,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       set[Int](
         priority,
         (b, priority) => b.copy(priority = Some(priority)),
+        (ce, priority) => ce.copy(priority = Some(priority)),
         (u, priority) => u.copy(priority = Some(priority)),
         (s, priority) => s.copy(priority = Some(priority)))
 
@@ -496,6 +507,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       set[Reference](
         Reference(ref, document),
         (b, r) => b.copy(references = r :: b.builderData.references),
+        (ce, r) => ce.copy(references = r :: ce.references),
         (u, r) => u.copy(references = r :: u.references),
         (s, r) => s.copy(references = r :: s.references))
 
@@ -507,11 +519,13 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def configuration[K](cfg: CfgFn) = set[CfgFn](cfg,
       (_, _) => throw new NeedScenarioException,
       (_, _) => throw new NeedScenarioException,
+      (_, _) => throw new NeedScenarioException,
       (s, c) => s.copy(configuration = Some(c)))
 
     /** An assertion is an extra test to be run. The assertions must be true for the scenario when the engine has been built. The function you pass in to it takes the parameters and the result of the engine, and returns a boolean*/
     def assertion(a: Assertion[A], comment: String = "") =
       set[Assertion[A]](a,
+        (_, _) => throw new NeedScenarioException,
         (_, _) => throw new NeedScenarioException,
         (_, _) => throw new NeedScenarioException,
         (s, r) => s.copy(assertions = a.copy(comment = comment) :: s.assertions))
@@ -521,20 +535,32 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       set[Because[B]](b.copy(comment = comment),
         (_, _) => throw new NeedScenarioException,
         (_, _) => throw new NeedScenarioException,
+        (_, _) => throw new NeedScenarioException,
         (s, b) => {
           if (s.because.isDefined)
             throw CannotDefineBecauseTwiceException(s.because.get, b)
           validateBecause(s);
           s.copy(because = Some(b))
         })
+
+    def childEngine(engineTitle: String) = {
+      for (c <- builderData.children)
+        if (!c.isInstanceOf[ChildEngineDescription])
+          throw new IllegalStateException("Cannot have a childEngine after defining use cases or scenarios")
+
+      copy(builderData.copy(depth = 1, children = new ChildEngineDescription(title = Some(engineTitle)) :: builderData.children))
+    }
+
     protected def withUseCase(useCaseTitle: String, useCaseDescription: Option[String]) = {
       def newUseCase(parentDepth: Int) = {
         val childDepth = parentDepth + 1
-        val useCase = UseCase(Some(useCaseTitle), useCaseDescription)
+        val useCase = UseCaseDescription(Some(useCaseTitle), useCaseDescription)
         val atParentDepth = copy(depth = parentDepth)
-        val result = atParentDepth.set[UseCase](useCase,
+        val result = atParentDepth.set[UseCaseDescription](useCase,
           (b, u) =>
             b.copy(children = u :: b.builderData.children),
+          (ce, u) =>
+            ce.copy(children = u :: ce.children),
           (uc, u) =>
             u.copy(children = u :: uc.children),
           (_, _) => throw new IllegalStateException).copy(depth = childDepth)
@@ -545,8 +571,11 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       val depth = builderData.depth
       (p, me) match {
         case (None, sb: ScenarioBuilder) => newUseCase(depth)
+        case (Some(sb: ScenarioBuilder), ce: ChildEngineDescription) => newUseCase(depth )
         case (Some(sb: ScenarioBuilder), u: UseCase) => newUseCase(depth - 1)
+        case (Some(ce: ChildEngineDescription), u: UseCase) => newUseCase(depth - 1)
         case (Some(sb: ScenarioBuilder), s: Scenario) => newUseCase(depth - 1)
+        case (Some(ce: ChildEngineDescription), s: Scenario) => newUseCase(depth - 1)
         case (Some(uc: UseCase), s: Scenario) => newUseCase(depth - 2)
       }
       //      copy(children = UseCase(title = Some(useCaseTitle), description = useCaseDescription) :: builderData.children);
@@ -558,12 +587,14 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def useCase(useCaseTitle: String, useCaseDescription: String) = withUseCase(useCaseTitle, Some(useCaseDescription))
 
     protected def newScenario(scenarioTitle: String, scenarioDescription: String, params: List[Any]): RealScenarioBuilder = {
-      def newScenario(parent: Object, parentsDepth: Int, childDepth: Int) = {
+      def newScenario(parentsDepth: Int) = {
+        val childDepth = parentsDepth + 1
         val titleString = if (scenarioTitle == null) None else Some(scenarioTitle);
         val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
         val scenario = new Scenario(titleString, descriptionString, params, logger)
         copy(depth = parentsDepth).set[Scenario](scenario,
           (b, s) => b.copy(children = s :: b.builderData.children),
+          (ce, s) => ce.copy(children = s :: ce.children),
           (u, s) => u.copy(children = s :: u.children),
           (_, _) => throw new IllegalStateException).copy(depth = childDepth)
       }
@@ -572,13 +603,21 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       val m = buildTarget
       (p, m) match {
         case (None, sb: ScenarioBuilder) =>
-          newScenario(this, 0, 1)
+          newScenario(0)
+        case (sb: ScenarioBuilder, ce: ChildEngine) =>
+          newScenario(1)
         case (Some(parent: ScenarioBuilder), u: UseCase) =>
-          newScenario(parent, 1, 2)
+          newScenario(1)
         case (Some(parent: ScenarioBuilder), s: Scenario) =>
-          newScenario(parent, 0, 1)
+          newScenario(0)
+        case (Some(parent: ScenarioBuilder), ce: ChildEngineDescription) =>
+          newScenario(1)
+        case (Some(parent: ChildEngineDescription), s: Scenario) =>
+          newScenario(1)
+        case (Some(parent: ChildEngineDescription), u: UseCase) =>
+          newScenario(2)
         case (Some(parent: UseCase), s: Scenario) =>
-          newScenario(parent, 1, 2)
+          newScenario(depth-1)
         case _ =>
           throw new RuntimeException(s"Don't know how to match $p, $m")
       }
@@ -936,6 +975,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
     def logger = EngineUniverse.this.logger
     override def templateName = "Engine"
+    val childEngines: List[ChildEngine] = all(classOf[ChildEngine])
     val useCases: List[UseCase] = all(classOf[UseCase])
     val scenarios: List[Scenario] = all(classOf[Scenario])
 
