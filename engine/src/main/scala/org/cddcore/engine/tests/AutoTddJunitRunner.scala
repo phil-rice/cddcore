@@ -21,7 +21,7 @@ object CddRunner {
   val directory = new File(userHome, ".cdd")
 
 }
-trait NotActuallyFactory[R] extends EngineUniverse[R] {
+trait NotActuallyFactory[R, FullR] extends EngineUniverse[R, FullR] {
   def builder: RealScenarioBuilder = ???
   def logger: org.cddcore.engine.TddLogger = TddLogger.noLogger
   def rfnMaker: scala.util.Either[() => Exception, Any] => RFn = ???
@@ -32,8 +32,8 @@ trait NotActuallyFactory[R] extends EngineUniverse[R] {
 
 }
 
-trait CddRunner extends Runner with EngineUniverse[Any] with NotActuallyFactory[Any] {
-import org.cddcore.engine.Engine._
+trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFactory[Any, Any] {
+  import org.cddcore.engine.Engine._
   var engineMap: Map[Description, Engine] = Map()
   var ScenarioMap: Map[Description, Scenario] = Map()
   var exceptionMap: Map[Description, Throwable] = Map()
@@ -161,7 +161,7 @@ import org.cddcore.engine.Engine._
 }
 
 class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
-import org.cddcore.engine.Engine._
+  import org.cddcore.engine.Engine._
   val getDescription = Description.createSuiteDescription("ATDD: " + clazz.getName);
 
   val instance = test(() => { instantiate(clazz) });

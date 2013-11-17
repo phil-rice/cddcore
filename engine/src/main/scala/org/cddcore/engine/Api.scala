@@ -159,12 +159,12 @@ case class Project(projectTitle: String, engines: ReportableHolder*) extends Req
 }
 
 object Engine {
-  def apply[P, R]() = new BuilderFactory1[P, R]().builder;
-  def apply[P1, P2, R]() = new BuilderFactory2[P1, P2, R]().builder;
-  def apply[P1, P2, P3, R]() = new BuilderFactory3[P1, P2, P3, R]().builder;
+  def apply[P, R]() = new BuilderFactory1[P, R,R]().builder;
+  def apply[P1, P2, R]() = new BuilderFactory2[P1, P2, R,R]().builder;
+  def apply[P1, P2, P3, R]() = new BuilderFactory3[P1, P2, P3, R,R]().builder;
 
-  def state[S, P, R]() = new BuilderFactory2[S, P, (S, R)]().builder;
-  def state[S, P1, P2, R]() = new BuilderFactory3[S, P1, P2, (S, R)]().builder;
+  def state[S, P, R]() = new BuilderFactory2[S, P, (S, R),(S, R)]().builder;
+  def state[S, P1, P2, R]() = new BuilderFactory3[S, P1, P2, (S, R),(S, R)]().builder;
 
   private var _traceBuilder: ThreadLocal[Option[TraceBuilder]] = new ThreadLocal[Option[TraceBuilder]] {
     override def initialValue = None

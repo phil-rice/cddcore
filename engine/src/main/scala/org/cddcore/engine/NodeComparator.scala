@@ -2,7 +2,7 @@ package org.cddcore.engine
 
 import java.text.MessageFormat
 
-trait NodeComparator[R] extends EngineUniverse[R] {
+trait NodeComparator[R, FullR] extends EngineUniverse[R, FullR] {
 
   def compareNodes(n1: RorN, n2: RorN): List[String] =
     compareNodes("", n1, n2)

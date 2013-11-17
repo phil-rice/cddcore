@@ -1,6 +1,6 @@
 package org.cddcore.engine
 
-trait Engine1Types[P, R] extends EngineTypes[R] {
+trait Engine1Types[P, R, FullR] extends EngineTypes[R, FullR] {
   type A = (P, ROrException[R]) => Boolean
   type B = (P) => Boolean
   type RFn = (P) => R
@@ -12,7 +12,7 @@ trait Engine1Types[P, R] extends EngineTypes[R] {
   def makeClosureForAssertion(params: List[Any], r: ROrException[R]) = (a: A) => a(params(0).asInstanceOf[P], r);
 }
 
-trait Engine2Types[P1, P2, R] extends EngineTypes[R] {
+trait Engine2Types[P1, P2, R, FullR] extends EngineTypes[R,FullR] {
   type A = (P1, P2, ROrException[R]) => Boolean
   type B = (P1, P2) => Boolean
   type RFn = (P1, P2) => R
@@ -24,7 +24,7 @@ trait Engine2Types[P1, P2, R] extends EngineTypes[R] {
   def makeClosureForAssertion(params: List[Any], r: ROrException[R]) = (a: A) => a(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2], r);
 }
 
-trait Engine3Types[P1, P2, P3, R] extends EngineTypes[R] {
+trait Engine3Types[P1, P2, P3, R, FullR] extends EngineTypes[R, FullR] {
   type A = (P1, P2, P3, ROrException[R]) => Boolean
   type B = (P1, P2, P3) => Boolean
   type RFn = (P1, P2, P3) => R
@@ -36,7 +36,7 @@ trait Engine3Types[P1, P2, P3, R] extends EngineTypes[R] {
   def makeClosureForAssertion(params: List[Any], r: ROrException[R]) = (a: A) => a(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2], params(2).asInstanceOf[P3], r);
 }
 
-trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
+trait ABuilderFactory1[P, R, FullR] extends EngineUniverse[R, FullR] with Engine1Types[P, R, FullR] {
 
   trait ABuilder1 extends ScenarioBuilder {
     def scenario(p: P, title: String = null, description: String = null) = newScenario(title, description, List(p))
@@ -58,7 +58,7 @@ trait ABuilderFactory1[P, R] extends EngineUniverse[R] with Engine1Types[P, R] {
   }
 }
 
-class BuilderFactory1[P, R](override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory1[P, R] {
+class BuilderFactory1[P, R, FullR](override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory1[P, R, FullR] {
   type RealScenarioBuilder = Builder1
   def builder = new Builder1
 
@@ -68,7 +68,7 @@ class BuilderFactory1[P, R](override val logger: TddLogger = TddLogger.defaultLo
   }
 }
 
-trait ABuilderFactory2[P1, P2, R] extends EngineUniverse[R] with Engine2Types[P1, P2, R] {
+trait ABuilderFactory2[P1, P2, R, FullR] extends EngineUniverse[R, FullR] with Engine2Types[P1, P2, R, FullR] {
 
   trait ABuilder2 extends ScenarioBuilder {
     def scenario(p1: P1, p2: P2, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2))
@@ -86,7 +86,7 @@ trait ABuilderFactory2[P1, P2, R] extends EngineUniverse[R] with Engine2Types[P1
   }
 }
 
-class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory2[P1, P2, R] {
+class BuilderFactory2[P1, P2, R, FullR](override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory2[P1, P2, R, FullR] {
   type RealScenarioBuilder = Builder2
   def builder = new Builder2
 
@@ -96,7 +96,7 @@ class BuilderFactory2[P1, P2, R](override val logger: TddLogger = TddLogger.defa
   }
 }
 
-class BuilderFactory3[P1, P2, P3, R](override val logger: TddLogger = TddLogger.defaultLogger) extends EngineUniverse[R] with Engine3Types[P1, P2, P3, R] {
+class BuilderFactory3[P1, P2, P3, R, FullR](override val logger: TddLogger = TddLogger.defaultLogger) extends EngineUniverse[R, FullR] with Engine3Types[P1, P2, P3, R, FullR] {
 
   type RealScenarioBuilder = Builder3
   def builder = new Builder3

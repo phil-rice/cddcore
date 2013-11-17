@@ -46,7 +46,7 @@ trait AbstractTest extends FlatSpecLike with Matchers with AssertEquals {
 
 }
 
-trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R] with NodeComparator[R] {
+trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R,R] with NodeComparator[R,R] {
   def logger: TddLogger
   def builder: RealScenarioBuilder
   def firstUseCaseDescription = "UseCase1"
@@ -57,7 +57,7 @@ trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R] with Nod
       assert(c.becauseString == a, "Expected: [" + a + "]\nBecauseString = [" + c.becauseString + "]\n\nActual " + c + "\n   Scenarios: " + engine.scenarios + "\nEngine:\n" + engine)
     }
   }
-  def allScenariosForBuild(b: ScenarioBuilder) = Reportable.allTests( b.builderData.childrenModifiedForBuild)
+  def allScenariosForBuild(b: ScenarioBuilder) = Reportable.allTests(b.builderData.childrenModifiedForBuild)
   def firstScenario(b: ScenarioBuilder): Scenario = b.builderData.all(classOf[Scenario])(0)
   def firstScenario(e: ReportableHolder): Scenario = e.all(classOf[Scenario])(0)
 
@@ -86,9 +86,9 @@ trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R] with Nod
   }
 }
 
-trait AbstractEngine1Test[P, R] extends BuilderFactory1[P, R] with AbstractEngineTest[R] with Engine1Types[P, R]
-trait AbstractEngine2Test[P1, P2, R] extends BuilderFactory2[P1, P2, R] with AbstractEngineTest[R] with Engine2Types[P1, P2, R]
-trait AbstractEngine3Test[P1, P2, P3, R] extends BuilderFactory3[P1, P2, P3, R] with AbstractEngineTest[R] with Engine3Types[P1, P2, P3, R]
+trait AbstractEngine1Test[P, R] extends BuilderFactory1[P, R, R] with AbstractEngineTest[R] with Engine1Types[P, R, R]
+trait AbstractEngine2Test[P1, P2, R] extends BuilderFactory2[P1, P2, R, R] with AbstractEngineTest[R] with Engine2Types[P1, P2, R, R]
+trait AbstractEngine3Test[P1, P2, P3, R] extends BuilderFactory3[P1, P2, P3, R, R] with AbstractEngineTest[R] with Engine3Types[P1, P2, P3, R, R]
 
 trait FirstScenarioTest[R] extends AbstractEngineTest[R] {
   def builderWithScenario: RealScenarioBuilder;

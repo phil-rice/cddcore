@@ -15,7 +15,9 @@ class CanOnlyAddDocumentToBuilderException extends Exception
 class CannotFindDocumentException(msg: String) extends Exception(msg)
 class ExceptionAddingScenario(msg: String, t: Throwable) extends EngineException(msg, t)
 import Reportable._
-trait EngineTypes[R] {
+
+/** R is the type returned by the child engines, or the engine if there are no child enginers. FullR is the result of the engine: which is the fold of the childEngine results if they exist */
+trait EngineTypes[R,FUllR] {
   /** A is a function from the parameters of the engine, and the result to a boolean. It checks that some property is true */
   type A
   /** B is a function from the parameters of the engine to a boolean. It is effectively in calculating which scenario is to be used */
@@ -72,7 +74,7 @@ case class ROrException[R](value: Option[R], exception: Option[Throwable]) {
   } else false
 }
 
-trait EngineUniverse[R] extends EngineTypes[R] {
+trait EngineUniverse[R,FullR] extends EngineTypes[R,FullR] {
 
   object NodePath {
     implicit def toNode(p: NodePath) = p.parent
