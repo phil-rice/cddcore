@@ -7,7 +7,7 @@ import scala.language.implicitConversions
 trait ReportableTestFramework {
   implicit def stringToOption(s: String) = Some(s)
   case class Holder(val name: String, val children: List[Reportable]) extends ReportableHolder
-  case class Req(val title: Option[String], description: Option[String], references: List[Reference] = List(), priority: Int = 0) extends Requirement
+  case class Req(val title: Option[String], description: Option[String], references: List[Reference] = List(), priority: Option[Int] = None) extends Requirement
 
   val rep1 = Req("rep1", "d1")
   val rep2 = Req("rep2", "d2")

@@ -33,7 +33,7 @@ trait NotActuallyFactory[R] extends EngineUniverse[R] {
 }
 
 trait CddRunner extends Runner with EngineUniverse[Any] with NotActuallyFactory[Any] {
-
+import org.cddcore.engine.Engine._
   var engineMap: Map[Description, Engine] = Map()
   var ScenarioMap: Map[Description, Scenario] = Map()
   var exceptionMap: Map[Description, Throwable] = Map()
@@ -85,7 +85,7 @@ trait CddRunner extends Runner with EngineUniverse[Any] with NotActuallyFactory[
   def log(s: String) = println(s)
 
   def run(notifier: RunNotifier) {
-    Engine.test(() => {
+    test(() => {
       notifier.fireTestStarted(getDescription)
       for (ed <- getDescription.getChildren) yield {
         log("notifier.fireTestStarted(ed)" + ed)
@@ -161,10 +161,10 @@ trait CddRunner extends Runner with EngineUniverse[Any] with NotActuallyFactory[
 }
 
 class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
-
+import org.cddcore.engine.Engine._
   val getDescription = Description.createSuiteDescription("ATDD: " + clazz.getName);
 
-  val instance = Engine.test(() => { instantiate(clazz) });
+  val instance = test(() => { instantiate(clazz) });
 
   override def addEngine(name: String, engine: Engine) = {
     val ed = super.addEngine(name, engine)

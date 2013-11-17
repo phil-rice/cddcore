@@ -3,9 +3,8 @@ package org.cddcore.engine
 object Reportable {
   type ReportableList = List[Reportable]
   type ReportableSet = Set[Reportable]
-  
-  def allTests(list: List[Reportable]): List[Test] = list.flatMap(_ match {case t: Test => List(t); case rh: ReportableHolder => allTests(rh.children)})
 
+  def allTests(list: List[Reportable]): List[Test] = list.flatMap(_ match { case t: Test => List(t); case rh: ReportableHolder => allTests(rh.children) })
 }
 
 trait HtmlDisplay {
@@ -93,6 +92,13 @@ object PathUtils {
     case _ => throw new IllegalArgumentException
   }
 
+  def maxPriority(path: ReportableList) = path.foldLeft[Option[Int]](None)((acc, r: Reportable) =>
+    (acc, r) match {
+      case (None, (r: Requirement)) => r.priority
+      case (Some(p), r: Requirement) if (r.priority.isDefined && r.priority.get > p) => Some(p);
+      case (acc, _) => acc
+    });
+
 }
 
 trait RequirementAndHolder extends ReportableHolder with Requirement
@@ -103,7 +109,7 @@ trait Requirement extends Reportable {
   def titleOrDescription(default: String): String = title.getOrElse(description.getOrElse(default))
 
   def description: Option[String]
-  def priority: Int
+  def priority: Option[Int]
   def references: List[Reference]
 }
 
@@ -138,7 +144,7 @@ case class Project(projectTitle: String, engines: ReportableHolder*) extends Req
   val title = Some(projectTitle)
   val children = engines.toList
   def description = None
-  def priority = 0
+  def priority = None
   def references = List()
 }
 

@@ -24,6 +24,7 @@ class RunListenerForTests extends RunListener {
 }
 @RunWith(classOf[JUnitRunner])
 class CddRunnerTests extends AbstractEngine1Test[String, String] {
+  import org.cddcore.engine.Engine._
   class CddRunnerForTests extends CddRunner {
     val getDescription = Description.createSuiteDescription("Test")
   }
@@ -66,7 +67,7 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
   }
 
   "An engine" should "report an exception while building to junit" in {
-    val engine1 = Engine.test(() => builder.useCase("uc1").
+    val engine1 = test(() => builder.useCase("uc1").
       scenario("one", "d1").
       expected("exp").
       because((p: String) => p == "two").

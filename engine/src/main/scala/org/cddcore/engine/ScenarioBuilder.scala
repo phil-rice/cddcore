@@ -253,7 +253,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     because: Option[Because[B]] = None,
     assertions: List[Assertion[A]] = List(),
     configuration: Option[CfgFn] = None,
-    priority: Int = 0,
+    priority: Option[Int] = None,
     references: List[Reference] = List()) extends BuilderNode with Requirement with Test {
 
     def configure = if (configuration.isDefined) makeClosureForCfg(params)(configuration.get)
@@ -286,7 +286,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
   //      case (u: UseCase) :: ut => u.children match {
   //        case (s: Scenario) :: st => s
   //        case _ => throw new NeedScenarioException
-  case class UseCase(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Int = 0, references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
+  case class UseCase(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
     override def toString = "UseCase(" + titleString + " children=" + children.mkString(",") + ")"
   }
 
@@ -298,24 +298,26 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     children: ReportableList = List(),
     expected: Option[ROrException[R]] = None,
     optCode: Option[Code] = None,
-    priority: Int = 0,
+    priority: Option[Int] = None,
     documents: List[Document] = List(),
     paramDetails: List[ParamDetail] = List(),
     references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
 
-    lazy val childrenModifiedForBuild: List[Reportable] =
-      children.collect {
-        case u: UseCase => u.copy(
-          children = u.children.collect {
-            case s: Scenario =>
-              (s.expected, u.expected) match {
-                case (None, Some(e)) => s.copy(expected = Some(e))
-                case _ => s
-              }
-          },
-          references = u.references.reverse)
-        case s: Scenario => s
-      };
+  def firstExpected(path: ReportableList): Option[ROrException[R]] = path.foldLeft[Option[ROrException[R]]](None)((acc, r: Reportable) =>
+    (acc, r) match {
+      case (None, (s: Scenario)) => s.expected
+      case (None, (u: UseCase)) => u.expected
+      case (None, (sb: ScenarioBuilderData)) => sb.expected
+      case (acc, _) => acc
+    });
+    
+    protected def modifyChildForBuild(path: ReportableList): Reportable = path.head match {
+      case s: Scenario => s.copy(priority = PathUtils.maxPriority(path), expected = firstExpected(path))
+      case u: UseCase => u.copy(children = modifyChildrenForBuild(u.children, path))
+    }
+    protected def modifyChildrenForBuild(children: List[Reportable], path: ReportableList): ReportableList = children.map((r) => modifyChildForBuild(r :: path))
+
+    lazy val childrenModifiedForBuild = modifyChildrenForBuild(children, List(this));
 
   }
   def validateBecause(s: Scenario) = {
@@ -388,7 +390,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       }
     }
     /** You should probably not call this explicitly. This makes a copy of the builder with new data. The builder is an immutable object, so this is how data is actually 'changed' when you call methods like description */
-    protected def copy(builderData: ScenarioBuilderData): RealScenarioBuilder
+    def copy(builderData: ScenarioBuilderData): RealScenarioBuilder
 
     protected def copy(
       depth: Int = builderData.depth,
@@ -397,7 +399,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       children: ReportableList = builderData.children,
       optCode: Option[Code] = builderData.optCode,
       expected: Option[ROrException[R]] = builderData.expected,
-      priority: Int = builderData.priority,
+      priority: Option[Int] = builderData.priority,
       references: List[Reference] = builderData.references,
       documents: List[Document] = builderData.documents,
       paramDetails: List[ParamDetail] = builderData.paramDetails): RealScenarioBuilder =
@@ -474,9 +476,9 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     def priority(priority: Int): RealScenarioBuilder =
       set[Int](
         priority,
-        (b, priority) => b.copy(priority = priority),
-        (u, priority) => u.copy(priority = priority),
-        (s, priority) => s.copy(priority = priority))
+        (b, priority) => b.copy(priority = Some(priority)),
+        (u, priority) => u.copy(priority = Some(priority)),
+        (s, priority) => s.copy(priority = Some(priority)))
 
     protected def findDocument(documentName: String) = builderData.documents.find((d) => d.name == Some(documentName)) match {
       case Some(d) => d
@@ -707,7 +709,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
 
     def buildFromScenarios(root: RorN, cs: List[Scenario], seMap: ScenarioExceptionMap): (RorN, ScenarioExceptionMap) = {
-      val sorted = cs.sortBy(-_.priority)
+      val sorted = cs.sortBy(-_.priority.getOrElse(0))
       sorted match {
         case c :: tail =>
           try {
@@ -733,8 +735,9 @@ trait EngineUniverse[R] extends EngineTypes[R] {
     }
 
     def validateScenarios(root: RorN, scenarios: List[Scenario]) {
+      import org.cddcore.engine.Engine._
       if (root == null)
-        if (Engine.testing)
+        if (testing)
           return
         else
           throw new NullPointerException("Cannot validate scenario as root doesn't exist")
@@ -923,7 +926,8 @@ trait EngineUniverse[R] extends EngineTypes[R] {
       result
     }
   }
-  abstract class Engine(val title: Option[String], val description: Option[String], val children: ReportableList, val optCode: Option[Code], val priority: Int, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine[R] {
+  abstract class Engine(val title: Option[String], val description: Option[String], val children: ReportableList, val optCode: Option[Code], val priority: Option[Int] = None, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine[R] {
+    import org.cddcore.engine.Engine._
     def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.childrenModifiedForBuild, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails.reverse)
     val defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
@@ -945,7 +949,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         case Right(n) => sum + countDecisionTreeNodes(n.yes, 0) + countDecisionTreeNodes(n.no, 0) + 1
       }
 
-    if (!Engine.testing)
+    if (!testing)
       validateScenarios(root, scenarios)
 
     def findConclusionFor(params: List[Any]): Conclusion = findConclusionFor(makeClosureForBecause(params), root)
@@ -964,18 +968,18 @@ trait EngineUniverse[R] extends EngineTypes[R] {
 
     def logParams(params: => List[Any]) = {
       logger.executing(params)
-      Engine.call(this, params)
+      call(this, params)
     }
 
     def logResult(fn: => (Conclusion, R)): R = {
       val (conclusion, result) = fn;
-      Engine.endCall(conclusion, result)
+      endCall(conclusion, result)
       logger.result(result)
       result
     }
     def logFailed(fn: => (Conclusion, Throwable)): R = {
       val (conclusion, exception) = fn;
-      Engine.failedCall(conclusion, exception)
+      failedCall(conclusion, exception)
       //    		logger.result(result)
       throw exception
     }
@@ -996,7 +1000,7 @@ trait EngineUniverse[R] extends EngineTypes[R] {
         case s :: rest =>
           val newRootAndExceptionMap = buildFromScenarios(root, scenarios, ScenarioExceptionMap());
           val (newRoot, seMap) = newRootAndExceptionMap
-          if (!Engine.testing) {
+          if (!testing) {
             seMap.size match {
               case 0 => ;
               case 1 => throw seMap.values.head

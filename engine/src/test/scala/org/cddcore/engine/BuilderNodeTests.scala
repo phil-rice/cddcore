@@ -19,7 +19,7 @@ class BuilderNodeTests extends EngineStringStringTests {
     assertEquals(Some(c), b1.builderData.optCode);
     assertEquals(Some(ROrException[String]("x")), b1.builderData.expected);
     assertEquals(Some(ROrException[String](new RuntimeException)), b2.builderData.expected);
-    assertEquals(2, b1.builderData.priority);
+    assertEquals(Some(2), b1.builderData.priority);
   }
 
   it should "throw exceptions if values are set twice" in {
@@ -54,7 +54,7 @@ class BuilderNodeTests extends EngineStringStringTests {
     val s = firstScenario(b1)
     assertEquals(Some("d1"), s.description)
     assertEquals(Some(c), s.optCode)
-    assertEquals(2, s.priority)
+    assertEquals(Some(2), s.priority)
 
   }
 
@@ -68,13 +68,13 @@ class BuilderNodeTests extends EngineStringStringTests {
     assertEquals(Some(c), uc1.optCode);
     assertEquals(Some(ROrException[String]("x")), uc1.expected);
     assertEquals(Some(ROrException[String](new RuntimeException)), uc2.expected);
-    assertEquals(2, uc1.priority);
+    assertEquals(Some(2), uc1.priority);
 
     assertEquals(None, b1.builderData.description);
     assertEquals(None, b1.builderData.optCode);
     assertEquals(None, b1.builderData.expected);
     assertEquals(None, b2.builderData.expected);
-    assertEquals(0, b1.builderData.priority);
+    assertEquals(None, b1.builderData.priority);
   }
 
   it should "allow usecase title and description to be set in one go" in {
@@ -119,13 +119,13 @@ class BuilderNodeTests extends EngineStringStringTests {
     assertEquals(Some(b), s1.because);
     assertEquals(Some(ROrException[String]("x")), s1.expected);
     assertEquals(Some(ROrException[String](new RuntimeException)), s2.expected);
-    assertEquals(2, s1.priority);
+    assertEquals(Some(2), s1.priority);
 
     assertEquals(None, b1.builderData.description);
     assertEquals(None, b1.builderData.optCode);
     assertEquals(None, b1.builderData.expected);
     assertEquals(None, b2.builderData.expected);
-    assertEquals(0, b1.builderData.priority);
+    assertEquals(None, b1.builderData.priority);
   }
 
   it should "allow usecase title and description to be set in one go" in {
@@ -166,13 +166,13 @@ class BuilderNodeTests extends EngineStringStringTests {
     val e = builder.title("title").description("a description").code(c).expected("x").priority(2).build;
     assertEquals(Some("title"), e.title);
     assertEquals(Some("a description"), e.description);
-    assertEquals(2, e.priority);
+    assertEquals(Some(2), e.priority);
   }
 
   it should "Allow parameter details to be specified " in {
     val parser1 = (x: String) => x.toInt
     val parser2 = (x: String) => x.toInt + 1
-    val e = Engine[Int, Int, Int].param(parser1, "One").param(parser2, "Two").build
+    val e = org.cddcore.engine.Engine[Int, Int, Int].param(parser1, "One").param(parser2, "Two").build
     assertEquals(List(ParamDetail("One", parser1), ParamDetail("Two", parser2)), e.paramDetails)
   }
 }

@@ -15,13 +15,13 @@ class EngineFirstTwoScenarioTests extends EngineStringStringTests {
   }
 
   it should " allow the first use not to have a because, and become the default value when we add a second scenario in a second use case" in {
-    val e = Engine[Int, String]().
+    val e = org.cddcore.engine.Engine[Int, String]().
       useCase("").scenario(1).expected("x").
       useCase("").scenario(2).expected("y").because((x: Int) => x == 2).
       build
   }
   it should " allow the first use not to have a because, and become the default value when we add a second scenario in same used case" in {
-    val e = Engine[Int, String]().
+    val e = org.cddcore.engine.Engine[Int, String]().
       useCase("").scenario(1).expected("x").
       scenario(2).expected("y").because((x: Int) => x == 2).
       build

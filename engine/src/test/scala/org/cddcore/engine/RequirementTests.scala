@@ -7,7 +7,7 @@ import scala.io.Source
 case class RequirementForTest(name: String) extends Requirement {
   def title: Option[String] = Some("Title_" + name)
   def description: Option[String] = Some("desc_" + name)
-  def priority: Int = 0
+  def priority: Option[Int] = None
   def references: List[Reference] = List()
   def params: List[Any] = List()
   override def toString() = name

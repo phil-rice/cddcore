@@ -34,7 +34,7 @@ class EngineExceptionTests extends EngineStringStringTests {
 
   }
   "An engine" should "record all the exceptions in the scenarioExceptionMap, if testing" in {
-    val engine = Engine.test(() =>
+    val engine = org.cddcore.engine.Engine.test(() =>
       builderWithUseCase.
         scenario("one").because((s: String) => false, "always false").
         scenario("two").because((s: String) => false, "always false").
