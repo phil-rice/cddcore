@@ -159,12 +159,12 @@ case class Project(projectTitle: String, engines: ReportableHolder*) extends Req
 }
 
 object Engine {
-  def apply[P, R]() = new BuilderFactory1[P, R,R]().builder;
-  def apply[P1, P2, R]() = new BuilderFactory2[P1, P2, R,R]().builder;
-  def apply[P1, P2, P3, R]() = new BuilderFactory3[P1, P2, P3, R,R]().builder;
+  def apply[P, R]() = new BuilderFactory1[P, R, R]().builder;
+  def apply[P1, P2, R]() = new BuilderFactory2[P1, P2, R, R]().builder;
+  def apply[P1, P2, P3, R]() = new BuilderFactory3[P1, P2, P3, R, R]().builder;
 
-  def state[S, P, R]() = new BuilderFactory2[S, P, (S, R),(S, R)]().builder;
-  def state[S, P1, P2, R]() = new BuilderFactory3[S, P1, P2, (S, R),(S, R)]().builder;
+  def state[S, P, R]() = new BuilderFactory2[S, P, (S, R), (S, R)]().builder;
+  def state[S, P1, P2, R]() = new BuilderFactory3[S, P1, P2, (S, R), (S, R)]().builder;
 
   private var _traceBuilder: ThreadLocal[Option[TraceBuilder]] = new ThreadLocal[Option[TraceBuilder]] {
     override def initialValue = None
@@ -219,7 +219,11 @@ trait DecisionTreeFolder[Acc] {
 
 }
 
-trait Engine[R] extends Requirement with RequirementAndHolder {
+trait SimpleEngine[R] extends RequirementAndHolder {
+
+}
+
+trait Engine[R] extends SimpleEngine[R] {
   import Reportable._
   def logger: TddLogger
   def documents: List[Document]
@@ -254,9 +258,17 @@ trait Engine[R] extends Requirement with RequirementAndHolder {
   }
 }
 
-trait Engine1[P, R] extends Engine[R] with Function1[P, R]
-trait Engine2[P1, P2, R] extends Engine[R] with Function2[P1, P2, R]
-trait Engine3[P1, P2, P3, R] extends Engine[R] with Function3[P1, P2, P3, R]
+trait Engine1[P, R] extends Engine[R] with Function1[P, R] {
+  def arity = 1
+}
+
+trait Engine2[P1, P2, R] extends Engine[R] with Function2[P1, P2, R] {
+  def arity = 2
+}
+
+trait Engine3[P1, P2, P3, R] extends Engine[R] with Function3[P1, P2, P3, R] {
+  def arity = 3
+}
 
 trait ConclusionOrDecision extends Reportable {
   def allConclusion: Set[Conclusion]

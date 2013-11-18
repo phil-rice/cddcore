@@ -108,7 +108,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
                 log("notifier.fireTestIgnored(sd)" + sd)
               } else
                 try {
-                  val actual = ROrException(engine.applyParam(engine.root, scenario.params, true))
+                  val actual = ROrException(engine.applyParams(engine.root, scenario.params, true))
                   if (scenario.expected == Some(actual)) {
                     log("notifier.fireTestFinished(sd)" + sd)
                     notifier.fireTestFinished(sd)

@@ -4,7 +4,7 @@ import org.cddcore.engine.tests.CddRunner
 
 trait IfThenPrinter {
   type ReqList = List[Reportable]
-  def start(path: ReqList, e: Engine[_]): String
+  def start(path: ReqList, e: SimpleEngine[_]): String
   def ifPrint(path: ReqList, decision: Decision): String
   def resultPrint(path: ReqList, conclusion: Conclusion): String
   def elsePrint(path: ReqList, decision: Decision): String
@@ -16,7 +16,7 @@ trait IfThenPrinter {
 }
 
 class DefaultIfThenPrinter extends IfThenPrinter {
-  def start(path: ReqList, e: Engine[_]): String = ""
+  def start(path: ReqList, e: SimpleEngine[_]): String = ""
   def ifPrint(path: ReqList, decision: Decision) =
     indent(path) + "if(" + decision.prettyString + ")\n"
   def resultPrint(path: ReqList, conclusion: Conclusion) =
@@ -28,7 +28,7 @@ class DefaultIfThenPrinter extends IfThenPrinter {
 }
 
 class FullHtmlPage(delegate: IfThenPrinter) extends IfThenPrinter {
-  def start(path: ReqList, e: Engine[_]): String = s"<html><head><title>Decision Tree for ${e.titleString}</title></head><style>\n${Files.getFromClassPath(getClass, "cdd.css")}</style><body>"
+  def start(path: ReqList, e: SimpleEngine[_]): String = s"<html><head><title>Decision Tree for ${e.titleString}</title></head><style>\n${Files.getFromClassPath(getClass, "cdd.css")}</style><body>"
   def end: String = "</body></html>"
 
   def ifPrint(path: ReqList, decision: Decision) = delegate.ifPrint(path, decision)
@@ -73,7 +73,7 @@ trait HtmlForIfThenPrinter extends IfThenPrinter {
 
   def reportableToUrl: ReportableToUrl
   def scenarioPrefix: Option[Any]
-  def start(path: ReqList, e: Engine[_]): String = ""
+  def start(path: ReqList, e: SimpleEngine[_]): String = ""
   def ifPrint(path: ReqList, decision: Decision, ifClassName: String) =
     s"<div class='decision'><div class='$ifClassName'>${nbsp(indent(path))}<span class='keyword'>if&#160;</span> <div class='because'>(${htmlEscape(decision.prettyString)})</div><!-- because --></div><!-- $ifClassName -->\n"
 

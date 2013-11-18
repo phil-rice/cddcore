@@ -158,4 +158,11 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
     assertEquals(List("121", "122"), uc1s(1).all(classOf[Test]).map(_.titleString))
   }
 
+  it should "not allow a child engine after a use case or a scenario" in {
+    evaluating { Engine[Int, String]().useCase("").childEngine("ed1") } should produce[CanAddChildEngineAfterUseCaseOrScenarioException]
+    evaluating { Engine[Int, String]().scenario(0).childEngine("ed1") } should produce[CanAddChildEngineAfterUseCaseOrScenarioException]
+    evaluating { Engine[Int, String]().useCase("").scenario(0).childEngine("ed1") } should produce[CanAddChildEngineAfterUseCaseOrScenarioException]
+
+  }
+
 }

@@ -12,7 +12,7 @@ trait Engine1Types[P, R, FullR] extends EngineTypes[R, FullR] {
   def makeClosureForAssertion(params: List[Any], r: ROrException[R]) = (a: A) => a(params(0).asInstanceOf[P], r);
 }
 
-trait Engine2Types[P1, P2, R, FullR] extends EngineTypes[R,FullR] {
+trait Engine2Types[P1, P2, R, FullR] extends EngineTypes[R, FullR] {
   type A = (P1, P2, ROrException[R]) => Boolean
   type B = (P1, P2) => Boolean
   type RFn = (P1, P2) => R
@@ -41,18 +41,10 @@ trait ABuilderFactory1[P, R, FullR] extends EngineUniverse[R, FullR] with Engine
   trait ABuilder1 extends ScenarioBuilder {
     def scenario(p: P, title: String = null, description: String = null) = newScenario(title, description, List(p))
     def build = new Engine(builderData) with Engine1[P, R] {
-      def arity = 1
-      def apply(p: P): R = {
-        logParams(List(p))
-        val conclusion = evaluate((b) => b(p), root);
-        try {
-          val rfn: RFn = conclusion.code.rfn
-          val result: R = rfn(p)
-          logResult((conclusion, result))
-        } catch {
-          case e: Throwable => logFailed((conclusion, e))
-        }
+      protected def executeChildEngine(e: ChildEngineDescription, p: P): FullR = {
+        throw new IllegalStateException
       }
+      def apply(p: P): R = applyParams(root, List(p), true);
       override def toString() = toStringWithScenarios
     }
   }
@@ -73,14 +65,7 @@ trait ABuilderFactory2[P1, P2, R, FullR] extends EngineUniverse[R, FullR] with E
   trait ABuilder2 extends ScenarioBuilder {
     def scenario(p1: P1, p2: P2, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2))
     def build = new Engine(builderData) with Engine2[P1, P2, R] {
-      def arity = 2
-      def apply(p1: P1, p2: P2): R = {
-        logParams(List(p1, p2))
-        val conclusion = evaluate((b) => b(p1, p2), root);
-        val rfn: RFn = conclusion.code.rfn
-        val result: R = rfn(p1, p2)
-        logResult((conclusion, result))
-      }
+      def apply(p1: P1, p2: P2): R = applyParams(root, List(p1, p2), true);
       override def toString() = toStringWithScenarios
     }
   }
@@ -106,14 +91,8 @@ class BuilderFactory3[P1, P2, P3, R, FullR](override val logger: TddLogger = Tdd
     def copy(builderData: ScenarioBuilderData) = new Builder3(builderData)
     def scenario(p1: P1, p2: P2, p3: P3, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2, p3))
     def build = new Engine(builderData) with Engine3[P1, P2, P3, R] {
-      def arity = 3
-      def apply(p1: P1, p2: P2, p3: P3): R = {
-        logParams(List(p1, p2))
-        val conclusion = evaluate((b) => b(p1, p2, p3), root);
-        val rfn: RFn = conclusion.code.rfn
-        val result: R = rfn(p1, p2, p3)
-        logResult((conclusion, result))
-      }
+
+      def apply(p1: P1, p2: P2, p3: P3): R = applyParams(root, List(p1, p2, p3), true);
       override def toString() = toStringWithScenarios
     }
   }
