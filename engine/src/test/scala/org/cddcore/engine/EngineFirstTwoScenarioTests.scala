@@ -8,7 +8,7 @@ class EngineFirstTwoScenarioTests extends EngineStringStringTests {
 
   "An empty engine" should "allow the first use not to have a because, and become the default value" in {
     println(engineWithDefault)
-    assertEquals(1, engineWithDefault.scenarios.size)
+    assertEquals(1, engineWithDefault.tests.size)
     assertEngineMatches(engineWithDefault, Left(CodeAndScenarios("Z": Code, List(defaultScenario))));
     assertEquals("Z", engineWithDefault("A"))
     assertEquals("Z", engineWithDefault("B"))
@@ -30,9 +30,9 @@ class EngineFirstTwoScenarioTests extends EngineStringStringTests {
   it should "produce a simple if then with two scenarios" in {
     val b = builderWithDefault.scenario("B").because("B").expected("X");
     val e = b.build
-    assertEquals(2, e.scenarios.size)
-    assertEquals(defaultScenario, e.scenarios(0))
-    val bScenario = e.scenarios(1)
+    assertEquals(2, e.tests.size)
+    assertEquals(defaultScenario, e.tests(0))
+    val bScenario = e.tests(1)
     assertEngineMatches(e, Right(EngineNode(because = List("B"), inputs = List("B"), yes = Left(CodeAndScenarios("X", List(bScenario))), no = Left(CodeAndScenarios("Z", List(defaultScenario))), scenarioThatCausedNode = bScenario)))
   }
 
@@ -47,7 +47,7 @@ class EngineFirstTwoScenarioTests extends EngineStringStringTests {
     val b = builderWithDefault.scenario("B").expected("Z")
     val e1 = builderWithDefault.build
     val e2 = b.build
-    val bScenario = e2.scenarios(1)
+    val bScenario = e2.tests(1)
     assertEngineMatches(e1, Left(CodeAndScenarios("Z", List(defaultScenario))))
     assertEngineMatches(e2, Left(CodeAndScenarios("Z", List(bScenario, defaultScenario))))
   }
@@ -56,7 +56,7 @@ class EngineFirstTwoScenarioTests extends EngineStringStringTests {
     val b = builderWithDefault.scenario("B").because("B").expected("Z")
     val e1 = builderWithDefault.build
     val e2 = b.build
-    val bScenario = e2.scenarios(1)
+    val bScenario = e2.tests(1)
     assertEngineMatches(e1, Left(CodeAndScenarios("Z", List(defaultScenario))))
     assertEngineMatches(e2, Left(CodeAndScenarios("Z", List(bScenario, defaultScenario))))
   }

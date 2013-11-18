@@ -113,11 +113,6 @@ trait Requirement extends Reportable {
   def references: List[Reference]
 }
 
-trait ChildEngine extends RequirementAndHolder {
-  lazy val scenarios = all(classOf[Test])
-  lazy val useCases = all(classOf[UseCase])
-}
-
 trait UseCase extends RequirementAndHolder {
   def optCode: Option[CodeHolder]
   def expected: Option[ROrException[_]]
@@ -170,7 +165,7 @@ object Engine {
     override def initialValue = None
   }
 
-  def call(e: Engine[_], params: List[Any]) = {
+  def call(e: SimpleEngine[_], params: List[Any]) = {
     _traceBuilder.get match {
       case Some(tb) => _traceBuilder.set(Some(tb.nest(e, params)))
       case None =>
@@ -219,8 +214,25 @@ trait DecisionTreeFolder[Acc] {
 
 }
 
-trait SimpleEngine[R] extends RequirementAndHolder {
+trait SimpleEngine[R] extends RequirementAndHolder  {
+  lazy val tests = all(classOf[Test])
+  lazy val useCases = all(classOf[UseCase])
+  
+  
+  def findConclusionFor(params: List[Any]): Conclusion
+  def evaluateConclusion(params: List[Any], conclusion: Conclusion): R
+  def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion): ROrException[R]
 
+  def apply(params: List[Any]): R = {
+    Engine.call(this, params)
+    val conclusion = findConclusionFor(params)
+    val result = evaluateConclusion(params, conclusion)
+    Engine.endCall(conclusion, result);
+    result
+  }
+
+}
+trait ChildEngine[R] extends SimpleEngine[R] {
 }
 
 trait Engine[R] extends SimpleEngine[R] {
@@ -234,16 +246,7 @@ trait Engine[R] extends SimpleEngine[R] {
   def evaluateBecauseForDecision(decision: Decision, params: List[Any]): Boolean
   def arity: Int
   def paramDetails: List[ParamDetail]
-  def apply(params: List[Any]): R = {
-    Engine.call(this, params)
-    val conclusion = findConclusionFor(params)
-    val result = evaluateConclusion(params, conclusion)
-    Engine.endCall(conclusion, result);
-    result
-  }
-  def findConclusionFor(params: List[Any]): Conclusion
-  def evaluateConclusion(params: List[Any], conclusion: Conclusion): R
-  def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion): ROrException[R]
+
   def fold[Acc](initialValue: Acc, folder: DecisionTreeFolder[Acc]): Acc = fold[Acc](initialValue, root, folder)
   def fold[Acc](initialValue: Acc, root: Either[Conclusion, Decision], folder: DecisionTreeFolder[Acc]): Acc = root match {
     case Right(d: Decision) => fold(fold(folder(initialValue, d), d.yes, folder), d.no, folder)

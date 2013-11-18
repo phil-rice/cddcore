@@ -14,9 +14,9 @@ class EngineSecondScenarioTests extends EngineStringStringTests {
       scenario("B").expected("Z");
     val e = bldr.build
 
-    val w = e.scenarios(0); assertEquals("", w.becauseString)
-    val a = e.scenarios(1); assertEquals("A", a.becauseString)
-    val b = e.scenarios(2); assertEquals("", b.becauseString)
+    val w = e.tests(0); assertEquals("", w.becauseString)
+    val a = e.tests(1); assertEquals("A", a.becauseString)
+    val b = e.tests(2); assertEquals("", b.becauseString)
 
     assertEngineMatches(e, Right(EngineNode(because = List("A"), scenarioThatCausedNode = a, inputs = List("A"),
       yes = Left(CodeAndScenarios("X", List(a))),
@@ -31,10 +31,10 @@ class EngineSecondScenarioTests extends EngineStringStringTests {
     val e = b.build
     val u1 = b.builderData.children
     val u2 = b.builderData.childrenModifiedForBuild
-    val s1 = e.scenarios
-    val w = e.scenarios(0); assertEquals(List("W"), w.params)
-    val a = e.scenarios(1); assertEquals(List("A"), a.params)
-    val ab = e.scenarios(2); assertEquals(List("AB"), ab.params)
+    val s1 = e.tests
+    val w = e.tests(0); assertEquals(List("W"), w.params)
+    val a = e.tests(1); assertEquals(List("A"), a.params)
+    val ab = e.tests(2); assertEquals(List("AB"), ab.params)
 
     assertEngineMatches(e, Right(EngineNode(because = List("A"), inputs = List("A"), yes = Left(CodeAndScenarios("X", List(ab, a))), no = Left(CodeAndScenarios("Z", List(w))), scenarioThatCausedNode = a)))
   }
@@ -45,9 +45,9 @@ class EngineSecondScenarioTests extends EngineStringStringTests {
       scenario("AB").because("B").expected("Y").
       build
 
-    val w = e.scenarios(0); assertEquals(List("W"), w.params)
-    val a = e.scenarios(1); assertEquals(List("A"), a.params)
-    val ab = e.scenarios(2); assertEquals(List("AB"), ab.params)
+    val w = e.tests(0); assertEquals(List("W"), w.params)
+    val a = e.tests(1); assertEquals(List("A"), a.params)
+    val ab = e.tests(2); assertEquals(List("AB"), ab.params)
 
     assertEngineMatches(e,
       Right(EngineNode(because = List("A"), scenarioThatCausedNode = a, inputs = List("A"),

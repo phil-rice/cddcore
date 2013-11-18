@@ -16,7 +16,7 @@ class BuilderPriorityTests extends AbstractTest {
       scenario("uc2_1").expected(1)
     val c = b.builderData.childrenModifiedForBuild
     val e = b.build
-    def s(name: String) = e.scenarios.find(_.params == List(name)).get
+    def s(name: String) = e.tests.find(_.params == List(name)).get
     assertEquals(Some(1), s("uc1_1").priority)
     assertEquals(Some(5), s("uc1_2").priority)
     assertEquals(Some(-3), s("uc2_1").priority)

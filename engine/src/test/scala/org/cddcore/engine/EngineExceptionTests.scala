@@ -42,11 +42,11 @@ class EngineExceptionTests extends EngineStringStringTests {
         scenario("four").expected("x").code((s: String) => "y").
         scenario("ok").expected("x"). //because((s: String) => s == "ok").
         build)
-    val sOne = engine.scenarios(0)
-    val stwo = engine.scenarios(1)
-    val sThree = engine.scenarios(2)
-    val sFour = engine.scenarios(3)
-    val sOk = engine.scenarios(4)
+    val sOne = engine.tests(0)
+    val stwo = engine.tests(1)
+    val sThree = engine.tests(2)
+    val sFour = engine.tests(3)
+    val sOk = engine.tests(4)
 
     val eOne = engine.scenarioExceptionMap(sOne)
     val eTwo = engine.scenarioExceptionMap(stwo)

@@ -76,9 +76,9 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   "A built engine" should "have all the scenarios in it's list of scenarios" in {
     val b = builderWithScenario.expected(firstResult)
     val engine = build(b)
-    assertEquals("UseCases",allScenariosForBuild( b), engine.scenarios)
+    assertEquals("UseCases",allScenariosForBuild( b), engine.tests)
     val expectedScenario = Scenario(None, None, firstParams, logger, Some(ROrException[R](firstResult)));
-    assertEquals(List(expectedScenario), engine.scenarios)
+    assertEquals(List(expectedScenario), engine.tests)
   }
 
 }
@@ -105,9 +105,9 @@ class Scenario1Tests extends FirstScenario1Test[Int, Int] with AbstractScenarioT
   it should "manipulate the second scenario when a new one is added" in {
     val b = builderWithScenario.expected(firstResult).scenario(3).expected(7).because((x: Int) => x > 2);
     val e = b.build;
-    val firstScenaro = e.scenarios(0)
-    val secondScenaro = e.scenarios(1)
-    assertEquals(2, e.scenarios.size)
+    val firstScenaro = e.tests(0)
+    val secondScenaro = e.tests(1)
+    assertEquals(2, e.tests.size)
 
     assertEquals("", firstScenaro.becauseString)
     assertEquals(Some(ROrException[Int](firstResult)), firstScenaro.expected)

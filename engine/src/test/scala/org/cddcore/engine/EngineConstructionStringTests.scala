@@ -51,12 +51,12 @@ class EngineConstructionStringTest extends EngineStringStringTests {
       scenario("B").because(becauseB).expected("XB").
       scenario("AB").because(becauseAB).expected("XAB")
     val e = bldr.build
-    val w = e.scenarios(0); assertEquals(List("W"), w.params)
-    val a = e.scenarios(1); assertEquals(List("A"), a.params)
-    val b = e.scenarios(2); assertEquals(List("B"), b.params)
-    val ab = e.scenarios(3); assertEquals(List("AB"), ab.params)
+    val w = e.tests(0); assertEquals(List("W"), w.params)
+    val a = e.tests(1); assertEquals(List("A"), a.params)
+    val b = e.tests(2); assertEquals(List("B"), b.params)
+    val ab = e.tests(3); assertEquals(List("AB"), ab.params)
 
-    val actual = e.increasingScenariosList(e.scenarios)
+    val actual = e.increasingScenariosList(e.tests)
     val expected = List(List(ab, b, a, w), List(b, a, w), List(a, w), List(w))
     assertEquals(expected, actual)
   }
@@ -67,10 +67,10 @@ class EngineConstructionStringTest extends EngineStringStringTests {
       scenario("B").because(becauseB).expected("XB").
       scenario("AB").because(becauseAB).expected("XAB")
     val e = bldr.build
-    val w = e.scenarios(0); assertEquals(List("W"), w.params)
-    val a = e.scenarios(1); assertEquals(List("A"), a.params)
-    val b = e.scenarios(2); assertEquals(List("B"), b.params)
-    val ab = e.scenarios(3); assertEquals(List("AB"), ab.params)
+    val w = e.tests(0); assertEquals(List("W"), w.params)
+    val a = e.tests(1); assertEquals(List("A"), a.params)
+    val b = e.tests(2); assertEquals(List("B"), b.params)
+    val ab = e.tests(3); assertEquals(List("AB"), ab.params)
 
     val (actual, seMap) = e.buildRoot(e.defaultRoot, List(w, a, b, ab))
     assertEngineMatches(e, actual)

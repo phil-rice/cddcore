@@ -46,15 +46,17 @@ trait AbstractTest extends FlatSpecLike with Matchers with AssertEquals {
 
 }
 
-trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R,R] with NodeComparator[R,R] {
+trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R, R] with NodeComparator[R, R] {
+  implicit def test_to_scenario(t: Test) = t.asInstanceOf[Scenario]
+
   def logger: TddLogger
   def builder: RealScenarioBuilder
   def firstUseCaseDescription = "UseCase1"
   def builderWithUseCase: RealScenarioBuilder = builder.useCase(firstUseCaseDescription)
   def checkScenariosExist[X](engine: Engine, expected: String*) {
-    assert(engine.scenarios.size == expected.size)
-    for ((c, a) <- (engine.scenarios, expected).zipped) {
-      assert(c.becauseString == a, "Expected: [" + a + "]\nBecauseString = [" + c.becauseString + "]\n\nActual " + c + "\n   Scenarios: " + engine.scenarios + "\nEngine:\n" + engine)
+    assert(engine.tests.size == expected.size)
+    for ((c, a) <- (engine.tests, expected).zipped) {
+      assert(c.becauseString == a, "Expected: [" + a + "]\nBecauseString = [" + c.becauseString + "]\n\nActual " + c + "\n   Scenarios: " + engine.tests + "\nEngine:\n" + engine)
     }
   }
   def allScenariosForBuild(b: ScenarioBuilder) = Reportable.allTests(b.builderData.childrenModifiedForBuild)
@@ -127,7 +129,7 @@ trait DefaultScenarioAndBecauseForStrings1 extends AbstractEngine1Test[String, S
   lazy val builderWithScenario = builderWithUseCase.scenario("W")
   lazy val builderWithDefault = builderWithScenario.expected("Z");
   lazy val engineWithDefault = builderWithDefault.build
-  lazy val defaultScenario = engineWithDefault.scenarios.head
+  lazy val defaultScenario = engineWithDefault.tests.head
 }
 
 trait EngineStringStringTests extends AbstractEngine1Test[String, String] with EngineString1Tests[String] with DefaultScenarioAndBecauseForStrings1 with DefaultBecauseForStrings1[String] {

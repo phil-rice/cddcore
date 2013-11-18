@@ -92,12 +92,12 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
   object ExceptionScenarioPrinter {
     val fullScenario = false
-    def apply(s: Scenario) = scenario2Str(s)
-    def existingAndBeingAdded(existing: Scenario, s: Scenario) =
+    def apply(s: Test) = scenario2Str(s)
+    def existingAndBeingAdded(existing: Test, s: Test) =
       s"Existing: ${existing.titleString}\nBeing Added: ${s.titleString}\nDetailed existing:\n${existing}\nDetailed of being Added:\n${s}"
-    def full(s: Scenario) = s + "\nDetailed:\n  " + params(s)
-    def params(s: Scenario) = s.paramPrinter(s.params)
-    def scenario2Str(s: Scenario) =
+    def full(s: Test) = s + "\nDetailed:\n  " + params(s)
+    def params(s: Test) = s.paramPrinter(s.params)
+    def scenario2Str(s: Test) =
       if (fullScenario)
         s.titleString
       else
@@ -105,23 +105,23 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
   }
 
-  class ScenarioException(msg: String, val scenario: Scenario, cause: Throwable = null) extends EngineException(msg, cause)
+  class ScenarioException(msg: String, val scenario: Test, cause: Throwable = null) extends EngineException(msg, cause)
 
   object NoExpectedException {
-    def apply(scenario: Scenario, cause: Throwable = null) = new NoExpectedException(s"No expected in ${ExceptionScenarioPrinter.full(scenario)}", scenario, cause)
+    def apply(scenario: Test, cause: Throwable = null) = new NoExpectedException(s"No expected in ${ExceptionScenarioPrinter.full(scenario)}", scenario, cause)
   }
-  class NoExpectedException(msg: String, scenario: Scenario, cause: Throwable) extends ScenarioException(msg, scenario, cause)
+  class NoExpectedException(msg: String, scenario: Test, cause: Throwable) extends ScenarioException(msg, scenario, cause)
 
   class EngineResultException(msg: String) extends EngineException(msg)
-  class NoBecauseException(msg: String, scenario: Scenario) extends ScenarioException(msg, scenario)
-  class ScenarioBecauseException(msg: String, scenario: Scenario) extends ScenarioException(msg, scenario)
+  class NoBecauseException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
+  class ScenarioBecauseException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
   object ScenarioResultException {
     def adding(existing: Scenario, s: Scenario, actual: R) =
       new ScenarioResultException(s"\nActual Result: ${actual}\nExpected ${s.expected.getOrElse("<N/A>")}\n Scenario ${ExceptionScenarioPrinter(s)}\nExisting Scenario${ExceptionScenarioPrinter(s)}", s)
   }
 
-  class ScenarioResultException(msg: String, scenario: Scenario) extends ScenarioException(msg, scenario)
-  class AssertionException(msg: String, scenario: Scenario) extends ScenarioException(msg, scenario)
+  class ScenarioResultException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
+  class AssertionException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
 
   object CannotDefineTitleTwiceException {
     def apply(original: String, beingAdded: String) = new CannotDefineTitleTwiceException(s"Original${original}\nBeing Added $beingAdded ", original, beingAdded);
@@ -194,9 +194,9 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   class AssertionDoesntMatchBecauseException(msg: String, scenario: Scenario, beingAdded: Scenario) extends ScenarioConflictException(msg, scenario, beingAdded)
 
   object ExceptionWithoutCodeException {
-    def apply(s: Scenario) = new ExceptionWithoutCodeException(s.toString, s)
+    def apply(s: Test) = new ExceptionWithoutCodeException(s.toString, s)
   }
-  class ExceptionWithoutCodeException(msg: String, scenario: Scenario) extends ScenarioException(msg, scenario)
+  class ExceptionWithoutCodeException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
 
   def rfnMaker: (Either[() => Exception, R]) => RFn
   def logger: TddLogger
@@ -277,30 +277,29 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       s"Scenario(${title.getOrElse("")}, ${paramString}, because=${becauseString}, expected=${logger(expected.getOrElse("<N/A>"))})"
   }
 
-  case class ScenarioExceptionMap(map: Map[Scenario, Throwable] = Map(), first: Option[Throwable] = None) {
+  case class ScenarioExceptionMap(map: Map[Test, Throwable] = Map(), first: Option[Throwable] = None) {
     def size = map.size
     def values = map.values
-    def +(x: (Scenario, Throwable)) = ScenarioExceptionMap(map + x, Some(first.getOrElse(x._2)))
-    def apply(s: Scenario) = map(s)
-    def contains(s: Scenario) = map.contains(s)
+    def +(x: (Test, Throwable)) = ScenarioExceptionMap(map + x, Some(first.getOrElse(x._2)))
+    def apply(s: Test) = map(s)
+    def contains(s: Test) = map.contains(s)
   }
 
   case class UseCaseDescription(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: List[Reference] = List()) extends BuilderNode with UseCase {
     override val templateName = "UseCase"
     override def toString = "UseCase(" + titleString + " children=" + children.mkString(",") + ")"
   }
-  case class ChildEngineDescription(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: List[Reference] = List()) extends BuilderNode with ChildEngine {
+  case class ChildEngineDescription(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
     override def toString = "ChildEngine(" + titleString + " children=" + children.mkString(",") + ")"
   }
 
-  class ChildEngineImpl(val desc: ChildEngineDescription) extends ChildEngine with BuildEngine {
+  class ChildEngineImpl(val desc: ChildEngineDescription) extends ChildEngine[R] with BuildEngine with EvaluateEngineWithRoot {
     def priority = desc.priority
     def title = desc.title
     def description = desc.description
     def children = desc.children
     def references = desc.references
     def optCode = desc.optCode
-    override lazy val scenarios = all(classOf[Scenario])
   }
 
   /** This holds the data that the scenario builder is building. It is a separate class mainly to allow code insight to be nicer for the scenarioBuilder. For example we want the description method to add a description on the builder, while we want to be able to access the description from other classes. Code insight is nicer with just one description*/
@@ -620,7 +619,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       (p, m) match {
         case (None, sb: ScenarioBuilder) =>
           newScenario(0)
-        case (sb: ScenarioBuilder, ce: ChildEngine) =>
+        case (sb: ScenarioBuilder, ce: ChildEngine[_]) =>
           newScenario(1)
         case (Some(parent: ScenarioBuilder), u: UseCase) =>
           newScenario(1)
@@ -702,8 +701,8 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
     def toStringWithScenarios(): String = toStringWithScenarios(root);
 
-    def increasingScenariosList(cs: List[Scenario]): List[List[Scenario]] =
-      cs.foldLeft(List[List[Scenario]]())((a, c) => (a match {
+    def increasingScenariosList(cs: List[Test]): List[List[Test]] =
+      cs.foldLeft(List[List[Test]]())((a, c) => (a match {
         case (h :: t) => (c :: a.head) :: a;
         case _ => List(List(c))
       }))
@@ -732,15 +731,30 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       toStringWith(List(), root, new DefaultIfThenPrinter())
   }
 
+  trait EvaluateEngineWithRoot extends EvaluateEngine {
+    def root:  RorN 
+    def findConclusionFor(params: List[Any]): Conclusion = findConclusionFor(makeClosureForBecause(params), root)
+    def evaluateConclusion(params: List[Any], conclusion: Conclusion): R = {
+      conclusion match {
+        case c: CodeAndScenarios => makeClosureForResult(params)(c.code.rfn)
+      }
+    }
+    def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion): ROrException[R] = {
+      try conclusion match {
+        case c: CodeAndScenarios => ROrException(makeClosureForResult(params)(c.code.rfn))
+      } catch { case e: Throwable => ROrException(e) }
+    }
+  }
+
   trait BuildEngine extends EvaluateEngine with EngineToString[R] {
     import org.cddcore.engine.Engine._
     def optCode: Option[Code]
-    def scenarios: List[Scenario]
     val defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>
         new UndecidedException)), List(), true))
     }
+    private lazy val scenarios = tests.asInstanceOf[List[Scenario]]
     private val rootAndExceptionMap = buildRoot(defaultRoot, scenarios)
 
     val root: RorN = rootAndExceptionMap._1
@@ -755,10 +769,10 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case Right(n) => sum + countDecisionTreeNodes(n.yes, 0) + countDecisionTreeNodes(n.no, 0) + 1
       }
 
-    def buildRoot(root: RorN, scenarios: List[Scenario]): (RorN, ScenarioExceptionMap) = {
+    def buildRoot(root: RorN, scenarios: List[Test]): (RorN, ScenarioExceptionMap) = {
       scenarios match {
         case s :: rest =>
-          val newRootAndExceptionMap = buildFromScenarios(root, scenarios, ScenarioExceptionMap());
+          val newRootAndExceptionMap = buildFromScenarios(root, scenarios.asInstanceOf[List[Scenario]], ScenarioExceptionMap());
           val (newRoot, seMap) = newRootAndExceptionMap
           if (!testing) {
             seMap.size match {
@@ -788,22 +802,22 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         throw new ScenarioResultException("Wrong result for " + s.actualCode.description + " for " + ExceptionScenarioPrinter(s) + "\nActual: " + actualFromScenario + "\nExpected: " + s.expected.getOrElse("<N/A>") + "\nRoot:\n" + toString("", root), s);
     }
 
-    protected def validateScenario(root: RorN, s: Scenario) {
-      s.configure
-      val bec = makeClosureForBecause(s.params)
-      val rFn: RFn = evaluate(bec, root, false).code.rfn
-      val actualFromScenario: ROrException[R] = safeCall(makeClosureForResult(s.params), rFn)
-      if (s.expected.isEmpty)
-        throw NoExpectedException(s)
-      if (Some(actualFromScenario) != s.expected)
-        throw new ScenarioResultException("Wrong result for " + s.actualCode.description + " for " + ExceptionScenarioPrinter(s) + "\nActual: " + actualFromScenario + "\nExpected: " + s.expected.getOrElse("<N/A>") + "\nRoot:\n" + toString("", root), s);
-      val assertionClosure = makeClosureForAssertion(s.params, actualFromScenario);
-      for (a <- s.assertions) {
-        val result = assertionClosure(a.assertion)
-        if (!result)
-          throw new AssertionException("\nAssertion " + a.description + " failed.\nParams are " + s.params + "\nResult was " + actualFromScenario, s)
-      }
-
+    protected def validateScenario(root: RorN, t: Test) = t match {
+      case s: Scenario =>
+        s.configure
+        val bec = makeClosureForBecause(s.params)
+        val rFn: RFn = evaluate(bec, root, false).code.rfn
+        val actualFromScenario: ROrException[R] = safeCall(makeClosureForResult(s.params), rFn)
+        if (s.expected.isEmpty)
+          throw NoExpectedException(s)
+        if (Some(actualFromScenario) != s.expected)
+          throw new ScenarioResultException("Wrong result for " + s.actualCode.description + " for " + ExceptionScenarioPrinter(s) + "\nActual: " + actualFromScenario + "\nExpected: " + s.expected.getOrElse("<N/A>") + "\nRoot:\n" + toString("", root), s);
+        val assertionClosure = makeClosureForAssertion(s.params, actualFromScenario);
+        for (a <- s.assertions) {
+          val result = assertionClosure(a.assertion)
+          if (!result)
+            throw new AssertionException("\nAssertion " + a.description + " failed.\nParams are " + s.params + "\nResult was " + actualFromScenario, s)
+        }
     }
 
     def buildFromScenarios(root: RorN, cs: List[Scenario], seMap: ScenarioExceptionMap): (RorN, ScenarioExceptionMap) = {
@@ -907,9 +921,9 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       result
     }
 
-    def findWhereItGoes(root: RorN, s: Scenario): List[NodePath] = findWhereItGoes(List(), root, s)
+    def findWhereItGoes(root: RorN, s: Test): List[NodePath] = findWhereItGoes(List(), root, s)
 
-    def findWhereItGoes(parents: List[NodePath], n: RorN, s: Scenario): List[NodePath] = {
+    def findWhereItGoes(parents: List[NodePath], n: RorN, s: Test): List[NodePath] = {
       n match {
         case null => if (parents.isEmpty) Nil else throw new IllegalStateException(PathPrinter(parents))
         case Left(l: CodeAndScenarios) => NodePath(Left(l), true) :: parents; //we got to the bottom! The true... not sure about 
@@ -1025,30 +1039,17 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     }
   }
 
-  abstract class Engine(val title: Option[String], val description: Option[String], val children: ReportableList, val optCode: Option[Code], val priority: Option[Int] = None, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with ReportableHolder with org.cddcore.engine.Engine[R] {
+  abstract class Engine(val title: Option[String], val description: Option[String], val children: ReportableList, val optCode: Option[Code], val priority: Option[Int] = None, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with EvaluateEngineWithRoot   with org.cddcore.engine.Engine[R] {
     import org.cddcore.engine.Engine._
     def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.childrenModifiedForBuild, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails.reverse)
 
     def logger = EngineUniverse.this.logger
     override def templateName = "Engine"
-    lazy val childEngines: List[ChildEngine] = all(classOf[ChildEngine])
-    lazy val useCases: List[UseCase] = all(classOf[UseCase])
-    lazy val scenarios: List[Scenario] = all(classOf[Scenario])
+    lazy val childEngines: List[ChildEngine[R]] = all(classOf[ChildEngine[R]])
+    protected lazy val scenarios: List[Scenario] = all(classOf[Scenario])
 
     if (!testing)
       validateScenarios(root, scenarios)
-
-    def findConclusionFor(params: List[Any]): Conclusion = findConclusionFor(makeClosureForBecause(params), root)
-    def evaluateConclusion(params: List[Any], conclusion: Conclusion): R = {
-      conclusion match {
-        case c: CodeAndScenarios => makeClosureForResult(params)(c.code.rfn)
-      }
-    }
-    def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion) = {
-      try conclusion match {
-        case c: CodeAndScenarios => ROrException(makeClosureForResult(params)(c.code.rfn))
-      } catch { case e: Throwable => ROrException(e) }
-    }
 
     def constructionString: String = constructionString(defaultRoot, scenarios, new DefaultIfThenPrinter)
 

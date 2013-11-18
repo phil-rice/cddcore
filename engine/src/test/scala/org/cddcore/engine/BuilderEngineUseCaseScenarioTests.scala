@@ -113,7 +113,7 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
       scenario(11).expected("1one").because((x: Int) => x == 11).
       scenario(12).expected("1two").because((x: Int) => x == 12);
 
-    val engines = b.builderData.all(classOf[ChildEngine]);
+    val engines = b.builderData.all(classOf[ChildEngine[_]]);
   }
 
   it should "only have its scenarios" in {
@@ -127,8 +127,8 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
 
     val engines = e.childEngines
     assertEquals(List("ed1", "ed2"), engines.map(_.titleString))
-    assertEquals(List("11", "12"), engines(0).scenarios.map(_.titleString))
-    assertEquals(List("21", "22"), engines(1).scenarios.map(_.titleString))
+    assertEquals(List("11", "12"), engines(0).tests.map(_.titleString))
+    assertEquals(List("21", "22"), engines(1).tests.map(_.titleString))
 
   }
 
@@ -152,8 +152,8 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
     val uc2s = engines(1).useCases
     assertEquals(List("uc11", "uc12"), uc1s.map(_.titleString))
     assertEquals(List(), uc2s.map(_.titleString))
-    assertEquals(List("111", "112", "121", "122"), engines(0).scenarios.map(_.titleString))
-    assertEquals(List("21", "22"), engines(1).scenarios.map(_.titleString))
+    assertEquals(List("111", "112", "121", "122"), engines(0).tests.map(_.titleString))
+    assertEquals(List("21", "22"), engines(1).tests.map(_.titleString))
     assertEquals(List("111", "112"), uc1s(0).all(classOf[Test]).map(_.titleString))
     assertEquals(List("121", "122"), uc1s(1).all(classOf[Test]).map(_.titleString))
   }

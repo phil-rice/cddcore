@@ -22,9 +22,9 @@ class EngineLoggerRunnerDisplayTests extends AbstractEngine1Test[DisplayTest, Di
   val builder_W_A_B_AB = builder_W_A_B.scenario(DisplayTest("AB")).expected("Z").because("AB")
   val e_w_a_b_ab = builder_W_A_B_AB.build
 
-  val wS = e_w_a_b_ab.scenarios(0); 
-  val aS = e_w_a_b_ab.scenarios(1); 
-  val abS = e_w_a_b_ab.scenarios(2);
+  val wS = e_w_a_b_ab.tests(0); 
+  val aS = e_w_a_b_ab.tests(1); 
+  val abS = e_w_a_b_ab.tests(2);
 
   "A logger display processor" should "use the display method if available" in {
     val processor = LoggerDisplayProcessor()

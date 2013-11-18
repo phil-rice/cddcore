@@ -15,7 +15,7 @@ class EngineMutabilityTests extends EngineString1Tests[Holder] {
   val builderWithScenario = builderWithUseCase.scenario(mutable).configuration((h: Holder) => h.value = "W")
   val builderWithDefault = builderWithScenario.expected("Z");
   val engineWithDefault = builderWithDefault.build
-  val defaultScenario = engineWithDefault.scenarios.head
+  val defaultScenario = engineWithDefault.tests.head
 
   def addW(e: RealScenarioBuilder): RealScenarioBuilder = e.scenario(mutable).expected("XW").configuration((h) => h.value = "W")
   def addA(e: RealScenarioBuilder): RealScenarioBuilder = e.scenario(mutable).expected("XA").because(becauseA).configuration((h) => h.value = "A")
@@ -26,7 +26,7 @@ class EngineMutabilityTests extends EngineString1Tests[Holder] {
 
   "A scenario with a configurer" should "change the configured items" in {
     val e = bldr.build
-    val s = e.scenarios
+    val s = e.tests
     val w = s(0);
     val a = s(1)
     val b = s(2)

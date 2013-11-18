@@ -12,7 +12,7 @@ class ChildEngineTests extends AbstractTest {
     assertEquals("def", e(4))
   }
 
-  "AN engine with two child engines and no fold function" should "throw CannotHaveChildEnginesWithoutFolderException" in {
+  "An engine with two child engines and no fold function" should "throw CannotHaveChildEnginesWithoutFolderException" in {
     val b1 = Engine[Int, String]().
       childEngine("ce1").scenario(0, "zero").expected("zero").
       childEngine("ce2").scenario(1, "one").expected("one");
@@ -27,9 +27,19 @@ class ChildEngineTests extends AbstractTest {
     evaluating { b2.build } should produce[CannotHaveChildEnginesWithoutFolderException]
     evaluating { b3.build } should produce[CannotHaveChildEnginesWithoutFolderException]
   }
-  
+
   it should "allow each child engine to come to correct conclusion" in {
-    
+    val childEngines = Engine[Int, String]().
+      childEngine("ce1").scenario(0).expected("zero").
+      childEngine("ce2").scenario(1).expected("one").
+      builderData.childrenModifiedForBuild.collect { case e: ChildEngine[_] => e }.reverse
+
+    assertEquals("zero", childEngines(0)(List(0)))
+    assertEquals("zero", childEngines(0)(List(1)))
+
+    assertEquals("one", childEngines(1)(List(0)))
+    assertEquals("one", childEngines(1)(List(1)))
+
   }
-  
+
 }

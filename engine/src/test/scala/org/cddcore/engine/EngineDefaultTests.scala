@@ -16,7 +16,7 @@ class EngineDefaultTests extends EngineStringStringTests {
     val e = builderWithUseCase.scenario("A").expected("Z").build
     assertEquals("Z", e("A"))
     assertEquals("Z", e("x"))
-    val s = e.scenarios(0)
+    val s = e.tests(0)
     assertEngineMatches(e, Left(CodeAndScenarios(s.actualCode, List(s))))
   }
 
@@ -25,7 +25,7 @@ class EngineDefaultTests extends EngineStringStringTests {
     assertEquals("Z", e("A"))
     evaluating { e("x") } should produce[UndecidedException]
 
-    val s = e.scenarios(0)
+    val s = e.tests(0)
     assertEngineMatches(e, Right(EngineNode(inputs = List("A"),
       because = List("A"),
       yes = Left(CodeAndScenarios(s.actualCode, List(s))),
