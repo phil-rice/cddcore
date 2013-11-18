@@ -27,4 +27,9 @@ class ChildEngineTests extends AbstractTest {
     evaluating { b2.build } should produce[CannotHaveChildEnginesWithoutFolderException]
     evaluating { b3.build } should produce[CannotHaveChildEnginesWithoutFolderException]
   }
+  
+  it should "allow each child engine to come to correct conclusion" in {
+    
+  }
+  
 }

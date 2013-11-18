@@ -63,7 +63,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
 
       for (c <- u.children.reverse) yield c match {
         case s: Test => {
-          val name = s.titleString + " => " + logger(s.expected.getOrElse("")) + " " + s.becauseString
+          val name = s.titleString + " => " + logger(s.expected.getOrElse("")) //+ " " + s.becauseString
           val cleanedName = Strings.clean(name)
           println("   " + cleanedName)
           val scenarioDescription = Description.createSuiteDescription(cleanedName)

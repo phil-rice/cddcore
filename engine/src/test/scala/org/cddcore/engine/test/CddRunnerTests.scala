@@ -29,7 +29,7 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
     val getDescription = Description.createSuiteDescription("Test")
   }
 
-  "An engine" should "notify started and finished for root, engine, usecase and scenario wihen one scenario" in {
+  "An engine" should "notify started and finished for root, engine, usecase and scenario when one scenario" in {
     val engine1 = builder.useCase("uc1").
       scenario("one", "d1").
       expected("exp").build
@@ -38,8 +38,8 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testStarted: Test",
       "testStarted: Engine",
       "testStarted: uc1",
-      "testStarted: d1 => exp ", //the space is there to separate the because
-      "testFinished: d1 => exp ",
+      "testStarted: d1 => exp",
+      "testFinished: d1 => exp",
       "testFinished: uc1",
       "testFinished: Engine",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
@@ -57,10 +57,10 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testStarted: Test",
       "testStarted: Engine",
       "testStarted: uc1",
-      "testStarted: d1 => exp ", //the space is there to separate the because
-      "testFinished: d1 => exp ",
-      "testStarted: two => exp2 <<p String> => p.==<two>>",
-      "testFinished: two => exp2 <<p String> => p.==<two>>",
+      "testStarted: d1 => exp",
+      "testFinished: d1 => exp",
+      "testStarted: two => exp2",
+      "testFinished: two => exp2",
       "testFinished: uc1",
       "testFinished: Engine",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
@@ -78,8 +78,8 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testStarted: Test",
       "testStarted: Engine",
       "testStarted: uc1",
-      "testStarted: d1 => exp <<p String> => p.==<two>>",
-      "testFailure: d1 => exp <<p String> => p.==<two>>: ((p: String) => p.==(\"two\")) is not true for Scenario(d1, one, because=((p: String) => p.==(\"two\")), expected=exp)\nDetailed:\n  List(one)\n",
+      "testStarted: d1 => exp",
+      "testFailure: d1 => exp: ((p: String) => p.==(\"two\")) is not true for Scenario(d1, one, because=((p: String) => p.==(\"two\")), expected=exp)\nDetailed:\n  List(one)\n",
       "testFinished: uc1",
       "testFinished: Engine",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
