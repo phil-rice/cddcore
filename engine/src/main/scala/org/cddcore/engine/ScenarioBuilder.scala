@@ -564,7 +564,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
     def fold(foldFn: FoldFn, initialValue: => FullR) = copy(foldFn = Some(foldFn), initialFoldValue = () => initialValue)
     def childEngine(engineTitle: String) = {
-      for (c <- builderData.children) 
+      for (c <- builderData.children)
         if (!c.isInstanceOf[ChildEngineDescription])
           throw new CanAddChildEngineAfterUseCaseOrScenarioException
 
@@ -687,54 +687,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       }
     }
   }
-  trait EngineToString[R] extends SimpleEngine[R] {
 
-    def root: Either[Conclusion, Decision]
-
-    def toString(indent: String, root: Either[Conclusion, Decision]): String = {
-      root match {
-        case null => indent + "null"
-        case Left(result) => indent + result.code.pretty + "\n"
-        case Right(node) =>
-          indent + "if(" + node.prettyString + ")\n" +
-            toString(indent + " ", node.yes) +
-            indent + "else\n" +
-            toString(indent + " ", node.no)
-      }
-    }
-    override def toString(): String = toString("", root)
-
-    def toStringWithScenarios(): String = toStringWithScenarios(root);
-
-    def increasingScenariosList(cs: List[Test]): List[List[Test]] =
-      cs.foldLeft(List[List[Test]]())((a, c) => (a match {
-        case (h :: t) => (c :: a.head) :: a;
-        case _ => List(List(c))
-      }))
-
-    def titleString: String
-
-    def toStringWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String =
-      printer.start(path, this) + toStringPrimWith(path, root, printer) + printer.end
-
-    private def toStringPrimWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String = {
-      root match {
-        case null => "Could not toString as root as null. Possibly because of earlier exceptions"
-        case Left(result) => printer.resultPrint(path, result)
-        case Right(node: Reportable) =>
-          val ifString = printer.ifPrint(path, node)
-          val yesString = toStringPrimWith(path :+ node, node.yes, printer)
-          val elseString = printer.elsePrint(path, node)
-          val noString = toStringPrimWith(path :+ node, node.no, printer)
-          val endString = printer.endPrint(path, node)
-          val result = ifString + yesString + elseString + noString + endString
-          return result
-      }
-    }
-
-    def toStringWithScenarios(root: Either[Conclusion, Decision]): String =
-      toStringWith(List(), root, new DefaultIfThenPrinter())
-  }
 
   trait EvaluateEngineWithRoot extends EvaluateEngine {
     def root: RorN
@@ -751,14 +704,18 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     }
   }
 
-  trait BuildEngine extends EvaluateEngine with EngineToString[R] {
+  trait BuildEngine extends EvaluateEngine  {
     import org.cddcore.engine.Engine._
-    def optCode: Option[Code]
+    
+    def toString(indent: String, root: Either[Conclusion, Decision]): String
+     def optCode: Option[Code]
     val defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>
         new UndecidedException)), List(), true))
+    
     }
+    def tests: List[Test]
     private lazy val scenarios = tests.asInstanceOf[List[Scenario]]
     protected def validateChildEngines
     validateChildEngines
@@ -1048,7 +1005,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
   abstract class Engine(val title: Option[String], val description: Option[String], val children: ReportableList,
     val folder: Option[FoldFn], val initialFoldValue: () => FullR,
-    val optCode: Option[Code], val priority: Option[Int] = None, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with EvaluateEngineWithRoot with org.cddcore.engine.Engine[R] {
+    val optCode: Option[Code], val priority: Option[Int] = None, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with EvaluateEngineWithRoot with org.cddcore.engine.EngineFull[R] {
     import org.cddcore.engine.Engine._
     def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.childrenModifiedForBuild, builderData.folder, builderData.initialFoldValue, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails.reverse)
 
@@ -1107,22 +1064,22 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     }
 
     def applyParams(root: RorN, params: List[Any], log: Boolean): R = {
-//      if (childEngines.size == 0)
-        return applyUsingJustMe(root, params, log)
-//      if (log) logParams(params)
-//      val bec = makeClosureForBecause(params)
-//      childEngines.foldLeft(initialFoldValue())((acc, ce) => {
-//        val conclusion = evaluate(bec, root, log);
-//        try {
-//          val rfn = conclusion.code.rfn
-//          val result = makeClosureForResult(params)(rfn)
-//          if (log) logResult((conclusion, result))
-//          folder.get(acc, result)
-//        } catch {
-//          case e: Throwable =>
-//            if (log) logFailed((conclusion, e)); throw e
-//        }
-//      })
+      //      if (childEngines.size == 0)
+      return applyUsingJustMe(root, params, log)
+      //      if (log) logParams(params)
+      //      val bec = makeClosureForBecause(params)
+      //      childEngines.foldLeft(initialFoldValue())((acc, ce) => {
+      //        val conclusion = evaluate(bec, root, log);
+      //        try {
+      //          val rfn = conclusion.code.rfn
+      //          val result = makeClosureForResult(params)(rfn)
+      //          if (log) logResult((conclusion, result))
+      //          folder.get(acc, result)
+      //        } catch {
+      //          case e: Throwable =>
+      //            if (log) logFailed((conclusion, e)); throw e
+      //        }
+      //      })
 
     }
 

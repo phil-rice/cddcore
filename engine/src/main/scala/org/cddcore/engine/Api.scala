@@ -73,9 +73,9 @@ object PathUtils {
     case _ => throw new IllegalArgumentException
   }
 
-  def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[Engine[_]]
+  def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[EngineFull[_]]
   def enginePath(path: ReportableList): ReportableList = path match {
-    case (engine: Engine[_]) :: tail => path
+    case (engine: EngineFull[_]) :: tail => path
     case h :: tail => enginePath(tail)
     case _ => throw new IllegalArgumentException
   }
@@ -165,7 +165,7 @@ object Engine {
     override def initialValue = None
   }
 
-  def call(e: SimpleEngine[_], params: List[Any]) = {
+  def call(e: Engine[_], params: List[Any]) = {
     _traceBuilder.get match {
       case Some(tb) => _traceBuilder.set(Some(tb.nest(e, params)))
       case None =>
@@ -214,11 +214,10 @@ trait DecisionTreeFolder[Acc] {
 
 }
 
-trait SimpleEngine[R] extends RequirementAndHolder  {
+trait Engine[R] extends RequirementAndHolder {
   lazy val tests = all(classOf[Test])
   lazy val useCases = all(classOf[UseCase])
-  
-  
+
   def findConclusionFor(params: List[Any]): Conclusion
   def evaluateConclusion(params: List[Any], conclusion: Conclusion): R
   def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion): ROrException[R]
@@ -230,12 +229,57 @@ trait SimpleEngine[R] extends RequirementAndHolder  {
     Engine.endCall(conclusion, result);
     result
   }
+  def root: Either[Conclusion, Decision]
+
+  def toString(indent: String, root: Either[Conclusion, Decision]): String = {
+    root match {
+      case null => indent + "null"
+      case Left(result) => indent + result.code.pretty + "\n"
+      case Right(node) =>
+        indent + "if(" + node.prettyString + ")\n" +
+          toString(indent + " ", node.yes) +
+          indent + "else\n" +
+          toString(indent + " ", node.no)
+    }
+  }
+  override def toString(): String = toString("", root)
+
+  def toStringWithScenarios(): String = toStringWithScenarios(root);
+
+  def increasingScenariosList(cs: List[Test]): List[List[Test]] =
+    cs.foldLeft(List[List[Test]]())((a, c) => (a match {
+      case (h :: t) => (c :: a.head) :: a;
+      case _ => List(List(c))
+    }))
+
+  def titleString: String
+
+  def toStringWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String =
+    printer.start(path, this) + toStringPrimWith(path, root, printer) + printer.end
+
+  private def toStringPrimWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String = {
+    root match {
+      case null => "Could not toString as root as null. Possibly because of earlier exceptions"
+      case Left(result) => printer.resultPrint(path, result)
+      case Right(node: Reportable) =>
+        val ifString = printer.ifPrint(path, node)
+        val yesString = toStringPrimWith(path :+ node, node.yes, printer)
+        val elseString = printer.elsePrint(path, node)
+        val noString = toStringPrimWith(path :+ node, node.no, printer)
+        val endString = printer.endPrint(path, node)
+        val result = ifString + yesString + elseString + noString + endString
+        return result
+    }
+  }
+
+  def toStringWithScenarios(root: Either[Conclusion, Decision]): String =
+    toStringWith(List(), root, new DefaultIfThenPrinter())
 
 }
-trait ChildEngine[R] extends SimpleEngine[R] {
+trait ChildEngine[R] extends Engine[R] {
 }
 
-trait Engine[R] extends SimpleEngine[R] {
+trait EngineFull[R] extends Engine[R] {
   import Reportable._
   def logger: TddLogger
   def documents: List[Document]
@@ -261,15 +305,15 @@ trait Engine[R] extends SimpleEngine[R] {
   }
 }
 
-trait Engine1[P, R] extends Engine[R] with Function1[P, R] {
+trait Engine1[P, R] extends EngineFull[R] with Function1[P, R] {
   def arity = 1
 }
 
-trait Engine2[P1, P2, R] extends Engine[R] with Function2[P1, P2, R] {
+trait Engine2[P1, P2, R] extends EngineFull[R] with Function2[P1, P2, R] {
   def arity = 2
 }
 
-trait Engine3[P1, P2, P3, R] extends Engine[R] with Function3[P1, P2, P3, R] {
+trait Engine3[P1, P2, P3, R] extends EngineFull[R] with Function3[P1, P2, P3, R] {
   def arity = 3
 }
 

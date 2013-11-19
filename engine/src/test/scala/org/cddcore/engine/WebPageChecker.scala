@@ -28,9 +28,9 @@ trait WebPageChecker extends AssertEquals {
       case _ => throw new IllegalArgumentException
     }
 
-    def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[Engine[_]]
+    def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[EngineFull[_]]
     def enginePath(path: ReportableList): ReportableList = path match {
-      case (engine: Engine[_]) :: tail => path
+      case (engine: EngineFull[_]) :: tail => path
       case h :: tail => enginePath(tail)
       case _ => throw new IllegalArgumentException
     }
@@ -271,7 +271,7 @@ class ProjectPageChecker(val path: ReportableList, val html: String, val reporta
   val report = path(1).asInstanceOf[Report]
   new TopLineChecker("Project: " + project.titleString)
   val engineDivs = divsWith("engine", reportDiv.child)
-  val engineSectionCheckers = project.engines.zip(engineDivs).map(_ match { case (e: Engine[_], node) => new EngineSectionChecker(e :: path, node, false) }).toList
+  val engineSectionCheckers = project.engines.zip(engineDivs).map(_ match { case (e: EngineFull[_], node) => new EngineSectionChecker(e :: path, node, false) }).toList
   assertEquals(project.engines.size, engineSectionCheckers.size)
   assertEquals(project.engines.size, engineDivs.size)
   for (e <- engineSectionCheckers)
@@ -279,7 +279,7 @@ class ProjectPageChecker(val path: ReportableList, val html: String, val reporta
 }
 
 class EnginePageChecker(val path: ReportableList, val html: String, val reportableToUrl: ReportableToUrl) extends WebPageChecker {
-  val engine = path(0).asInstanceOf[Engine[_]]
+  val engine = path(0).asInstanceOf[EngineFull[_]]
   val project = path(1).asInstanceOf[Project]
   val report = path(2).asInstanceOf[Report]
   new TopLineChecker("Engine: " + engine.titleOrDescription(""))
@@ -290,7 +290,7 @@ class EnginePageChecker(val path: ReportableList, val html: String, val reportab
 }
 class UseCasePageChecker(path: ReportableList, val html: String, val reportableToUrl: ReportableToUrl) extends WebPageChecker {
   val useCase = path(0).asInstanceOf[RequirementAndHolder];
-  val engine = path(1).asInstanceOf[Engine[_]]
+  val engine = path(1).asInstanceOf[EngineFull[_]]
   val project = path(2).asInstanceOf[Project]
   val report = path(3).asInstanceOf[Report]
 
@@ -305,7 +305,7 @@ class UseCasePageChecker(path: ReportableList, val html: String, val reportableT
 class ScenarioPageChecker(path: ReportableList, val html: String, val reportableToUrl: ReportableToUrl) extends WebPageChecker {
   val scenario = path(0).asInstanceOf[Test];
   val useCase = path(1).asInstanceOf[RequirementAndHolder];
-  val engine = path(2).asInstanceOf[Engine[_]]
+  val engine = path(2).asInstanceOf[EngineFull[_]]
   val project = path(3).asInstanceOf[Project]
   val report = path(4).asInstanceOf[Report]
 

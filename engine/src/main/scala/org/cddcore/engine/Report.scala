@@ -55,7 +55,7 @@ class EngineConclusionWalker extends ReportWalker {
     endFn: (Acc, ReportableList) => Acc): Acc = {
     val head = path.head
     head match {
-      case engine: Engine[_] =>
+      case engine: EngineFull[_] =>
         var acc = startFn(initial, path)
         engine.walkDecisionsAndConclusion(engine.root, (cd: ConclusionOrDecision) => cd match {
           case c: Conclusion => acc = childFn(acc, c :: path)
@@ -118,7 +118,7 @@ class ReportCreator[RtoUrl <: ReportableToUrl](r: ReportableHolder, title: Strin
       //        case r: Report => Some(HtmlRenderer.reportHtml(rootUrl).render(reportableToUrl, urlMap, r))
       case p: Project =>
         Some(HtmlRenderer(live).projectHtml(rootUrl).render(reportableToUrl, urlMap, Report("Project: " + p.titleOrDescription(ReportCreator.unnamed), p)))
-      case e: Engine[_] => Some(HtmlRenderer(live).engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
+      case e: EngineFull[_] => Some(HtmlRenderer(live).engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
       case u: RequirementAndHolder => Some(HtmlRenderer(live).usecaseHtml(rootUrl, restrict = path.toSet ++ u.children).render(reportableToUrl, urlMap, Report("Usecase: " + u.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
       case t: Test =>
         val conclusion = PathUtils.findEngine(path).findConclusionFor(t.params)
@@ -184,7 +184,7 @@ trait ReportableToUrl {
       }
       val withU = addToMap(acc, path)
       path.head match {
-        case e: Engine[_] => e.fold(withU, new DecisionTreeFolder[UrlMap] {
+        case e: EngineFull[_] => e.fold(withU, new DecisionTreeFolder[UrlMap] {
           def apply(acc: UrlMap, c: Conclusion) = addToMap(acc, c :: path)
           def apply(acc: UrlMap, d: Decision) = addToMap(acc, d :: path)
         })
@@ -301,17 +301,17 @@ object Renderer {
       stringTemplate.setAttribute("urlId", repToUrl.urlId(path.head))
     }
   })
-  protected def engineConfig = RenderAttributeConfigurer[Engine[_]]("Engine", (_, _, path, e, stringTemplate) => stringTemplate.setAttribute("decisionTreeNodes", e.decisionTreeNodes))
+  protected def engineConfig = RenderAttributeConfigurer[EngineFull[_]]("Engine", (_, _, path, e, stringTemplate) => stringTemplate.setAttribute("decisionTreeNodes", e.decisionTreeNodes))
 
   def decisionTreeConfig(params: Option[List[Any]], conclusion: Option[Conclusion], test: Option[Test]) =
-    RenderAttributeConfigurer[Engine[_]]("Engine", (reportableToUrl, urlMap, path, e, stringTemplate) =>
+    RenderAttributeConfigurer[EngineFull[_]]("Engine", (reportableToUrl, urlMap, path, e, stringTemplate) =>
       stringTemplate.setAttribute("decisionTree", e.toStringWith(params match {
         case Some(p) => new HtmlWithTestIfThenPrinter(p, conclusion, test, reportableToUrl, urlMap)
         case _ => new HtmlIfThenPrinter(reportableToUrl, urlMap)
       })))
 
   def setAttribute(templateName: String, attributeName: String, value: Any) =
-    RenderAttributeConfigurer[Engine[_]](templateName, (reportableToUrl, urlMap, path, e, stringTemplate) =>
+    RenderAttributeConfigurer[EngineFull[_]](templateName, (reportableToUrl, urlMap, path, e, stringTemplate) =>
       stringTemplate.setAttribute(attributeName, value))
 
   protected def reportConfig = RenderAttributeConfigurer[Report]("Report", (reportableToUrl, urlMap, path, r, stringTemplate) => {
