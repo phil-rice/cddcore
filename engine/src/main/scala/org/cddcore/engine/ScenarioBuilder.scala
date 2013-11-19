@@ -19,7 +19,7 @@ class ExceptionAddingScenario(msg: String, t: Throwable) extends EngineException
 import Reportable._
 
 /** R is the type returned by the child engines, or the engine if there are no child enginers. FullR is the result of the engine: which is the fold of the childEngine results if they exist */
-trait EngineTypes[R, FUllR] {
+trait EngineTypes[R, FullR] {
   /** A is a function from the parameters of the engine, and the result to a boolean. It checks that some property is true */
   type A
   /** B is a function from the parameters of the engine to a boolean. It is effectively in calculating which scenario is to be used */
@@ -27,7 +27,8 @@ trait EngineTypes[R, FUllR] {
   /** RFn is a function from the parameters of the engine to a result R. It is used to calculate the result of the engine */
   type RFn
   type RFnMaker = (Either[Exception, R]) => RFn
-
+  type FoldFn = (FullR, R) => FullR
+  type InitialValueMaker = () => FullR
   /** this is a function from the parameters to Unit e,g, (P1,P2,P3)=> Unit */
   type CfgFn;
 
@@ -300,6 +301,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     def children = desc.children
     def references = desc.references
     def optCode = desc.optCode
+    protected def validateChildEngines {}
   }
 
   /** This holds the data that the scenario builder is building. It is a separate class mainly to allow code insight to be nicer for the scenarioBuilder. For example we want the description method to add a description on the builder, while we want to be able to access the description from other classes. Code insight is nicer with just one description*/
@@ -308,7 +310,8 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     title: Option[String] = None,
     description: Option[String] = None,
     children: ReportableList = List(),
-    folder: (List[R], R) => FullR = ((acc, r) => if (acc.size > 1) throw new CannotHaveChildEnginesWithoutFolderException else r.asInstanceOf[FullR]),
+    folder: Option[FoldFn] = None,
+    initialFoldValue: () => FullR = () => throw new IllegalStateException,
     expected: Option[ROrException[R]] = None,
     optCode: Option[Code] = None,
     priority: Option[Int] = None,
@@ -415,14 +418,15 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       title: Option[String] = builderData.title,
       description: Option[String] = builderData.description,
       children: ReportableList = builderData.children,
-      folder: (List[R], R) => FullR = builderData.folder,
+      foldFn: Option[FoldFn] = builderData.folder,
+      initialFoldValue: InitialValueMaker = builderData.initialFoldValue,
       optCode: Option[Code] = builderData.optCode,
       expected: Option[ROrException[R]] = builderData.expected,
       priority: Option[Int] = builderData.priority,
       references: List[Reference] = builderData.references,
       documents: List[Document] = builderData.documents,
       paramDetails: List[ParamDetail] = builderData.paramDetails): RealScenarioBuilder =
-      copy(ScenarioBuilderData(depth, title, description, children, folder, expected, optCode, priority, documents, paramDetails, references))
+      copy(ScenarioBuilderData(depth, title, description, children, foldFn, initialFoldValue, expected, optCode, priority, documents, paramDetails, references))
 
     protected def thisAsBuilder: RealScenarioBuilder
 
@@ -558,8 +562,9 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
           s.copy(because = Some(b))
         })
 
+    def fold(foldFn: FoldFn, initialValue: => FullR) = copy(foldFn = Some(foldFn), initialFoldValue = () => initialValue)
     def childEngine(engineTitle: String) = {
-      for (c <- builderData.children)
+      for (c <- builderData.children) 
         if (!c.isInstanceOf[ChildEngineDescription])
           throw new CanAddChildEngineAfterUseCaseOrScenarioException
 
@@ -732,7 +737,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   }
 
   trait EvaluateEngineWithRoot extends EvaluateEngine {
-    def root:  RorN 
+    def root: RorN
     def findConclusionFor(params: List[Any]): Conclusion = findConclusionFor(makeClosureForBecause(params), root)
     def evaluateConclusion(params: List[Any], conclusion: Conclusion): R = {
       conclusion match {
@@ -755,6 +760,8 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         new UndecidedException)), List(), true))
     }
     private lazy val scenarios = tests.asInstanceOf[List[Scenario]]
+    protected def validateChildEngines
+    validateChildEngines
     private val rootAndExceptionMap = buildRoot(defaultRoot, scenarios)
 
     val root: RorN = rootAndExceptionMap._1
@@ -1039,14 +1046,18 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     }
   }
 
-  abstract class Engine(val title: Option[String], val description: Option[String], val children: ReportableList, val optCode: Option[Code], val priority: Option[Int] = None, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with EvaluateEngineWithRoot   with org.cddcore.engine.Engine[R] {
+  abstract class Engine(val title: Option[String], val description: Option[String], val children: ReportableList,
+    val folder: Option[FoldFn], val initialFoldValue: () => FullR,
+    val optCode: Option[Code], val priority: Option[Int] = None, val references: List[Reference], val documents: List[Document], val paramDetails: List[ParamDetail]) extends BuildEngine with EvaluateEngineWithRoot with org.cddcore.engine.Engine[R] {
     import org.cddcore.engine.Engine._
-    def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.childrenModifiedForBuild, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails.reverse)
+    def this(builderData: ScenarioBuilderData) = this(builderData.title, builderData.description, builderData.childrenModifiedForBuild, builderData.folder, builderData.initialFoldValue, builderData.optCode, builderData.priority, builderData.references, builderData.documents, builderData.paramDetails.reverse)
 
     def logger = EngineUniverse.this.logger
     override def templateName = "Engine"
     lazy val childEngines: List[ChildEngine[R]] = all(classOf[ChildEngine[R]])
     protected lazy val scenarios: List[Scenario] = all(classOf[Scenario])
+    override protected def validateChildEngines =
+      if (childEngines.size > 0 && folder.isEmpty) throw new CannotHaveChildEnginesWithoutFolderException
 
     if (!testing)
       validateScenarios(root, scenarios)
@@ -1080,19 +1091,39 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
           case e: Throwable => e.getClass() + "\n" + e.getMessage()
         }).mkString("\n")
 
-    def applyParams(root: RorN, params: List[Any], log: Boolean): R = {
+    protected def applyUsingJustMe(root: RorN, params: List[Any], log: Boolean): R = {
       if (log) logParams(params)
       val bec = makeClosureForBecause(params)
       val conclusion = evaluate(bec, root, log);
       try {
         val rfn = conclusion.code.rfn
         val result = makeClosureForResult(params)(rfn)
-        if (log) logResult((conclusion, result))
+        if (log) logResult(conclusion, result)
         result
       } catch {
         case e: Throwable =>
           if (log) logFailed((conclusion, e)); throw e
       }
+    }
+
+    def applyParams(root: RorN, params: List[Any], log: Boolean): R = {
+//      if (childEngines.size == 0)
+        return applyUsingJustMe(root, params, log)
+//      if (log) logParams(params)
+//      val bec = makeClosureForBecause(params)
+//      childEngines.foldLeft(initialFoldValue())((acc, ce) => {
+//        val conclusion = evaluate(bec, root, log);
+//        try {
+//          val rfn = conclusion.code.rfn
+//          val result = makeClosureForResult(params)(rfn)
+//          if (log) logResult((conclusion, result))
+//          folder.get(acc, result)
+//        } catch {
+//          case e: Throwable =>
+//            if (log) logFailed((conclusion, e)); throw e
+//        }
+//      })
+
     }
 
     private def checkScenario(root: RorN, c: Scenario) {

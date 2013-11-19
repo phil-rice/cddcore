@@ -85,11 +85,11 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
   }
 
   "An engine with a child engine" should "allow an engine to be specified" in {
-    val e = Engine[Int, String]().childEngine("engineDescription").build;
+    val e = Engine[Int, String]().fold((acc,s)=>acc, "").childEngine("engineDescription").build;
   }
 
   it should "allow use cases to be specified" in {
-    val e = Engine[Int, String]().childEngine("engineDescription").
+    val e = Engine[Int, String]().fold((acc,s)=>acc, "").childEngine("engineDescription").
       useCase("uc1").useCase("uc2").
       build;
     val useCases = e.useCases
@@ -99,7 +99,7 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
   }
 
   it should "allow scenarios to be specifed" in {
-    val e = Engine[Int, String]().childEngine("engineDescription").
+    val e = Engine[Int, String]().fold((acc,s)=>acc, "").childEngine("engineDescription").
       scenario(1).expected("one").because((x: Int) => x == 1).
       scenario(2).expected("two").because((x: Int) => x == 2).
       build
@@ -108,7 +108,7 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
   }
 
   it should "have its scenarios" in {
-    val bce = Engine[Int, String]().childEngine("engineDescription");
+    val bce = Engine[Int, String]().fold((acc,s)=>acc, "").childEngine("engineDescription");
     val b = bce.
       scenario(11).expected("1one").because((x: Int) => x == 11).
       scenario(12).expected("1two").because((x: Int) => x == 12);
@@ -117,7 +117,7 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
   }
 
   it should "only have its scenarios" in {
-    val e = Engine[Int, String]().childEngine("ed1").
+    val e = Engine[Int, String]().fold((acc,s)=>acc, "").childEngine("ed1").
       scenario(11).expected("1one").because((x: Int) => x == 11).
       scenario(12).expected("1two").because((x: Int) => x == 12).
       childEngine("ed2").
@@ -133,7 +133,7 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
   }
 
   it should "allow use cases and scenarios under it in" in {
-    val b = Engine[Int, String]().childEngine("ed1").
+    val b = Engine[Int, String]().fold((acc,s)=>acc, "").fold((acc,s)=> acc, "").childEngine("ed1").
       useCase("uc11").
       scenario(111).expected("1one").because((x: Int) => x == 111).
       scenario(112).expected("1two").because((x: Int) => x == 112).
