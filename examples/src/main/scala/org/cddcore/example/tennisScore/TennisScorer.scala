@@ -9,23 +9,24 @@ import org.cddcore.engine.tests.CddJunitRunner
 
 @RunWith(classOf[CddJunitRunner])
 object TennisScorer {
-  val lookup = Map(0 -> "love", 1 -> "fifteen", 2 -> "thirty", 3 -> "forty")
   val definition = Document(name = Some("CodingDojo"), url = Some("http://codingdojo.org/cgi-bin/wiki.pl?KataTennis"))
   val wikipedia = Document(name = Some("Wikipedia"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
   val changeRequest = Document(name = Some("CR24"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
 
+  val lookup = Map(0 -> "love", 1 -> "fifteen", 2 -> "thirty", 3 -> "forty")
+  
   val scorer = Engine[Int, Int, String]().title("Tennis Kata").reference("Game_score", wikipedia).reference("", definition).
     param((s: String) => Integer.parseInt(s), "Left").
     param((s: String) => Integer.parseInt(s), "Right").
 
     useCase("Winning", "A game is won by the first player to have won at least four points in total and at least two points more than the opponent.").
     scenario(4, 0).expected("left won").because((l: Int, r: Int) => (l - r) >= 2 && l >= 4).
-    scenario(4, 1).expected("left won").reference("1.22", changeRequest).
+    scenario(4, 1).expected("left won").
     scenario(4, 2).expected("left won").
     scenario(5, 3).expected("left won").
 
     scenario(0, 4).expected("right won").because((l: Int, r: Int) => (r - l) >= 2 && r >= 4).
-    scenario(1, 4).expected("right won").reference("1.5", changeRequest).
+    scenario(1, 4).expected("right won").
     scenario(2, 4).expected("right won").
     scenario(3, 5).expected("right won").
     scenario(40, 42).expected("right won").
@@ -35,7 +36,7 @@ object TennisScorer {
     scenario(2, 1).expected("thirty, fifteen").
 
     useCase("When both have the same running score").description("The running score, if both scores are the same, is called xx all").
-    scenario(0, 0).expected("love all").because((l: Int, r: Int) => l == r && l < 3).code((l: Int, r: Int) => s"${lookup(l)} all").reference("", changeRequest).
+    scenario(0, 0).expected("love all").because((l: Int, r: Int) => l == r && l < 3).code((l: Int, r: Int) => s"${lookup(l)} all").
     scenario(2, 2).expected("thirty all").
 
     useCase("Deuce").description("If at least three points have been scored by each player, and the scores are equal, the score is 'deuce'.").expected("deuce").

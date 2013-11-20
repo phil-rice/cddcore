@@ -140,13 +140,7 @@ case class Report(reportTitle: String, rootUrl: Option[String], reportables: Rep
 }
 
 case class Project(projectTitle: String, engines: ReportableHolder*) extends RequirementAndHolder {
-  //  lazy val documents = engines.flatMap(_.documents).distinct
-  //  lazy val refToRequirement: Map[Reference, Requirement] =
-  //    engines.foldLeft(List[(Reference, Requirement)]())((acc, e) => acc ++
-  //      e.collect { case r: Requirement => r }.flatMap(_.references.map((_, e))) ++
-  //      e.references.map((_, e))).toMap
-
-  val title = Some(projectTitle)
+   val title = Some(projectTitle)
   val children = engines.toList
   def description = None
   def priority = None
@@ -246,11 +240,7 @@ trait Engine[R] extends RequirementAndHolder {
 
   def toStringWithScenarios(): String = toStringWithScenarios(root);
 
-  def increasingScenariosList(cs: List[Test]): List[List[Test]] =
-    cs.foldLeft(List[List[Test]]())((a, c) => (a match {
-      case (h :: t) => (c :: a.head) :: a;
-      case _ => List(List(c))
-    }))
+  
 
   def titleString: String
 

@@ -17,7 +17,7 @@ class CannotHaveChildEnginesWithoutFolderException extends Exception
 class CannotFindDocumentException(msg: String) extends Exception(msg)
 class ExceptionAddingScenario(msg: String, t: Throwable) extends EngineException(msg, t)
 import Reportable._
-
+import Lists._
 /** R is the type returned by the child engines, or the engine if there are no child enginers. FullR is the result of the engine: which is the fold of the childEngine results if they exist */
 trait EngineTypes[R, FullR] {
   /** A is a function from the parameters of the engine, and the result to a boolean. It checks that some property is true */
@@ -688,7 +688,6 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     }
   }
 
-
   trait EvaluateEngineWithRoot extends EvaluateEngine {
     def root: RorN
     def findConclusionFor(params: List[Any]): Conclusion = findConclusionFor(makeClosureForBecause(params), root)
@@ -704,16 +703,16 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     }
   }
 
-  trait BuildEngine extends EvaluateEngine  {
+  trait BuildEngine extends EvaluateEngine {
     import org.cddcore.engine.Engine._
-    
+
     def toString(indent: String, root: Either[Conclusion, Decision]): String
-     def optCode: Option[Code]
+    def optCode: Option[Code]
     val defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>
         new UndecidedException)), List(), true))
-    
+
     }
     def tests: List[Test]
     private lazy val scenarios = tests.asInstanceOf[List[Scenario]]
@@ -1001,6 +1000,18 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
       result
     }
+    def toStringWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String
+    def constructionString(root: RorN, cs: List[Scenario], printer: IfThenPrinter) = {
+      cs.increasingList.map((cs) =>
+        try {
+          val c = cs.last
+          val title = "Adding " + c + "\n"
+          val (r, s) = buildRoot(root, cs)
+          title + toStringWith(List(), r, printer)
+        } catch {
+          case e: Throwable => e.getClass() + "\n" + e.getMessage()
+        }).mkString("\n")
+    }
   }
 
   abstract class Engine(val title: Option[String], val description: Option[String], val children: ReportableList,
@@ -1036,17 +1047,6 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       val (conclusion, exception) = fn;
       failedCall(conclusion, exception)
     }
-
-    def constructionString(root: RorN, cs: List[Scenario], printer: IfThenPrinter) =
-      increasingScenariosList(cs).reverse.map((cs) =>
-        try {
-          val c = cs.head
-          val title = "Adding " + c + "\n"
-          val (r, s) = buildRoot(root, cs.reverse)
-          title + toStringWith(List(), r, printer)
-        } catch {
-          case e: Throwable => e.getClass() + "\n" + e.getMessage()
-        }).mkString("\n")
 
     protected def applyUsingJustMe(root: RorN, params: List[Any], log: Boolean): R = {
       if (log) logParams(params)

@@ -45,22 +45,6 @@ class EngineConstructionStringTest extends EngineStringStringTests {
       "Adding Scenario(, AB, because=hAB, expected=XAB)\n" + w_ab_b_aCString, cs)
   }
 
-  "An engine's increasingScenariosList method" should "return a list of increasing numbers of scenarios" in {
-    val bldr = builderWithDefault.
-      scenario("A").because(becauseA).expected("XA").
-      scenario("B").because(becauseB).expected("XB").
-      scenario("AB").because(becauseAB).expected("XAB")
-    val e = bldr.build
-    val w = e.tests(0); assertEquals(List("W"), w.params)
-    val a = e.tests(1); assertEquals(List("A"), a.params)
-    val b = e.tests(2); assertEquals(List("B"), b.params)
-    val ab = e.tests(3); assertEquals(List("AB"), ab.params)
-
-    val actual = e.increasingScenariosList(e.tests)
-    val expected = List(List(ab, b, a, w), List(b, a, w), List(a, w), List(w))
-    assertEquals(expected, actual)
-  }
-
   "An engine's buildRoot method" should "return a node that represents the scenarios" in {
     val bldr = builderWithDefault.
       scenario("A").because(becauseA).expected("XA").
