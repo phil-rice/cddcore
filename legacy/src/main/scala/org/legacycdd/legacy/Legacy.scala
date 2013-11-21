@@ -16,8 +16,8 @@ class LegacyItem[ID, R](legacyData: LegacyData[ID, R], val categoriseConclusion:
 class Legacy[ID, R](val idGen: Iterable[ID],
   idToParams: (ID) => List[Any],
   idToExpected: (ID) => ROrException[R],
-  val replacement: EngineFull[R],
-  val categorise: Engine1[LegacyData[ID, R], String],
+  val replacement: EngineBuiltFromTests[R],
+  val categorise: EngineBuiltFromTests[ String],
   reporter: LegacyReporter[ID, R],
   idToDescription: (ID) => Option[String] = (id: ID) => None) {
   for (id <- idGen) {

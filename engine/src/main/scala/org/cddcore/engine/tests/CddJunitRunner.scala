@@ -34,13 +34,13 @@ trait NotActuallyFactory[R, FullR] extends EngineUniverse[R, FullR] {
 
 trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFactory[Any, Any] {
   import org.cddcore.engine.Engine._
-  var engineMap: Map[Description, Engine] = Map()
+  var engineMap: Map[Description, EngineFromTestsImpl] = Map()
   var ScenarioMap: Map[Description, Scenario] = Map()
   var exceptionMap: Map[Description, Throwable] = Map()
 
-  def addEngineForTest(name: String, engine: Any) = addEngine(name, engine.asInstanceOf[Engine])
+  def addEngineForTest(name: String, engine: Any) = addEngine(name, engine.asInstanceOf[EngineFromTestsImpl])
 
-  def addEngine(name: String, engine: Engine) = {
+  def addEngine(name: String, engine: EngineFromTestsImpl) = {
     val engineDescription = Description.createSuiteDescription(name)
     println(name)
     println(engine)
@@ -50,7 +50,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
 
   //  private var i = 0;
 
-  def add(engineDescription: Description, engine: Engine) {
+  def add(engineDescription: Description, engine: EngineFromTestsImpl) {
     getDescription.addChild(engineDescription)
 
     //    manipulator.append("\n\n" + <new(null, "pre", e>, false, pre>new }</pre>engine.constructionString }</pre>$buf_*) }</pre>)
@@ -76,7 +76,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
 
   def fileFor(clazz: Class[Any], ed: Description, extension: String) = new File(CddRunner.directory, clazz.getName() + "." + ed.getDisplayName() + "." + extension)
 
-  def saveResults(clazz: Class[Any], ed: Description, e: Engine) {
+  def saveResults(clazz: Class[Any], ed: Description, e: EngineFromTestsImpl) {
     import Files._
     printToFile(fileFor(clazz, ed, "dt.html"))((pw) => pw.write(e.toStringWith(new HtmlIfThenPrinter)))
     //        new File(AutoTddRunner.directory, clazz.getName() + "." + ed.getDisplayName() + ".attd"))((pw) => pw.write(e.toString))
@@ -149,7 +149,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
   }
 
   def isEngine(rt: Class[_]): Boolean = {
-    val c = classOf[Engine]
+    val c = classOf[EngineFromTestsImpl]
     if (c.isAssignableFrom(rt))
       return true;
     for (t <- rt.getInterfaces())
@@ -166,18 +166,18 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
 
   val instance = test(() => { instantiate(clazz) });
 
-  override def addEngine(name: String, engine: Engine) = {
+  override def addEngine(name: String, engine: EngineFromTestsImpl) = {
     val ed = super.addEngine(name, engine)
     recordEngine(clazz, ed, engine)
     ed
   }
 
   for (m <- clazz.getDeclaredMethods().filter((m) => returnTypeIsEngine(m))) {
-    val engine: Engine = m.invoke(instance).asInstanceOf[Engine];
+    val engine: EngineFromTestsImpl = m.invoke(instance).asInstanceOf[EngineFromTestsImpl];
     addEngine(m.getName(), engine)
   }
   for (f <- clazz.getFields().filter((f) => typeIsEngine(f))) {
-    val engine: Engine = f.get(instance).asInstanceOf[Engine];
+    val engine: EngineFromTestsImpl = f.get(instance).asInstanceOf[EngineFromTestsImpl];
     addEngine(f.getName, engine)
   }
 
@@ -197,7 +197,7 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
     }
   }
 
-  def recordEngine(clazz: Class[Any], engineDescription: Description, engine: Engine) {
+  def recordEngine(clazz: Class[Any], engineDescription: Description, engine: EngineFromTestsImpl) {
     val project = Project("Junit_" + engine.titleOrDescription("Unnamed"), engine)
     ReportCreator.fileSystem(project).create
   }

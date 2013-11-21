@@ -55,7 +55,7 @@ class EngineConclusionWalker extends ReportWalker {
     endFn: (Acc, ReportableList) => Acc): Acc = {
     val head = path.head
     head match {
-      case engine: EngineFull[_] =>
+      case engine: EngineBuiltFromTests[_] =>
         var acc = startFn(initial, path)
         engine.walkDecisionsAndConclusion(engine.root, (cd: ConclusionOrDecision) => cd match {
           case c: Conclusion => acc = childFn(acc, c :: path)
@@ -121,7 +121,7 @@ class ReportCreator[RtoUrl <: ReportableToUrl](r: ReportableHolder, title: Strin
       case e: EngineFull[_] => Some(HtmlRenderer(live).engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
       case u: RequirementAndHolder => Some(HtmlRenderer(live).usecaseHtml(rootUrl, restrict = path.toSet ++ u.children).render(reportableToUrl, urlMap, Report("Usecase: " + u.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
       case t: Test =>
-        val conclusion = PathUtils.findEngine(path).findConclusionFor(t.params)
+        val conclusion = PathUtils.findEngineWithTests(path).findConclusionFor(t.params)
         Some(HtmlRenderer(live).scenarioHtml(rootUrl, conclusion, t, path.toSet).render(reportableToUrl, urlMap, Report("Scenario: " + t.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
       case _ => None
     }
@@ -184,7 +184,7 @@ trait ReportableToUrl {
       }
       val withU = addToMap(acc, path)
       path.head match {
-        case e: EngineFull[_] => e.fold(withU, new DecisionTreeFolder[UrlMap] {
+        case e: EngineBuiltFromTests[_] => e.fold(withU, new DecisionTreeFolder[UrlMap] {
           def apply(acc: UrlMap, c: Conclusion) = addToMap(acc, c :: path)
           def apply(acc: UrlMap, d: Decision) = addToMap(acc, d :: path)
         })
@@ -304,7 +304,7 @@ object Renderer {
   protected def engineConfig = RenderAttributeConfigurer[EngineFull[_]]("Engine", (_, _, path, e, stringTemplate) => stringTemplate.setAttribute("decisionTreeNodes", e.decisionTreeNodes))
 
   def decisionTreeConfig(params: Option[List[Any]], conclusion: Option[Conclusion], test: Option[Test]) =
-    RenderAttributeConfigurer[EngineFull[_]]("Engine", (reportableToUrl, urlMap, path, e, stringTemplate) =>
+    RenderAttributeConfigurer[EngineBuiltFromTests [_]]("Engine", (reportableToUrl, urlMap, path, e, stringTemplate) =>
       stringTemplate.setAttribute("decisionTree", e.toStringWith(params match {
         case Some(p) => new HtmlWithTestIfThenPrinter(p, conclusion, test, reportableToUrl, urlMap)
         case _ => new HtmlIfThenPrinter(reportableToUrl, urlMap)

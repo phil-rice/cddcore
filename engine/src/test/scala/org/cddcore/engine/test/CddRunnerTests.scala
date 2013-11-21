@@ -85,7 +85,7 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
 
-  def runAndGetListOfNotifications(engine: Engine) = {
+  def runAndGetListOfNotifications(engine: EngineFromTestsImpl) = {
     val runner = new CddRunnerForTests
     runner.addEngineForTest("Engine", engine)
     val listener = new RunListenerForTests

@@ -17,7 +17,7 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R
   import HtmlRenderer._
   import PathUtils._
 
-  class LegacyIfThenHtmlPrinter(e: EngineFull[_], conclusions: Set[Conclusion], val reportableToUrl: ReportableToUrl, val urlMap: UrlMap, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
+  class LegacyIfThenHtmlPrinter(e: EngineBuiltFromTests[_], conclusions: Set[Conclusion], val reportableToUrl: ReportableToUrl, val urlMap: UrlMap, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
     import HtmlForIfThenPrinter._
     import Strings._
     def isSelected(c: Conclusion) = conclusions.contains(c)
@@ -58,7 +58,7 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R
       endFn: (Acc, ReportableList) => Acc): Acc = {
       val head = path.head
       head match {
-        case engine: EngineFull[_] =>
+        case engine: EngineBuiltFromTests[_] =>
           var acc = startFn(initial, path)
           engine.walkDecisionsAndConclusion(engine.root, (cd: ConclusionOrDecision) => cd match {
             case c: Conclusion =>
@@ -83,7 +83,7 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R
 
   }
 
-  def legacyDecisionTreeConfig(rep: Rep, conclusionNode: Set[Conclusion]) = RenderAttributeConfigurer[EngineFull[_]]("Engine",
+  def legacyDecisionTreeConfig(rep: Rep, conclusionNode: Set[Conclusion]) = RenderAttributeConfigurer[EngineBuiltFromTests[_]]("Engine",
     (reportableToUrl, urlMap, path, e, stringTemplate) =>
       stringTemplate.setAttribute("decisionTree", e.toStringWith(new LegacyIfThenHtmlPrinter(e, conclusionNode, reportableToUrl, urlMap))))
 
@@ -137,7 +137,7 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R
     r.foldWithPath(List(), reportableToUrl.makeUrlMap(r), ((acc: UrlMap, path) => {
       val withU = addToMap(reportableToUrl, acc, path)
       path.head match {
-        case e: EngineFull[_] => e.fold(withU, new DecisionTreeFolder[UrlMap] {
+        case e: EngineBuiltFromTests[_] => e.fold(withU, new DecisionTreeFolder[UrlMap] {
           def apply(acc: UrlMap, c: Conclusion) = {
             val initial = addToMap(reportableToUrl, acc, c :: path)
             val in1 = initial.contains(c)
@@ -166,7 +166,7 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R
         Files.printToFile(reportableToUrl.file(path))(_.println(html))
       }
 
-      case e: EngineFull[_] =>
+      case e: EngineBuiltFromTests[_] =>
         e.walkDecisionsAndConclusion((cd: ConclusionOrDecision) => cd match {
           case c: Conclusion =>
             val e = findEngine(path)

@@ -40,7 +40,7 @@ trait ABuilderFactory1[P, R, FullR] extends EngineUniverse[R, FullR] with Engine
 
   trait ABuilder1 extends ScenarioBuilder {
     def scenario(p: P, title: String = null, description: String = null) = newScenario(title, description, List(p))
-    def build = new Engine(builderData) with Engine1[P, R] {
+    def build = new EngineFromTestsImpl(builderData) with Engine1[P, R] {
       protected def executeChildEngine(e: ChildEngineDescription, p: P): FullR = {
         throw new IllegalStateException
       }
@@ -54,7 +54,7 @@ class BuilderFactory1[P, R, FullR](override val logger: TddLogger = TddLogger.de
   type RealScenarioBuilder = Builder1
   def builder = new Builder1
 
-  class Builder1(val builderData: ScenarioBuilderData = ScenarioBuilderData()) extends ABuilder1 {
+  class Builder1(val builderData: ScenarioBuilderData = ScenarioBuilderData(arity=1)) extends ABuilder1 {
     protected def thisAsBuilder = this
     def copy(builderData: ScenarioBuilderData) = new Builder1(builderData)
   }
@@ -64,7 +64,7 @@ trait ABuilderFactory2[P1, P2, R, FullR] extends EngineUniverse[R, FullR] with E
 
   trait ABuilder2 extends ScenarioBuilder {
     def scenario(p1: P1, p2: P2, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2))
-    def build = new Engine(builderData) with Engine2[P1, P2, R] {
+    def build = new EngineFromTestsImpl(builderData) with Engine2[P1, P2, R] {
       def apply(p1: P1, p2: P2): R = applyParams(root, List(p1, p2), true);
       override def toString() = toStringWithScenarios
     }
@@ -75,7 +75,7 @@ class BuilderFactory2[P1, P2, R, FullR](override val logger: TddLogger = TddLogg
   type RealScenarioBuilder = Builder2
   def builder = new Builder2
 
-  class Builder2(val builderData: ScenarioBuilderData = ScenarioBuilderData()) extends ABuilder2 {
+  class Builder2(val builderData: ScenarioBuilderData = ScenarioBuilderData(arity=2)) extends ABuilder2 {
     protected def thisAsBuilder = this
     def copy(builderData: ScenarioBuilderData) = new Builder2(builderData)
   }
@@ -86,11 +86,11 @@ class BuilderFactory3[P1, P2, P3, R, FullR](override val logger: TddLogger = Tdd
   type RealScenarioBuilder = Builder3
   def builder = new Builder3
 
-  class Builder3(val builderData: ScenarioBuilderData = ScenarioBuilderData()) extends ScenarioBuilder {
+  class Builder3(val builderData: ScenarioBuilderData = ScenarioBuilderData(arity=3)) extends ScenarioBuilder {
     protected def thisAsBuilder = this
     def copy(builderData: ScenarioBuilderData) = new Builder3(builderData)
     def scenario(p1: P1, p2: P2, p3: P3, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2, p3))
-    def build = new Engine(builderData) with Engine3[P1, P2, P3, R] {
+    def build = new EngineFromTestsImpl(builderData) with Engine3[P1, P2, P3, R] {
 
       def apply(p1: P1, p2: P2, p3: P3): R = applyParams(root, List(p1, p2, p3), true);
       override def toString() = toStringWithScenarios

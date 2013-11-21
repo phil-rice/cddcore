@@ -18,7 +18,7 @@ class HandlerContext(val root: RequirementAndHolder, val reportCreator: ReportCr
   val reportableToUrl = reportCreator.reportableToUrl
   val urlMap = reportCreator.urlMap
   lazy val path: List[Reportable] = urlMap(uriPath)
-  lazy val engine = findEngine(path)
+  lazy val engine = findEngineWithTests(path)
   def toHtmlString(o: Any) = o match { case h: HtmlDisplay => h.htmlDisplay; case _ => o.toString }
 }
 
@@ -82,42 +82,45 @@ class LivePathHandler extends CddPathHandler {
   override def findUriPath(uri: String): String = uri.substring(0, uri.length() - 5)
   override def paramsINeed(context: HandlerContext) = {
     import context._
-    engine.paramDetails.map((x) => Some(x.displayName)).padTo(engine.arity, None).zipWithIndex.map { case (None, i) => "param" + i; case (Some(x), _) => x }
+//    engine.paramDetails.map((x) => Some(x.displayName)).padTo(engine.arity, None).zipWithIndex.map { case (None, i) => "param" + i; case (Some(x), _) => x }
+    List("Not", "yet")
   }
 
   def html(context: HandlerContext, params: List[(String, String)]): String = {
     import context._
-    val (engineForm, paramNameAndValues, conclusion) = try {
-      val paramNameAndValues = params.zip(engine.paramDetails).map { case ((paramName, paramString), details) => Param(paramName, paramString, details.parser(paramString)) }.toList
-      val engineParams = paramNameAndValues.map(_.value)
-      val conclusion = engine.findConclusionFor(engineParams)
-      val result = engine.evaluateConclusion(engineParams, conclusion)
-      (formHtml(context, paramNameAndValues, result.toString), Some(engineParams), Some(conclusion))
-    } catch { case t: Throwable => t.printStackTrace(); (formHtml(context, params.map((n) => Param(n._1, n._2, "")), t.getClass + ": " + t.getMessage()), None, None) }
-    HtmlRenderer(true).liveEngineHtml(reportCreator.rootUrl, paramNameAndValues, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + engine.titleOrDescription(""), engine))
+//    val (engineForm, paramNameAndValues, conclusion) = try {
+//      val paramNameAndValues = params.zip(engine.paramDetails).map { case ((paramName, paramString), details) => Param(paramName, paramString, details.parser(paramString)) }.toList
+//      val engineParams = paramNameAndValues.map(_.value)
+//      val conclusion = engine.findConclusionFor(engineParams)
+//      val result = engine.evaluateConclusion(engineParams, conclusion)
+//      (formHtml(context, paramNameAndValues, result.toString), Some(engineParams), Some(conclusion))
+//    } catch { case t: Throwable => t.printStackTrace(); (formHtml(context, params.map((n) => Param(n._1, n._2, "")), t.getClass + ": " + t.getMessage()), None, None) }
+//    HtmlRenderer(true).liveEngineHtml(reportCreator.rootUrl, paramNameAndValues, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + engine.titleOrDescription(""), engine))
+    "Not implemented at the moment"
   }
 
   def formHtml(context: HandlerContext, paramNameAndValues: List[Param], result: String) = {
     import context._
-    val form =
-      <form method='post' action={ fullUri }>
-        {
-          for (i <- 0 to (engine.arity - 1)) yield {
-            val name: String = paramNameAndValues(i).name;
-            <label id={ name }>{ name } </label>
-            <input name={ name } id={ name } type='text' value={ paramNameAndValues(i).valueAsString }/><br/>
-          }
+//    val form =
+//      <form method='post' action={ fullUri }>
+//        {
+//          for (i <- 0 to (engine.arity - 1)) yield {
+//            val name: String = paramNameAndValues(i).name;
+//            <label id={ name }>{ name } </label>
+//            <input name={ name } id={ name } type='text' value={ paramNameAndValues(i).valueAsString }/><br/>
+//          } 
+//        }
+//        <input type='submit'/>
+//      </form>
+//    val center = if (engine.arity == engine.paramDetails.size) form else <p>This engine isn't configured for live operations. Add 'param' details</p>;
+//    <div>
+//      { center }
+//      <br/>
+//      <table>
+//        <tr><td>Params:</td><td>{ paramNameAndValues.map((p) => toHtmlString(p.value)).mkString(", ") }</td></tr>
+//        <tr><td>Result:</td><td>{ result }</td></tr>
+//      </table>
+//    </div>.toString
+        "Not implemented at the moment"
         }
-        <input type='submit'/>
-      </form>
-    val center = if (engine.arity == engine.paramDetails.size) form else <p>This engine isn't configured for live operations. Add 'param' details</p>;
-    <div>
-      { center }
-      <br/>
-      <table>
-        <tr><td>Params:</td><td>{ paramNameAndValues.map((p) => toHtmlString(p.value)).mkString(", ") }</td></tr>
-        <tr><td>Result:</td><td>{ result }</td></tr>
-      </table>
-    </div>.toString
-  }
 }

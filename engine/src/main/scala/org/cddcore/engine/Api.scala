@@ -73,6 +73,12 @@ object PathUtils {
     case _ => throw new IllegalArgumentException
   }
 
+  def findEngineWithTests(path: ReportableList) = engineWithTestsPath(path).head.asInstanceOf[EngineBuiltFromTests[_]]
+  def engineWithTestsPath(path: ReportableList): ReportableList = path match {
+    case (engine: EngineBuiltFromTests[_]) :: tail => path
+    case h :: tail => enginePath(tail)
+    case _ => throw new IllegalArgumentException
+  }
   def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[EngineFull[_]]
   def enginePath(path: ReportableList): ReportableList = path match {
     case (engine: EngineFull[_]) :: tail => path
@@ -140,7 +146,7 @@ case class Report(reportTitle: String, rootUrl: Option[String], reportables: Rep
 }
 
 case class Project(projectTitle: String, engines: ReportableHolder*) extends RequirementAndHolder {
-   val title = Some(projectTitle)
+  val title = Some(projectTitle)
   val children = engines.toList
   def description = None
   def priority = None
@@ -209,8 +215,14 @@ trait DecisionTreeFolder[Acc] {
 }
 
 trait Engine[R] extends RequirementAndHolder {
-  lazy val tests = all(classOf[Test])
   lazy val useCases = all(classOf[UseCase])
+  def arity: Int
+
+}
+trait EngineBuiltFromTests[R] extends Engine[R] {
+
+  def root: Either[Conclusion, Decision]
+  lazy val tests = all(classOf[Test])
 
   def findConclusionFor(params: List[Any]): Conclusion
   def evaluateConclusion(params: List[Any], conclusion: Conclusion): R
@@ -223,7 +235,6 @@ trait Engine[R] extends RequirementAndHolder {
     Engine.endCall(conclusion, result);
     result
   }
-  def root: Either[Conclusion, Decision]
 
   def toString(indent: String, root: Either[Conclusion, Decision]): String = {
     root match {
@@ -240,12 +251,23 @@ trait Engine[R] extends RequirementAndHolder {
 
   def toStringWithScenarios(): String = toStringWithScenarios(root);
 
-  
+  def fold[Acc](initialValue: Acc, folder: DecisionTreeFolder[Acc]): Acc = fold[Acc](initialValue, root, folder)
+  def fold[Acc](initialValue: Acc, root: Either[Conclusion, Decision], folder: DecisionTreeFolder[Acc]): Acc = root match {
+    case Right(d: Decision) => fold(fold(folder(initialValue, d), d.yes, folder), d.no, folder)
+    case Left(c: Conclusion) => folder(initialValue, c)
+  }
 
-  def titleString: String
-
+  def walkDecisionsAndConclusion(fn: (ConclusionOrDecision) => Unit): Unit = walkDecisionsAndConclusion(root, fn)
+  def walkDecisionsAndConclusion(root: Either[Conclusion, Decision], fn: (ConclusionOrDecision) => Unit): Unit = {
+    root match {
+      case Right(d: Decision) => fn(d); walkDecisionsAndConclusion(d.yes, fn); walkDecisionsAndConclusion(d.no, fn);
+      case Left(c: Conclusion) => fn(c)
+    }
+  }
   def toStringWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String =
     printer.start(path, this) + toStringPrimWith(path, root, printer) + printer.end
+
+  def toStringWith(printer: IfThenPrinter): String = toStringWith(List(this), root, printer)
 
   private def toStringPrimWith(path: List[Reportable], root: Either[Conclusion, Decision], printer: IfThenPrinter): String = {
     root match {
@@ -266,7 +288,7 @@ trait Engine[R] extends RequirementAndHolder {
     toStringWith(List(), root, new DefaultIfThenPrinter())
 
 }
-trait ChildEngine[R] extends Engine[R] {
+trait ChildEngine[R] extends EngineBuiltFromTests[R] {
 }
 
 trait EngineFull[R] extends Engine[R] {
@@ -275,24 +297,11 @@ trait EngineFull[R] extends Engine[R] {
   def documents: List[Document]
   def decisionTreeNodes: Int
   def root: Either[Conclusion, Decision]
-  def toStringWith(printer: IfThenPrinter): String = toStringWith(List(this), root, printer)
   protected def toStringWith(path: ReportableList, root: Either[Conclusion, Decision], printer: IfThenPrinter): String
   def evaluateBecauseForDecision(decision: Decision, params: List[Any]): Boolean
-  def arity: Int
   def paramDetails: List[ParamDetail]
+  lazy val childEngines: List[ChildEngine[R]] = all(classOf[ChildEngine[R]])
 
-  def fold[Acc](initialValue: Acc, folder: DecisionTreeFolder[Acc]): Acc = fold[Acc](initialValue, root, folder)
-  def fold[Acc](initialValue: Acc, root: Either[Conclusion, Decision], folder: DecisionTreeFolder[Acc]): Acc = root match {
-    case Right(d: Decision) => fold(fold(folder(initialValue, d), d.yes, folder), d.no, folder)
-    case Left(c: Conclusion) => folder(initialValue, c)
-  }
-  def walkDecisionsAndConclusion(fn: (ConclusionOrDecision) => Unit): Unit = walkDecisionsAndConclusion(root, fn)
-  def walkDecisionsAndConclusion(root: Either[Conclusion, Decision], fn: (ConclusionOrDecision) => Unit): Unit = {
-    root match {
-      case Right(d: Decision) => fn(d); walkDecisionsAndConclusion(d.yes, fn); walkDecisionsAndConclusion(d.no, fn);
-      case Left(c: Conclusion) => fn(c)
-    }
-  }
 }
 
 trait Engine1[P, R] extends EngineFull[R] with Function1[P, R] {

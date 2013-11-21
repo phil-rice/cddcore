@@ -15,7 +15,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   def firstResult: R
   def checkRfn(c: Scenario): Unit
   def checkExpected(c: Scenario): Unit
-  def build(builder: RealScenarioBuilder): Engine
+  def build(builder: RealScenarioBuilder): EngineFromTestsImpl
 
   "A scenario" should " remember parameters and have None for the other parameters" in {
     val c = firstScenario

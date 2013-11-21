@@ -53,7 +53,7 @@ trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R, R] with 
   def builder: RealScenarioBuilder
   def firstUseCaseDescription = "UseCase1"
   def builderWithUseCase: RealScenarioBuilder = builder.useCase(firstUseCaseDescription)
-  def checkScenariosExist[X](engine: Engine, expected: String*) {
+  def checkScenariosExist[X](engine: EngineFromTestsImpl, expected: String*) {
     assert(engine.tests.size == expected.size)
     for ((c, a) <- (engine.tests, expected).zipped) {
       assert(c.becauseString == a, "Expected: [" + a + "]\nBecauseString = [" + c.becauseString + "]\n\nActual " + c + "\n   Scenarios: " + engine.tests + "\nEngine:\n" + engine)
@@ -63,7 +63,7 @@ trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R, R] with 
   def firstScenario(b: ScenarioBuilder): Scenario = b.builderData.all(classOf[Scenario])(0)
   def firstScenario(e: ReportableHolder): Scenario = e.all(classOf[Scenario])(0)
 
-  def assertEngineMatches(e: Engine, n2: RorN) {
+  def assertEngineMatches(e: EngineFromTestsImpl, n2: RorN) {
     val actual = compareNodes(e.root.asInstanceOf[RorN], n2)
     assert(actual == List(), "\n" + actual.mkString("\n\n") + "\n\nExpected:\n" + n2 + "\n\nRoot:\n" + e.root)
   }
