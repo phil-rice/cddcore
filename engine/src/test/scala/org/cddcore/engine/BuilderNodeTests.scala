@@ -170,6 +170,7 @@ class BuilderNodeTests extends EngineStringStringTests {
   }
 
   it should "Allow parameter details to be specified " in {
+    implicit def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineFromTestsImpl]
     val parser1 = (x: String) => x.toInt
     val parser2 = (x: String) => x.toInt + 1
     val e = org.cddcore.engine.Engine[Int, Int, Int].param(parser1, "One").param(parser2, "Two").build

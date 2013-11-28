@@ -1,6 +1,7 @@
 package org.cddcore.engine
 
 import scala.language.implicitConversions
+
 import junit.framework.AssertionFailedError
 import org.scalatest.FlatSpec
 import org.scalatest.FlatSpecLike
@@ -48,6 +49,7 @@ trait AbstractTest extends FlatSpecLike with Matchers with AssertEquals {
 
 trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R, R] with NodeComparator[R, R] {
   implicit def test_to_scenario(t: Test) = t.asInstanceOf[Scenario]
+  implicit def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineBuiltFromTests[String]]
 
   def logger: TddLogger
   def builder: RealScenarioBuilder
@@ -63,20 +65,11 @@ trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R, R] with 
   def firstScenario(b: ScenarioBuilder): Scenario = b.builderData.all(classOf[Scenario])(0)
   def firstScenario(e: ReportableHolder): Scenario = e.all(classOf[Scenario])(0)
 
-  def assertEngineMatches(e: EngineFromTestsImpl, n2: RorN) {
+  def assertEngineMatches[P](e: Engine, n2: RorN) {
     val actual = compareNodes(e.root.asInstanceOf[RorN], n2)
     assert(actual == List(), "\n" + actual.mkString("\n\n") + "\n\nExpected:\n" + n2 + "\n\nRoot:\n" + e.root)
   }
 
-  //  def checkSingleException[E](code: => Unit, exceptionClass: Class[E]): E =
-  //    try {
-  //      code
-  //      throw new AssertionFailedError("Expected " + exceptionClass.getName());
-  //    } catch {
-  //      case e: Exception if exceptionClass == e.get  => 
-  //        assert(1==e.scenarioExceptionMap.size, s"Expected one exception of type $exceptionClass got ${e.scenarioExceptionMap}")
-  //        e.scenarioExceptionMap.keys.head.asInstanceOf[E]
-  //    }
   def checkMessages[X](expected: String*) {
     val actual = logger.asInstanceOf[TestLogger].messages
     assert(expected.toList == actual, "\nExpected: " + expected + "\nActual: " + actual)
@@ -88,9 +81,9 @@ trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R, R] with 
   }
 }
 
-trait AbstractEngine1Test[P, R] extends BuilderFactory1[P, R, R] with AbstractEngineTest[R] with Engine1Types[P, R, R]
-trait AbstractEngine2Test[P1, P2, R] extends BuilderFactory2[P1, P2, R, R] with AbstractEngineTest[R] with Engine2Types[P1, P2, R, R]
-trait AbstractEngine3Test[P1, P2, P3, R] extends BuilderFactory3[P1, P2, P3, R, R] with AbstractEngineTest[R] with Engine3Types[P1, P2, P3, R, R]
+class AbstractEngine1Test[P, R] extends BuilderFactory1[P, R, R](None, Engine.noInitialValue) with AbstractEngineTest[R] with Engine1Types[P, R, R]
+class AbstractEngine2Test[P1, P2, R] extends BuilderFactory2[P1, P2, R, R](None, Engine.noInitialValue) with AbstractEngineTest[R] with Engine2Types[P1, P2, R, R]
+class AbstractEngine3Test[P1, P2, P3, R] extends BuilderFactory3[P1, P2, P3, R, R](None, Engine.noInitialValue) with AbstractEngineTest[R] with Engine3Types[P1, P2, P3, R, R]
 
 trait FirstScenarioTest[R] extends AbstractEngineTest[R] {
   def builderWithScenario: RealScenarioBuilder;

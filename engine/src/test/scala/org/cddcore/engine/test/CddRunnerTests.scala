@@ -25,6 +25,8 @@ class RunListenerForTests extends RunListener {
 @RunWith(classOf[JUnitRunner])
 class CddRunnerTests extends AbstractEngine1Test[String, String] {
   import org.cddcore.engine.Engine._
+  implicit def toBuildEngine[R](e: Engine) = e.asInstanceOf[BuildEngine]
+
   class CddRunnerForTests extends CddRunner {
     val getDescription = Description.createSuiteDescription("Test")
   }
@@ -85,7 +87,7 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
 
-  def runAndGetListOfNotifications(engine: EngineFromTestsImpl) = {
+  def runAndGetListOfNotifications(engine: Engine) = {
     val runner = new CddRunnerForTests
     runner.addEngineForTest("Engine", engine)
     val listener = new RunListenerForTests

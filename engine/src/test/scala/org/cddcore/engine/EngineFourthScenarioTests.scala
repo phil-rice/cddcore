@@ -5,7 +5,7 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class EngineThreeScenarioTests extends EngineStringStringTests {
-
+ implicit override  def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineFromTestsImpl]
 
 
   val builderA = builderWithDefault.scenario("A").because(becauseA).expected("A")

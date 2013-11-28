@@ -1,6 +1,5 @@
 package org.cddcore.engine
 
-
 import scala.language.implicitConversions
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -11,6 +10,7 @@ case class DisplayTest(val x: String) extends LoggerDisplay {
 
 @RunWith(classOf[JUnitRunner])
 class EngineLoggerRunnerDisplayTests extends AbstractEngine1Test[DisplayTest, DisplayTest] {
+
   override val logger = new TestLogger()
   implicit def string_to_because(s: String) = new Because[B]((x) => x.x contains s, s.toString())
   implicit def string_to_rfn2(s: String): (DisplayTest) => DisplayTest = (x: DisplayTest) => DisplayTest(s)
@@ -22,8 +22,8 @@ class EngineLoggerRunnerDisplayTests extends AbstractEngine1Test[DisplayTest, Di
   val builder_W_A_B_AB = builder_W_A_B.scenario(DisplayTest("AB")).expected("Z").because("AB")
   val e_w_a_b_ab = builder_W_A_B_AB.build
 
-  val wS = e_w_a_b_ab.tests(0); 
-  val aS = e_w_a_b_ab.tests(1); 
+  val wS = e_w_a_b_ab.tests(0);
+  val aS = e_w_a_b_ab.tests(1);
   val abS = e_w_a_b_ab.tests(2);
 
   "A logger display processor" should "use the display method if available" in {

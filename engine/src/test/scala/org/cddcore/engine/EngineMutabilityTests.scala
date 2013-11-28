@@ -39,6 +39,8 @@ class EngineMutabilityTests extends EngineString1Tests[Holder] {
   }
 
   "An engine passed a mutable parameter" should "reset the paramaters prior to checking the because 1" in {
+    implicit def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineFromTestsImpl]
+
     val _w: RealScenarioBuilder = addW(builderWithUseCase)
     val _w_a: RealScenarioBuilder = addA(_w)
     val _w_b: RealScenarioBuilder = addB(_w)

@@ -118,7 +118,7 @@ class ReportCreator[RtoUrl <: ReportableToUrl](r: ReportableHolder, title: Strin
       //        case r: Report => Some(HtmlRenderer.reportHtml(rootUrl).render(reportableToUrl, urlMap, r))
       case p: Project =>
         Some(HtmlRenderer(live).projectHtml(rootUrl).render(reportableToUrl, urlMap, Report("Project: " + p.titleOrDescription(ReportCreator.unnamed), p)))
-      case e: EngineFull[_] => Some(HtmlRenderer(live).engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
+      case e: Engine => Some(HtmlRenderer(live).engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
       case u: RequirementAndHolder => Some(HtmlRenderer(live).usecaseHtml(rootUrl, restrict = path.toSet ++ u.children).render(reportableToUrl, urlMap, Report("Usecase: " + u.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
       case t: Test =>
         val conclusion = PathUtils.findEngineWithTests(path).findConclusionFor(t.params)
@@ -301,7 +301,7 @@ object Renderer {
       stringTemplate.setAttribute("urlId", repToUrl.urlId(path.head))
     }
   })
-  protected def engineConfig = RenderAttributeConfigurer[EngineFull[_]]("Engine", (_, _, path, e, stringTemplate) => stringTemplate.setAttribute("decisionTreeNodes", e.decisionTreeNodes))
+  protected def engineConfig = RenderAttributeConfigurer[Engine]("Engine", (_, _, path, e, stringTemplate) => stringTemplate.setAttribute("decisionTreeNodes", e.decisionTreeNodes))
 
   def decisionTreeConfig(params: Option[List[Any]], conclusion: Option[Conclusion], test: Option[Test]) =
     RenderAttributeConfigurer[EngineBuiltFromTests [_]]("Engine", (reportableToUrl, urlMap, path, e, stringTemplate) =>
@@ -311,7 +311,7 @@ object Renderer {
       })))
 
   def setAttribute(templateName: String, attributeName: String, value: Any) =
-    RenderAttributeConfigurer[EngineFull[_]](templateName, (reportableToUrl, urlMap, path, e, stringTemplate) =>
+    RenderAttributeConfigurer[EngineFull[_,_]](templateName, (reportableToUrl, urlMap, path, e, stringTemplate) =>
       stringTemplate.setAttribute(attributeName, value))
 
   protected def reportConfig = RenderAttributeConfigurer[Report]("Report", (reportableToUrl, urlMap, path, r, stringTemplate) => {

@@ -15,7 +15,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   def firstResult: R
   def checkRfn(c: Scenario): Unit
   def checkExpected(c: Scenario): Unit
-  def build(builder: RealScenarioBuilder): EngineFromTestsImpl
+  def build(builder: RealScenarioBuilder): Engine
 
   "A scenario" should " remember parameters and have None for the other parameters" in {
     val c = firstScenario
@@ -27,12 +27,12 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
     assert(c.description == None, c.description)
   }
 
-//  "The ScenarioBuilder" should "allow the scenario lens to set /get the scenario" in {
-//    val expected = new Scenario(None, None, List(), logger)
-//    val newBuilder = scenarioLens.set(builderWithScenario, expected);
-//    assertEquals(List(expected) , newBuilder.builderData.children.head.asInstanceOf[UseCase].scenarios)
-//    assert(expected == scenarioLens.get(newBuilder), scenarioLens.get(newBuilder))
-//  }
+  //  "The ScenarioBuilder" should "allow the scenario lens to set /get the scenario" in {
+  //    val expected = new Scenario(None, None, List(), logger)
+  //    val newBuilder = scenarioLens.set(builderWithScenario, expected);
+  //    assertEquals(List(expected) , newBuilder.builderData.children.head.asInstanceOf[UseCase].scenarios)
+  //    assert(expected == scenarioLens.get(newBuilder), scenarioLens.get(newBuilder))
+  //  }
 
   it should "add expected when produces is called" in {
     val c = firstScenario(builderWithScenario.expected(firstResult))
@@ -76,7 +76,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   "A built engine" should "have all the scenarios in it's list of scenarios" in {
     val b = builderWithScenario.expected(firstResult)
     val engine = build(b)
-    assertEquals("UseCases",allScenariosForBuild( b), engine.tests)
+    assertEquals("UseCases", allScenariosForBuild(b), engine.tests)
     val expectedScenario = Scenario(None, None, firstParams, logger, Some(ROrException[R](firstResult)));
     assertEquals(List(expectedScenario), engine.tests)
   }

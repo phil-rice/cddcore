@@ -4,6 +4,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class ReportableToUrlTests extends AbstractTest with ReportableTestFramework {
+  implicit def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineBuiltFromTests[String]]
 
   val rep1a = Req("rep1", "d2")
   val rep1b = Req("rep1", "d3")

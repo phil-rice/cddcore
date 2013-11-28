@@ -5,12 +5,12 @@ import org.cddcore.engine.ReportWalker
 
 trait ReporterToHtml {
   type Rep <: LegacyReporter[_, _]
-  def categorisationEngine: EngineFull[_]
-  def replacementEngine: EngineFull[_]
+  def categorisationEngine: EngineFull[_, _]
+  def replacementEngine: EngineFull[_, _]
   def apply(rep: Rep): String
 }
 
-class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R], String], replacementEngine: EngineFull[R], rep: MemoryReporter[ID, R], maxItems: Int = 5) {
+class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyData[ID, R], String], replacementEngine: Engine, rep: MemoryReporter[ID, R], maxItems: Int = 5) {
   type Rep = MemoryReporter[ID, _]
   import Reportable._
   import Renderer._
@@ -24,7 +24,7 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R
 
     def holdsOneOf(c: Set[Conclusion]) = (conclusions & c).size > 0
     override def ifPrint(path: ReqList, decision: Decision): String =
-      if (holdsOneOf(decision.allYesConclusion)) ifPrint(path, decision, "ifTrueOnPath") else //
+      if (holdsOneOf(decision.allYesConclusion)) ifPrint(path, decision, "ifTrueOnPath") else // 
       if (holdsOneOf(decision.allNoConclusion)) ifPrint(path, decision, "ifFalseOnPath") else
         ifPrint(path, decision, "if")
 
@@ -52,6 +52,7 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R
 
   class EngineConclusionLegacyWalker() extends ReportWalker {
     import Reportable._
+
     def foldWithPath[Acc](path: ReportableList, initial: Acc,
       startFn: (Acc, ReportableList) => Acc,
       childFn: (Acc, ReportableList) => Acc,
@@ -120,7 +121,7 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R
     configureReportable(legacyItemSummary)
 
   def apply: String = {
-    val report = new Report("Legacy run", None, categorisationEngine, replacementEngine)
+    val report = new Report("Legacy run", None, categorisationEngine.asInstanceOf[Reportable], replacementEngine)
     val reportableToUrl = new SimpleReportableToUrl
     val urlMap = reportableToUrl.makeUrlMapWithDecisionsAndConclusions(report)
     val htmlMaker = legacyHtml(rep, None, Set())
@@ -153,7 +154,8 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R
 
   def createReport(reportableToUrl: FileSystemReportableToUrl = new FileSystemReportableToUrl) {
     import PathUtils._
-    val project = new Project("Legacy Run", categorisationEngine, replacementEngine)
+    val categorisationReportableHolder = categorisationEngine.asInstanceOf[ReportableHolder]
+    val project = new Project("Legacy Run",categorisationReportableHolder, replacementEngine)
     val report = new Report("Legacy run", None, project)
     val urlMap = makeUrlMap(reportableToUrl, report)
     ReportCreator.fileSystem(report, reportableToUrl = reportableToUrl, optUrlMap = Some(urlMap)).create
@@ -170,13 +172,13 @@ class MemoryReporterToHtml[ID, R](categorisationEngine: Engine1[LegacyData[ID, R
         e.walkDecisionsAndConclusion((cd: ConclusionOrDecision) => cd match {
           case c: Conclusion =>
             val e = findEngine(path)
-            val htmlMaker = legacyConclusionHtml(rep, rootUrl, Set(e, cd) ++ rep.itemsFor(c) + categorisationEngine + replacementEngine, Set(c))
-            val html = htmlMaker.render(new SimpleReportableToUrl, urlMap, new Report("Legacy: " + e.titleOrDescription(""), rootUrl, categorisationEngine, replacementEngine))
+            val htmlMaker = legacyConclusionHtml(rep, rootUrl, Set(e, cd) ++ rep.itemsFor(c) + categorisationReportableHolder + replacementEngine, Set(c))
+            val html = htmlMaker.render(new SimpleReportableToUrl, urlMap, new Report("Legacy: " + e.titleOrDescription(""), rootUrl, categorisationReportableHolder, replacementEngine))
             Files.printToFile(reportableToUrl.file(c :: path))(_.println(html))
 
             for (li <- rep.itemsFor(c)) {
-              val htmlMaker = legacyConclusionHtml(rep, rootUrl, Set(e, li.categoriseConclusion, li.replacementConclusion) + li + categorisationEngine + replacementEngine, Set(li.categoriseConclusion, li.replacementConclusion))
-              val html = htmlMaker.render(new SimpleReportableToUrl, urlMap, new Report("Legacy: " + e.titleOrDescription(""), rootUrl, categorisationEngine, replacementEngine))
+              val htmlMaker = legacyConclusionHtml(rep, rootUrl, Set(e, li.categoriseConclusion, li.replacementConclusion) + li + categorisationReportableHolder + replacementEngine, Set(li.categoriseConclusion, li.replacementConclusion))
+              val html = htmlMaker.render(new SimpleReportableToUrl, urlMap, new Report("Legacy: " + e.titleOrDescription(""), rootUrl, categorisationReportableHolder, replacementEngine))
               Files.printToFile(reportableToUrl.file(li :: path))(_.println(html))
             }
 

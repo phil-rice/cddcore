@@ -1,6 +1,7 @@
 package org.cddcore.engine
 
 import org.junit.runner.RunWith
+
 import org.scalatest.junit.JUnitRunner
 import scala.language.implicitConversions
 
@@ -104,6 +105,7 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
     assertEquals(11, map.size)
   }
   "A ReportWalker.engineConclusionWalker" should "fold with paths with startEnd over things up to the engine then just the conclusions" in {
+    implicit def toEngine[R](e: Engine) = e.asInstanceOf[EngineBuiltFromTests[R]]
     val e = Engine[Int, String]().useCase("uc1").scenario(0).expected("X").because((x: Int) => x == 0).build
 
     type Acc = List[(ReportableList, String)]

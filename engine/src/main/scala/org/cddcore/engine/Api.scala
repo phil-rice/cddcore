@@ -79,9 +79,9 @@ object PathUtils {
     case h :: tail => enginePath(tail)
     case _ => throw new IllegalArgumentException
   }
-  def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[EngineFull[_]]
+  def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[Engine]
   def enginePath(path: ReportableList): ReportableList = path match {
-    case (engine: EngineFull[_]) :: tail => path
+    case (engine: Engine) :: tail => path
     case h :: tail => enginePath(tail)
     case _ => throw new IllegalArgumentException
   }
@@ -154,18 +154,33 @@ case class Project(projectTitle: String, engines: ReportableHolder*) extends Req
 }
 
 object Engine {
-  def apply[P, R]() = new BuilderFactory1[P, R, R]().builder;
-  def apply[P1, P2, R]() = new BuilderFactory2[P1, P2, R, R]().builder;
-  def apply[P1, P2, P3, R]() = new BuilderFactory3[P1, P2, P3, R, R]().builder;
+  protected def addToList[R] = (acc: List[R], r: R) => r :: acc
+  protected def addToSet[R] = (acc: Set[R], r: R) => acc + r
+  val noInitialValue = () => throw new IllegalStateException
+  def apply[P, R]() = new BuilderFactory1[P, R, R](None, noInitialValue).builder;
+  def apply[P1, P2, R]() = new BuilderFactory2[P1, P2, R, R](None, noInitialValue).builder;
+  def apply[P1, P2, P3, R]() = new BuilderFactory3[P1, P2, P3, R, R](None, noInitialValue).builder;
 
-  def state[S, P, R]() = new BuilderFactory2[S, P, (S, R), (S, R)]().builder;
-  def state[S, P1, P2, R]() = new BuilderFactory3[S, P1, P2, (S, R), (S, R)]().builder;
+  def folding[P, R, FullR](foldFn: (FullR, R) => FullR, initialValue: => FullR) = new BuilderFactory1[P, R, FullR](Some(foldFn), () => initialValue).builder
+  def folding[P1, P2, R, FullR](foldFn: (FullR, R) => FullR, initialValue: => FullR) = new BuilderFactory2[P1, P2, R, FullR](Some(foldFn), () => initialValue).builder
+  def folding[P1, P2, P3, R, FullR](foldFn: (FullR, R) => FullR, initialValue: => FullR) = new BuilderFactory3[P1, P2, P3, R, FullR](Some(foldFn), () => initialValue).builder
+
+  def foldList[P, R] = folding[P, R, List[R]](addToList[R], List[R]())
+  def foldList[P1, P2, R] = folding[P1, P2, R, List[R]](addToList[R], List[R]())
+  def foldList[P1, P2, P3, R] = folding[P1, P2, P3, R, List[R]](addToList[R], List[R]())
+
+  def foldSet[P, R] = folding[P, R, Set[R]](addToSet[R], Set[R]())
+  def foldSet[P1, P2, R] = folding[P1, P2, R, Set[R]](addToSet[R], Set[R]())
+  def foldSet[P1, P2, P3, R] = folding[P1, P2, P3, R, Set[R]](addToSet[R], Set[R]())
+
+  def state[S, P, R]() = new BuilderFactory2[S, P, (S, R), (S, R)](None, noInitialValue).builder;
+  def state[S, P1, P2, R]() = new BuilderFactory3[S, P1, P2, (S, R), (S, R)](None, noInitialValue).builder;
 
   private var _traceBuilder: ThreadLocal[Option[TraceBuilder]] = new ThreadLocal[Option[TraceBuilder]] {
     override def initialValue = None
   }
 
-  def call(e: Engine[_], params: List[Any]) = {
+  def call(e: Engine, params: List[Any]) = {
     _traceBuilder.get match {
       case Some(tb) => _traceBuilder.set(Some(tb.nest(e, params)))
       case None =>
@@ -214,20 +229,22 @@ trait DecisionTreeFolder[Acc] {
 
 }
 
-trait Engine[R] extends RequirementAndHolder {
+trait Engine extends RequirementAndHolder {
   lazy val useCases = all(classOf[UseCase])
   def arity: Int
+  def logger: TddLogger
+  def decisionTreeNodes: Int
 
 }
-trait EngineBuiltFromTests[R] extends Engine[R] {
+trait EngineBuiltFromTests[R] extends Engine {
 
   def root: Either[Conclusion, Decision]
   lazy val tests = all(classOf[Test])
 
+  def evaluateBecauseForDecision(decision: Decision, params: List[Any]): Boolean
   def findConclusionFor(params: List[Any]): Conclusion
   def evaluateConclusion(params: List[Any], conclusion: Conclusion): R
   def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion): ROrException[R]
-
   def apply(params: List[Any]): R = {
     Engine.call(this, params)
     val conclusion = findConclusionFor(params)
@@ -291,28 +308,32 @@ trait EngineBuiltFromTests[R] extends Engine[R] {
 trait ChildEngine[R] extends EngineBuiltFromTests[R] {
 }
 
-trait EngineFull[R] extends Engine[R] {
+trait EngineFull[R, FullR] extends Engine {
   import Reportable._
-  def logger: TddLogger
   def documents: List[Document]
-  def decisionTreeNodes: Int
-  def root: Either[Conclusion, Decision]
-  protected def toStringWith(path: ReportableList, root: Either[Conclusion, Decision], printer: IfThenPrinter): String
-  def evaluateBecauseForDecision(decision: Decision, params: List[Any]): Boolean
+  //  def root: Either[Conclusion, Decision]
+  //  protected def toStringWith(path: ReportableList, root: Either[Conclusion, Decision], printer: IfThenPrinter): String
   def paramDetails: List[ParamDetail]
   lazy val childEngines: List[ChildEngine[R]] = all(classOf[ChildEngine[R]])
-
+  def initialFoldValue: () => FullR
+  def folder: Option[(FullR, R) => FullR]
+  def applyParams(params: List[Any]): FullR =
+    folder match {
+      case Some(f) => childEngines.foldLeft[FullR](initialFoldValue())((acc, ce) => f(acc, ce(params)))
+      case _ => throw new IllegalStateException
+    }
+  lazy val decisionTreeNodes = childEngines.foldLeft(0)(_ + _.decisionTreeNodes)
 }
 
-trait Engine1[P, R] extends EngineFull[R] with Function1[P, R] {
+trait Engine1[P, R] extends Engine with Function1[P, R] {
   def arity = 1
 }
 
-trait Engine2[P1, P2, R] extends EngineFull[R] with Function2[P1, P2, R] {
+trait Engine2[P1, P2, R] extends Engine with Function2[P1, P2, R] {
   def arity = 2
 }
 
-trait Engine3[P1, P2, P3, R] extends EngineFull[R] with Function3[P1, P2, P3, R] {
+trait Engine3[P1, P2, P3, R] extends Engine with Function3[P1, P2, P3, R] {
   def arity = 3
 }
 

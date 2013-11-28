@@ -85,7 +85,7 @@ object TennisExample {
       tennis,
       categoriserEngine,
       reporter, descFn)
-    new MemoryReporterToHtml[Int, String](categoriserEngine, tennis, reporter).createReport()
+    new MemoryReporterToHtml[Int, String, String](categoriserEngine, tennis, reporter).createReport()
     println("Done")
   }
 

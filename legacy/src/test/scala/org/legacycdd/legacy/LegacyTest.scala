@@ -1,16 +1,16 @@
 package org.legacycdd.legacy
 
 import org.junit.runner.RunWith
+
 import 
  scala.language.implicitConversions
 import org.cddcore.engine._
 import org.scalatest.junit.JUnitRunner
-import org.cddcore.engine.Conclusion
-import org.cddcore.engine.AbstractTest
+import org.cddcore.engine._
 
 @RunWith(classOf[JUnitRunner])
 class LegacyTest extends AbstractTest {
-
+  implicit def toBuildEngine[R](e: Engine) = e.asInstanceOf[EngineBuiltFromTests[R]]
   val replacementEngine = Engine[Int, String]().
     useCase("").
     scenario(1).expected("X").

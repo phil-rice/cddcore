@@ -1,10 +1,12 @@
 package org.cddcore.engine
 
 import org.junit.runner.RunWith
+
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TraceTests extends AbstractTest {
+  implicit def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineBuiltFromTests[String]]
   val exception = new RuntimeException
   val e1 = Engine[String, String].code((s: String) => s + "_1").build;
   val e1Conclusion = e1.root.left.get

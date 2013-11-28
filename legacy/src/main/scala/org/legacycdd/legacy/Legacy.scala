@@ -16,21 +16,24 @@ class LegacyItem[ID, R](legacyData: LegacyData[ID, R], val categoriseConclusion:
 class Legacy[ID, R](val idGen: Iterable[ID],
   idToParams: (ID) => List[Any],
   idToExpected: (ID) => ROrException[R],
-  val replacement: EngineBuiltFromTests[R],
-  val categorise: EngineBuiltFromTests[ String],
+  val replacement: Engine,
+  val categorise: Engine1[LegacyData[ID, R], String],
   reporter: LegacyReporter[ID, R],
   idToDescription: (ID) => Option[String] = (id: ID) => None) {
+  val replacementProper = replacement.asInstanceOf[EngineBuiltFromTests[R]]
+  val categoriseProper = replacement.asInstanceOf[EngineBuiltFromTests[String]]
+
   for (id <- idGen) {
     val params = idToParams(id)
     val expected = idToExpected(id)
-    val replacementNode = replacement.findConclusionFor(params)
-    val actual = replacement.evaluateConclusionNoException(params, replacementNode)
+    val replacementNode = replacementProper.findConclusionFor(params)
+    val actual = replacementProper.evaluateConclusionNoException(params, replacementNode)
     val description = idToDescription(id)
     val legacyData = LegacyData(id, params, description, actual, expected)
 
     val categoriseParams = List(legacyData)
-    val categoriseNode = categorise.findConclusionFor(categoriseParams)
-    val categoriseActual = categorise.evaluateConclusionNoException(categoriseParams, categoriseNode)
+    val categoriseNode = categoriseProper.findConclusionFor(categoriseParams)
+    val categoriseActual = categoriseProper.evaluateConclusionNoException(categoriseParams, categoriseNode)
     val item = new LegacyItem[ID, R](legacyData, categoriseNode, replacementNode)
     reporter.report(item)
   }

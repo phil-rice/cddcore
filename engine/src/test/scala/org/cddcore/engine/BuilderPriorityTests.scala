@@ -6,7 +6,7 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class BuilderPriorityTests extends AbstractTest {
-
+  implicit def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineBuiltFromTests[R]]
   "A builder" should "allow priority to be set in scenario, usecase or engine, and that be reflected in the scenarios produced" in {
     val b = Engine[String, Int]().priority(-3).
       useCase("uc1").priority(1).

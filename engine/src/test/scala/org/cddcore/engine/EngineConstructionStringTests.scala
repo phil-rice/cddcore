@@ -31,6 +31,7 @@ class EngineConstructionStringTest extends EngineStringStringTests {
     "  XB:B\n" +
     " else\n" +
     "  Z:W\n"
+  implicit override def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineFromTestsImpl]
 
   it should "return the aggregate of the toString of an engine created from the scenarios, one after another" in {
     val bldr = builderWithDefault.

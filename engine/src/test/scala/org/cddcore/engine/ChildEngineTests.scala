@@ -18,7 +18,7 @@ class ChildEngineTests extends AbstractTest {
 
   }
 
-  it should "allow each child engine to come to correct conclusion" in {
+  "An engine with a child engine" should "allow each child engine to come to correct conclusion" in {
     val childEngines = Engine[Int, String]().
       childEngine("ce0").scenario(0).expected("zero").
       childEngine("ce1").scenario(1).expected("one").
@@ -32,10 +32,12 @@ class ChildEngineTests extends AbstractTest {
   }
 
   it should "use the fold function to produce the correct result" in {
-    val e = Engine[Int, String]().fold(_ + _, { "I" }).
-      childEngine("ce0").scenario(0).expected("zero").
-      childEngine("ce1").scenario(1).expected("one").build
-    assertEquals(List("zero", "one"), e(0))
+    val b = Engine.folding[Int, String, String](_ + _, { "Init" }).
+      childEngine("ce0").scenario(0).expected("Zero").
+      childEngine("ce1").scenario(1).expected("One")
+    val e = b.build
+    assertEquals("InitZeroOne", e(0))
+    assertEquals("InitZeroOne", e(123))
   }
 
 }
