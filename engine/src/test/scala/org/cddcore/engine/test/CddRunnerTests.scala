@@ -46,13 +46,10 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testFinished: Engine",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
-  "An engine" should "notify started and finished for root, engine, usecase and scenario wihen two scenarios in same use case" in {
+  it should "notify started and finished for root, engine, usecase and scenario wihen two scenarios in same use case" in {
     val engine1 = builder.useCase("uc1").
-      scenario("one", "d1").
-      expected("exp").
-      scenario("two").
-      expected("exp2").
-      because((p: String) => p == "two").
+      scenario("one", "d1").expected("exp").
+      scenario("two").expected("exp2").because((p: String) => p == "two").
       build
     assertEquals(Map(), engine1.scenarioExceptionMap.map)
     assertEquals(List(
@@ -68,7 +65,7 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
 
-  "An engine" should "report an exception while building to junit" in {
+  it should "report an exception while building to junit" in {
     val engine1 = test(() => builder.useCase("uc1").
       scenario("one", "d1").
       expected("exp").
@@ -85,6 +82,20 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testFinished: uc1",
       "testFinished: Engine",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
+  }
+
+  it should "pass if the expected exception is thrown" in {
+    val e = builder.
+      scenario("one", "d1").expectException(new RuntimeException()).code((x: String) => 
+        throw new RuntimeException).
+      build
+    assertEquals(List(
+      "testStarted: Test",
+      "testStarted: Engine",
+      "testStarted: d1 => throws RuntimeException",
+      "testFinished: d1 => throws RuntimeException",
+      "testFinished: Engine",
+      "testFinished: Test"), runAndGetListOfNotifications(e))
   }
 
   def runAndGetListOfNotifications(engine: Engine) = {

@@ -17,8 +17,8 @@ trait ReportableTestFramework {
   val rep5 = Req("rep5", "d5")
 
   val holder12 = Holder("holder12", List(rep1, rep2))
-  val holder345 = Holder("holder23", List(rep3, rep4, rep5))
-  val holder_12_345 = Holder("holder_12_23", List(holder12, holder345))
+  val holder345 = Holder("holder345", List(rep3, rep4, rep5))
+  val holder_12_345 = Holder("holder_12_345", List(holder12, holder345))
 }
 
 @RunWith(classOf[JUnitRunner])
@@ -60,6 +60,25 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
 
     assertEquals(List(holder_12_345), map(holder_12_345))
     assertEquals(8, map.size)
+    val order = holder_12_345.foldWithPath(List(), List[Reportable](), (acc: List[Reportable], list) => acc :+ list.head)
+    assertEquals(List(holder_12_345, holder12, rep1, rep2, holder345, rep3, rep4, rep5), order)
+  }
+
+  it should "fold with paths over itself and all it's descendants with reversed children" in {
+    val map = holder_12_345.foldWithPathReversingChildren(List(), Map[Reportable, ReportableList](), (acc: Map[Reportable, ReportableList], list) => acc + (list.head -> list))
+    assertEquals(List(rep1, holder12, holder_12_345), map(rep1))
+    assertEquals(List(rep2, holder12, holder_12_345), map(rep2))
+    assertEquals(List(holder12, holder_12_345), map(holder12))
+
+    assertEquals(List(rep3, holder345, holder_12_345), map(rep3))
+    assertEquals(List(rep4, holder345, holder_12_345), map(rep4))
+    assertEquals(List(rep5, holder345, holder_12_345), map(rep5))
+    assertEquals(List(holder345, holder_12_345), map(holder345))
+
+    assertEquals(List(holder_12_345), map(holder_12_345))
+    assertEquals(8, map.size)
+    val order = holder_12_345.foldWithPathReversingChildren(List(), List[Reportable](), (acc: List[Reportable], list) => acc :+ list.head)
+    assertEquals(List(holder_12_345, holder345, rep5, rep4, rep3, holder12, rep2, rep1), order)
   }
 
   "A FileSystemReportableToUrl" should "Make a nice name for a reportable" in {

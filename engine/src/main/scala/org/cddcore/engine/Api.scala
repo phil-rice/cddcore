@@ -61,6 +61,17 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
       }
     acc
   }
+  def foldWithPathReversingChildren[Acc](path: ReportableList, initial: Acc, fn: (Acc, ReportableList) => Acc): Acc = {
+    val newPath = this :: path
+    var acc = fn(initial, newPath)
+    for (c <- children.reverse)
+      c match {
+        case holder: ReportableHolder =>
+          acc = holder.foldWithPathReversingChildren(newPath, acc, fn)
+        case _ => acc = fn(acc, c :: newPath)
+      }
+    acc
+  }
 
 }
 
@@ -245,7 +256,7 @@ trait EngineBuiltFromTests[R] extends Engine {
   def findConclusionFor(params: List[Any]): Conclusion
   def evaluateConclusion(params: List[Any], conclusion: Conclusion): R
   def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion): ROrException[R]
-  def apply(params: List[Any]): R = {
+  def applyParams(params: List[Any]): R = {
     Engine.call(this, params)
     val conclusion = findConclusionFor(params)
     val result = evaluateConclusion(params, conclusion)
@@ -319,7 +330,7 @@ trait EngineFull[R, FullR] extends Engine {
   def folder: Option[(FullR, R) => FullR]
   def applyParams(params: List[Any]): FullR =
     folder match {
-      case Some(f) => childEngines.foldLeft[FullR](initialFoldValue())((acc, ce) => f(acc, ce(params)))
+      case Some(f) => childEngines.foldLeft[FullR](initialFoldValue())((acc, ce) => f(acc, ce.applyParams(params)))
       case _ => throw new IllegalStateException
     }
   lazy val decisionTreeNodes = childEngines.foldLeft(0)(_ + _.decisionTreeNodes)

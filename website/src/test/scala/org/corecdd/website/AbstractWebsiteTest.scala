@@ -28,7 +28,7 @@ abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with Bef
 
   trait AbstractPage {
     def path: ReportableList
-    def clickLogo = { click on id("cddLogo"); new ProjectPage(path.reverse.take(2).reverse) }
+    def clickLogo = { click on  id("cddLogo"); new ProjectPage(path.reverse.take(2).reverse) }
 //    println(currentUrl)
   }
 

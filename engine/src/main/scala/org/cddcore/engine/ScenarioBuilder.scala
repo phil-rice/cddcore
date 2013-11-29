@@ -59,6 +59,7 @@ object ROrException {
   def apply[R]() = new ROrException[R](None, None)
   def apply[R](value: R) = new ROrException[R](Some(value), None)
   def apply[R](exception: Throwable) = new ROrException[R](None, Some(exception))
+  def from[R](from: =>R) = try {apply(from) } catch { case e: Throwable => apply(e)}
 
 }
 case class ROrException[R](value: Option[R], exception: Option[Throwable]) {

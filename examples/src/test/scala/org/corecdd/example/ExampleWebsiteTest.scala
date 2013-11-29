@@ -75,4 +75,6 @@ class ExampleWebsiteTest extends AbstractWebsiteTest with BeforeAndAfterAll {
       click = _.clickScenario(_),
       recover = _.clickLogo)
   }
+  
+
 }

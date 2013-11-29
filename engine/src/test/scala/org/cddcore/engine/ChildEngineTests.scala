@@ -24,11 +24,11 @@ class ChildEngineTests extends AbstractTest {
       childEngine("ce1").scenario(1).expected("one").
       builderData.childrenModifiedForBuild.collect { case e: ChildEngine[_] => e }.reverse
 
-    assertEquals("zero", childEngines(0)(List(0)))
-    assertEquals("zero", childEngines(0)(List(1)))
+    assertEquals("zero", childEngines(0).applyParams(List(0)))
+    assertEquals("zero", childEngines(0).applyParams(List(1)))
 
-    assertEquals("one", childEngines(1)(List(0)))
-    assertEquals("one", childEngines(1)(List(1)))
+    assertEquals("one", childEngines(1).applyParams(List(0)))
+    assertEquals("one", childEngines(1).applyParams(List(1)))
   }
 
   it should "use the fold function to produce the correct result" in {

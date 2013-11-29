@@ -33,10 +33,10 @@ trait NotActuallyFactory[R, FullR] extends EngineUniverse[R, FullR] {
 }
 
 trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFactory[Any, Any] {
+  type BiMap = Tuple2[Map[Reportable, Description], Map[Description, Reportable]]
   import org.cddcore.engine.Engine._
-  var engineMap: Map[Description, EngineFromTestsImpl] = Map()
-  var ScenarioMap: Map[Description, Scenario] = Map()
-  var exceptionMap: Map[Description, Throwable] = Map()
+  var exceptionMap: Map[Test, Throwable] = Map()
+  var biMap: BiMap = (Map(), Map())
 
   def addEngineForTest(name: String, engine: Any) = addEngine(name, engine.asInstanceOf[EngineFromTestsImpl])
 
@@ -44,34 +44,20 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
     val engineDescription = Description.createSuiteDescription(name)
     println(name)
     println(engine)
-    add(engineDescription, engine)
-    engineDescription
-  }
-
-  //  private var i = 0;
-
-  def add(engineDescription: Description, engine: EngineFromTestsImpl) {
     getDescription.addChild(engineDescription)
-
-    //    manipulator.append("\n\n" + <new(null, "pre", e>, false, pre>new }</pre>engine.constructionString }</pre>$buf_*) }</pre>)
-
-    engineMap = engineMap + (engineDescription -> engine)
-
-    for (u <- engine.useCases.reverse) yield {
-      val useCaseDescription = Description.createSuiteDescription(Strings.clean(u.title.getOrElse("")))
-      engineDescription.addChild(useCaseDescription)
-
-      for (c <- u.children.reverse) yield c match {
-        case s: Test => {
-          val name = s.titleString + " => " + logger(s.expected.getOrElse("")) //+ " " + s.becauseString
-          val cleanedName = Strings.clean(name)
-          println("   " + cleanedName)
-          val scenarioDescription = Description.createSuiteDescription(cleanedName)
-          useCaseDescription.addChild(scenarioDescription)
-          ScenarioMap = ScenarioMap + (scenarioDescription -> s.asInstanceOf[Scenario])
-        }
-      }
-    }
+    val result = engine.foldWithPathReversingChildren[BiMap](List(), (biMap._1 + (engine -> engineDescription), biMap._2 + (engineDescription -> engine)), (acc, path) => (acc, path) match {
+      case ((from, to), (r: Requirement) :: tail) if !from.contains(r) =>
+        val d = Description.createSuiteDescription(Strings.clean(r match {
+          case t: Test => t.titleString + " => " + logger(t.expected.getOrElse(""))
+          case _ => r.title.getOrElse("")
+        }))
+        tail.headOption match { case Some(parent) => from(parent).addChild(d); case _ => }
+        (from + (r -> d), to + (d -> r))
+      case _ => acc
+    })
+    biMap = result
+    exceptionMap = exceptionMap ++ engine.scenarioExceptionMap.map
+    engineDescription
   }
 
   def fileFor(clazz: Class[Any], ed: Description, extension: String) = new File(CddRunner.directory, clazz.getName() + "." + ed.getDisplayName() + "." + extension)
@@ -79,62 +65,43 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
   def saveResults(clazz: Class[Any], ed: Description, e: EngineFromTestsImpl) {
     import Files._
     printToFile(fileFor(clazz, ed, "dt.html"))((pw) => pw.write(e.toStringWith(new HtmlIfThenPrinter)))
-    //        new File(AutoTddRunner.directory, clazz.getName() + "." + ed.getDisplayName() + ".attd"))((pw) => pw.write(e.toString))
   }
 
   def log(s: String) = println(s)
 
-  def run(notifier: RunNotifier) {
+  def run(notifier: RunNotifier) =
+    run(notifier, getDescription(), None)
+
+  def runChildren(notifier: RunNotifier, r: Reportable, engine: Option[Engine]): Unit =
+    runChildren(notifier, biMap._1(r), engine)
+
+  def runChildren(notifier: RunNotifier, description: Description, engine: Option[Engine]) =
+    for (d <- description.getChildren)
+      run(notifier, d, engine)
+
+  def run(notifier: RunNotifier, description: Description, engine: Option[Engine]) {
     test(() => {
-      notifier.fireTestStarted(getDescription)
-      for (ed <- getDescription.getChildren) yield {
-        log("notifier.fireTestStarted(ed)" + ed)
-        notifier.fireTestStarted(ed)
-        val engine = engineMap(ed)
-        for (ud <- ed.getChildren) yield {
-          log("notifier.fireTestStarted(ud)" + ud)
-          notifier.fireTestStarted(ud)
-          for (sd <- ud.getChildren) yield {
-            log("notifier.fireTestStarted(sd)" + sd)
-            notifier.fireTestStarted(sd)
-            val scenario = ScenarioMap(sd)
-            if (engine.scenarioExceptionMap.contains(scenario)) {
-              log("notifier.fireTestFailure(sd)" + sd)
-              notifier.fireTestFailure(new Failure(sd, engine.scenarioExceptionMap(scenario)))
-            } else {
-              //            val b = engine.makeClosureForBecause(Scenario.params);
-              if (engine.root == null) {
-                notifier.fireTestIgnored(sd)
-                log("notifier.fireTestIgnored(sd)" + sd)
-              } else
-                try {
-                  val actual = ROrException(engine.applyParams(engine.root, scenario.params, true))
-                  if (scenario.expected == Some(actual)) {
-                    log("notifier.fireTestFinished(sd)" + sd)
-                    notifier.fireTestFinished(sd)
-                  } else
-                    throw new AssertionFailedError("Expected:\n" + scenario.expected + "\nActual:\n" + actual + "\n" + scenario)
-                } catch {
-                  //                  case e: AssertionFailedError => 
-                  case e: Throwable =>
-                    //                    e.printStackTrace()
-                    val f = new Failure(sd, e)
-                    log("notifier.fireTestFailure(sd)" + sd)
-                    notifier.fireTestFailure(f)
-                }
-            }
+      notifier.fireTestStarted(description)
+      log("notifier.fireTestStarted" + description)
+      try {
+        (engine, biMap._2.get(description)) match {
+          case (_, Some(engine: EngineBuiltFromTests[_])) => runChildren(notifier, engine, Some(engine))
+          case (_, Some(t: Test)) if exceptionMap.contains(t)=> throw exceptionMap(t)
+          case (Some(e: EngineBuiltFromTests[_]), Some(t: Test)) => {
+            val actual = ROrException.from(e.applyParams(t.params))
+            if (t.expected != Some(actual)) 
+              throw new AssertionFailedError("Expected:\n" + t.expected + "\nActual:\n" + actual + "\n" + t)
           }
-          log("notifier.fireTestFinished(ud)" + ud)
-          notifier.fireTestFinished(ud)
+          case (_, Some(x)) => runChildren(notifier, x, engine)
+          case _ => runChildren(notifier, description, engine)
         }
-        log("notifier.fireTestFinished(ed)" + ed)
-        notifier.fireTestFinished(ed)
-        //        println("Scenarios for: " + ed.getDisplayName())
-        //        for (c <- engine.Scenarios)
-        //          println("  " + c)
+        log("notifier.fireTestFinished" + description)
+        notifier.fireTestFinished(description)
+      } catch {
+        case t: Throwable =>
+          log("notifier.fireTestFailure" + description)
+          notifier.fireTestFailure(new Failure(description, t))
       }
-      log("notifier.fireTestFinished(getDescription)" + getDescription)
-      notifier.fireTestFinished(getDescription)
     })
   }
 
@@ -149,7 +116,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
   }
 
   def isEngine(rt: Class[_]): Boolean = {
-    val c = classOf[EngineFromTestsImpl]
+    val c = classOf[Engine]
     if (c.isAssignableFrom(rt))
       return true;
     for (t <- rt.getInterfaces())
