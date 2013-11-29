@@ -260,7 +260,7 @@ trait WebPageChecker extends AssertEquals {
     assertTextEquals("Report date", reportTitlesDiv(1))
     val reportTextDiv = onlyDivWith("reportText", reportTopBoxDiv.child)
     val reportDateDiv = onlyDivWith("reportDate", reportTopBoxDiv.child)
-    assertTextEquals(expectedTitle, reportTextDiv)
+    assertTextEquals(expectedTitle.trim, reportTextDiv)
   }
 }
 

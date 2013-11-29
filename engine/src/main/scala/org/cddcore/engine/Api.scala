@@ -232,7 +232,7 @@ object Engine {
   }
 
 }
-case class ParamDetail(displayName: String, parser: (String) => _)
+case class ParamDetail(displayName: String, parser: (String) => _, testValue: Option[String])
 
 trait DecisionTreeFolder[Acc] {
   def apply(acc: Acc, c: Conclusion): Acc
@@ -245,9 +245,13 @@ trait Engine extends RequirementAndHolder {
   def arity: Int
   def logger: TddLogger
   def decisionTreeNodes: Int
-
 }
-trait EngineBuiltFromTests[R] extends Engine {
+
+trait EngineWithResult[R] extends Engine {
+  def applyParams(params: List[Any]): R
+}
+
+trait EngineBuiltFromTests[R] extends EngineWithResult[R] {
 
   def root: Either[Conclusion, Decision]
   lazy val tests = all(classOf[Test])
@@ -319,12 +323,19 @@ trait EngineBuiltFromTests[R] extends Engine {
 trait ChildEngine[R] extends EngineBuiltFromTests[R] {
 }
 
-trait EngineFull[R, FullR] extends Engine {
+object ParamDetails {
+  implicit def toParamDetails(e: Engine) = e.asInstanceOf[ParamDetails]
+}
+trait ParamDetails {
+  def paramDetails: List[ParamDetail]
+}
+
+trait EngineFull[R, FullR] extends EngineWithResult[FullR] {
   import Reportable._
   def documents: List[Document]
   //  def root: Either[Conclusion, Decision]
   //  protected def toStringWith(path: ReportableList, root: Either[Conclusion, Decision], printer: IfThenPrinter): String
-  def paramDetails: List[ParamDetail]
+
   lazy val childEngines: List[ChildEngine[R]] = all(classOf[ChildEngine[R]])
   def initialFoldValue: () => FullR
   def folder: Option[(FullR, R) => FullR]

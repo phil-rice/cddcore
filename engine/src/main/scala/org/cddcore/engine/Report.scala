@@ -311,7 +311,7 @@ object Renderer {
       })))
 
   def setAttribute(templateName: String, attributeName: String, value: Any) =
-    RenderAttributeConfigurer[EngineFull[_,_]](templateName, (reportableToUrl, urlMap, path, e, stringTemplate) =>
+    RenderAttributeConfigurer[EngineBuiltFromTests[_]](templateName, (reportableToUrl, urlMap, path, e, stringTemplate) =>
       stringTemplate.setAttribute(attributeName, value))
 
   protected def reportConfig = RenderAttributeConfigurer[Report]("Report", (reportableToUrl, urlMap, path, r, stringTemplate) => {
@@ -432,7 +432,7 @@ object HtmlRenderer {
   protected val date = "$if(reportDate)$<hr /><div class='dateTitle'>$reportDate$</div><hr /><div>$reportDate$</div>$endif$"
   def titleAndDescription(clazz: String, titlePattern: String) = s"<div class='$clazz'>" + a(MessageFormat.format(titlePattern, title)) + description + "</div>"
   def a(body: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$'>$endif$" + body + "$if(url)$</a>$endif$"
-  def aForLive = "$if(url)$<a href='$url$/live'>$endif$Live$if(url)$</a>$endif$"
+  def aForLive = "$if(url)$<a id='$url$/live' href='$url$/live'>$endif$Live$if(url)$</a>$endif$"
 
   protected def cddLogoImg = "<img src='http://img24.imageshack.us/img24/4325/gp9j.png'  alt='CDD'/>"
 

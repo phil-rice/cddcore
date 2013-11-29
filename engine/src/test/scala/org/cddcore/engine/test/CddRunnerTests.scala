@@ -46,6 +46,7 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testFinished: Engine",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
+  
   it should "notify started and finished for root, engine, usecase and scenario wihen two scenarios in same use case" in {
     val engine1 = builder.useCase("uc1").
       scenario("one", "d1").expected("exp").

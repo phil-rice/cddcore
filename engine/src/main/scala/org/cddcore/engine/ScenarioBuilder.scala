@@ -361,6 +361,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
     def builderData: ScenarioBuilderData
 
+    //The client code of this is very repeatable. I keep changing it: going from a visitor to inheritance and back again. 
     protected def set[X](x: X, bFn: (ScenarioBuilder, X) => ScenarioBuilder, ceFn: (ChildEngineDescription, X) => ChildEngineDescription, uFn: (UseCaseDescription, X) => UseCaseDescription, sFn: (Scenario, X) => Scenario, checkFn: (BuilderNode, X) => Unit = (b: BuilderNode, x: X) => {}) =
       setWithDepth(0, this, x, bFn, ceFn, uFn, sFn, checkFn).asInstanceOf[RealScenarioBuilder]
 
@@ -470,11 +471,11 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         (n, description) => if (n.description.isDefined) throw CannotDefineDescriptionTwiceException(n.description.get, description.get))
 
     /** This is only used when using the 'live' website option. It turns a string into a parameter, and gives the parameter a 'nice' name on the website */
-    def param(parser: (String) => _, name: String = s"Param${builderData.paramDetails.size}") = copy(paramDetails = builderData.paramDetails :+ ParamDetail(name, parser))
+    def param(parser: (String) => _, name: String = s"Param${builderData.paramDetails.size}", testValue : String = null) = 
+      copy(paramDetails = builderData.paramDetails :+ ParamDetail(name, parser, Option(testValue)))
 
     /**
      * Set the 'expected' of the 'last thing to be mentioned' to be an exception. i.e. the builder/usecase/scenario. Throws CannotDefineExpectedTwiceException if expected already set.
-     *
      *  Note that the engine will currently only check the type of the message, not the message itself, and that you must have a 'code' to throw the exception
      */
     def expectException[E <: Throwable](e: E, comment: String = "") =
@@ -1037,7 +1038,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     def paramDetails = builderData.paramDetails
   }
 
-  abstract class AbstractEngine extends Engine {
+  abstract class AbstractEngine extends Engine with ParamDetails{
 
     def logger = EngineUniverse.this.logger
     override def templateName = "Engine"

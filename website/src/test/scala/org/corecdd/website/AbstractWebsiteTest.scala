@@ -36,7 +36,7 @@ abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with Bef
     type PageType = ProjectPage
     val projectPageChecker = new ProjectPageChecker(path, pageSource, reportableToUrl)
     def clickEngine(path: ReportableList) = {
-      val urlId = reportableToUrl.urlId(path.head.asInstanceOf[EngineFull[_,_]])
+      val urlId = reportableToUrl.urlId(path.head.asInstanceOf[Engine])
       click on id(urlId)
       new EnginePage(path)
     }

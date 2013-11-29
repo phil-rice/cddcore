@@ -16,8 +16,8 @@ object TennisScorer {
   val lookup = Map(0 -> "love", 1 -> "fifteen", 2 -> "thirty", 3 -> "forty")
   
   val scorer = Engine[Int, Int, String]().title("Tennis Kata").reference("Game_score", wikipedia).reference("", definition).
-    param((s: String) => Integer.parseInt(s), "Left").
-    param((s: String) => Integer.parseInt(s), "Right").
+    param((s: String) => Integer.parseInt(s), "Left Player's Score", "1").
+    param((s: String) => Integer.parseInt(s), "Right Player's Score", "2").
 
     useCase("Winning", "A game is won by the first player to have won at least four points in total and at least two points more than the opponent.").
     scenario(4, 0).expected("left won").because((l: Int, r: Int) => (l - r) >= 2 && l >= 4).
