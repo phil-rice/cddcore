@@ -13,9 +13,11 @@ trait ReporterToHtml {
 class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyData[ID, R], String], replacementEngine: Engine, rep: MemoryReporter[ID, R], maxItems: Int = 5) {
   type Rep = MemoryReporter[ID, _]
   import Reportable._
+  import EngineWithLogger._
   import Renderer._
   import HtmlRenderer._
   import PathUtils._
+  implicit val loggerDisplayProcessor: LoggerDisplayProcessor = replacementEngine.logger
 
   class LegacyIfThenHtmlPrinter(e: EngineBuiltFromTests[_], conclusions: Set[Conclusion], val reportableToUrl: ReportableToUrl, val urlMap: UrlMap, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
     import HtmlForIfThenPrinter._
@@ -85,12 +87,12 @@ class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyDat
   }
 
   def legacyDecisionTreeConfig(rep: Rep, conclusionNode: Set[Conclusion]) = RenderAttributeConfigurer[EngineBuiltFromTests[_]]("Engine",
-    (reportableToUrl, urlMap, path, e, stringTemplate) =>
-      stringTemplate.setAttribute("decisionTree", e.toStringWith(new LegacyIfThenHtmlPrinter(e, conclusionNode, reportableToUrl, urlMap))))
+    (rc) => { import rc._; stringTemplate.setAttribute("decisionTree", r.toStringWith(new LegacyIfThenHtmlPrinter(r, conclusionNode, reportableToUrl, urlMap))) })
 
-  def legacyConclusionConfig = RenderAttributeConfigurer[Conclusion]("CodeAndScenarios", (_, _, _, c, stringTemplate) => {
-    stringTemplate.setAttribute("conclusion", c.code.pretty)
-    stringTemplate.setAttribute("conclusionCount", rep.itemsFor(c).size)
+  def legacyConclusionConfig = RenderAttributeConfigurer[Conclusion]("CodeAndScenarios", (rc) => {
+    import rc._
+    stringTemplate.setAttribute("conclusion", r.code.pretty)
+    stringTemplate.setAttribute("conclusionCount", rep.itemsFor(r).size)
   })
 
   def conclusionSummary: StringRendererRenderer =
@@ -98,24 +100,27 @@ class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyDat
       "<div class='legacyConclusion'><div class='legacyConclusionTest'>" + a("Conclusion") + " $conclusion$ $conclusionCount$</div><!-- legacyConclusionTest -->" + table("legacyConclusionTable"),
       "</div><!-- legacyConclusion' -->")
 
-  def legacyItemConfig = RenderAttributeConfigurer[LegacyItem[ID, R]]("LegacyItem", (_, _, _, li, stringTemplate) => {
-    stringTemplate.setAttribute("legacyItemId", li.id)
-    addParams(stringTemplate, "params", replacementEngine.logger, li.params)
-    stringTemplate.setAttribute("expected", li.expected)
-    stringTemplate.setAttribute("actual", li.actual)
-    if (li.description.isDefined)
-      stringTemplate.setAttribute("legacyDescription", li.description.get)
+  def legacyItemConfig = RenderAttributeConfigurer[LegacyItem[ID, R]]("LegacyItem", (rendererContext) => {
+    import EngineWithLogger._
+    import rendererContext._
+    import r._
+    stringTemplate.setAttribute("legacyItemId", id)
+    addParams(stringTemplate, "params", replacementEngine.logger, params)
+    stringTemplate.setAttribute("expected", expected)
+    stringTemplate.setAttribute("actual", actual)
+    if (description.isDefined)
+      stringTemplate.setAttribute("legacyDescription", description.get)
   })
   def legacyItemSummary: StringRenderer =
     ("LegacyItem",
       "<div class='legacyItem'><div class='legacyItemTable'>" + table("legacyItemTable", idRow, descriptionRow, paramsRow, expectedRow, actualRow) + "</div></div>")
 
-  def legacyHtml(rep: Rep, rootUrl: Option[String], restrict: ReportableSet = Set()) = Renderer(rootUrl, restrict, false, new EngineConclusionLegacyWalker).
+  def legacyHtml(rep: Rep, rootUrl: Option[String], restrict: ReportableSet = Set()) = Renderer(loggerDisplayProcessor, rootUrl, restrict, false, new EngineConclusionLegacyWalker).
     configureAttribute(legacyDecisionTreeConfig(rep, Set()), legacyConclusionConfig, legacyItemConfig).
     configureReportableHolder(reportTemplate, engineTemplate, conclusionSummary).
     configureReportable(legacyItemSummary)
 
-  def legacyConclusionHtml(rep: Rep, rootUrl: Option[String], restrict: ReportableSet = Set(), conclusion: Set[Conclusion]) = Renderer(rootUrl, restrict, false, new EngineConclusionLegacyWalker).
+  def legacyConclusionHtml(rep: Rep, rootUrl: Option[String], restrict: ReportableSet = Set(), conclusion: Set[Conclusion]) = Renderer(loggerDisplayProcessor, rootUrl, restrict, false, new EngineConclusionLegacyWalker).
     configureAttribute(legacyDecisionTreeConfig(rep, conclusion), legacyConclusionConfig, legacyItemConfig).
     configureReportableHolder(reportTemplate, engineTemplate, conclusionSummary).
     configureReportable(legacyItemSummary)
@@ -135,7 +140,7 @@ class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyDat
     withU
   }
   def makeUrlMap(reportableToUrl: ReportableToUrl, r: ReportableHolder): UrlMap =
-    r.foldWithPath(List(), reportableToUrl.makeUrlMap(r), ((acc: UrlMap, path) => {
+    r.foldWithPath(reportableToUrl.makeUrlMap(r), ((acc: UrlMap, path) => {
       val withU = addToMap(reportableToUrl, acc, path)
       path.head match {
         case e: EngineBuiltFromTests[_] => e.fold(withU, new DecisionTreeFolder[UrlMap] {
@@ -155,10 +160,10 @@ class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyDat
   def createReport(reportableToUrl: FileSystemReportableToUrl = new FileSystemReportableToUrl) {
     import PathUtils._
     val categorisationReportableHolder = categorisationEngine.asInstanceOf[ReportableHolder]
-    val project = new Project("Legacy Run",categorisationReportableHolder, replacementEngine)
+    val project = new Project("Legacy Run", categorisationReportableHolder, replacementEngine)
     val report = new Report("Legacy run", None, project)
     val urlMap = makeUrlMap(reportableToUrl, report)
-    ReportCreator.fileSystem(report, reportableToUrl = reportableToUrl, optUrlMap = Some(urlMap)).create
+    ReportCreator.fileSystem(loggerDisplayProcessor, report, reportableToUrl = reportableToUrl, optUrlMap = Some(urlMap)).create
 
     val rootUrl = urlMap.get(report)
     report.walkWithPath((path: ReportableList) => path.head match {

@@ -45,7 +45,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
     println(name)
     println(engine)
     getDescription.addChild(engineDescription)
-    val result = engine.foldWithPathReversingChildren[BiMap](List(), (biMap._1 + (engine -> engineDescription), biMap._2 + (engineDescription -> engine)), (acc, path) => (acc, path) match {
+    val result = engine.foldWithPathReversingChildren[BiMap]((biMap._1 + (engine -> engineDescription), biMap._2 + (engineDescription -> engine)), (acc, path) => (acc, path) match {
       case ((from, to), (r: Requirement) :: tail) if !from.contains(r) =>
         val d = Description.createSuiteDescription(Strings.clean(r match {
           case t: Test => t.titleString + " => " + logger(t.expected.getOrElse(""))
@@ -86,10 +86,10 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
       try {
         (engine, biMap._2.get(description)) match {
           case (_, Some(engine: EngineBuiltFromTests[_])) => runChildren(notifier, engine, Some(engine))
-          case (_, Some(t: Test)) if exceptionMap.contains(t)=> throw exceptionMap(t)
+          case (_, Some(t: Test)) if exceptionMap.contains(t) => throw exceptionMap(t)
           case (Some(e: EngineBuiltFromTests[_]), Some(t: Test)) => {
             val actual = ROrException.from(e.applyParams(t.params))
-            if (t.expected != Some(actual)) 
+            if (t.expected != Some(actual))
               throw new AssertionFailedError("Expected:\n" + t.expected + "\nActual:\n" + actual + "\n" + t)
           }
           case (_, Some(x)) => runChildren(notifier, x, engine)
@@ -166,7 +166,7 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
 
   def recordEngine(clazz: Class[Any], engineDescription: Description, engine: EngineFromTestsImpl) {
     val project = Project("Junit_" + engine.titleOrDescription("Unnamed"), engine)
-    ReportCreator.fileSystem(project).create
+    ReportCreator.fileSystem(engine.loggerDisplayProcessor, project).create
   }
 
   trait SomeTrait { def someMethod: String }

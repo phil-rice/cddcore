@@ -8,7 +8,7 @@ import scala.language.implicitConversions
 trait ReportableTestFramework {
   implicit def stringToOption(s: String) = Some(s)
   case class Holder(val name: String, val children: List[Reportable]) extends ReportableHolder
-  case class Req(val title: Option[String], description: Option[String], references: List[Reference] = List(), priority: Option[Int] = None) extends Requirement
+  case class Req(val title: Option[String], description: Option[String], references: Set[Reference] = Set(), priority: Option[Int] = None) extends Requirement
 
   val rep1 = Req("rep1", "d1")
   val rep2 = Req("rep2", "d2")
@@ -48,7 +48,7 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
   }
 
   it should "fold with paths over itself and all it's descendants" in {
-    val map = holder_12_345.foldWithPath(List(), Map[Reportable, ReportableList](), (acc: Map[Reportable, ReportableList], list) => acc + (list.head -> list))
+    val map = holder_12_345.foldWithPath(Map[Reportable, ReportableList](), (acc: Map[Reportable, ReportableList], list) => acc + (list.head -> list))
     assertEquals(List(rep1, holder12, holder_12_345), map(rep1))
     assertEquals(List(rep2, holder12, holder_12_345), map(rep2))
     assertEquals(List(holder12, holder_12_345), map(holder12))
@@ -60,12 +60,12 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
 
     assertEquals(List(holder_12_345), map(holder_12_345))
     assertEquals(8, map.size)
-    val order = holder_12_345.foldWithPath(List(), List[Reportable](), (acc: List[Reportable], list) => acc :+ list.head)
+    val order = holder_12_345.foldWithPath( List[Reportable](), (acc: List[Reportable], list) => acc :+ list.head)
     assertEquals(List(holder_12_345, holder12, rep1, rep2, holder345, rep3, rep4, rep5), order)
   }
 
   it should "fold with paths over itself and all it's descendants with reversed children" in {
-    val map = holder_12_345.foldWithPathReversingChildren(List(), Map[Reportable, ReportableList](), (acc: Map[Reportable, ReportableList], list) => acc + (list.head -> list))
+    val map = holder_12_345.foldWithPathReversingChildren( Map[Reportable, ReportableList](), (acc: Map[Reportable, ReportableList], list) => acc + (list.head -> list))
     assertEquals(List(rep1, holder12, holder_12_345), map(rep1))
     assertEquals(List(rep2, holder12, holder_12_345), map(rep2))
     assertEquals(List(holder12, holder_12_345), map(holder12))
@@ -77,7 +77,7 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
 
     assertEquals(List(holder_12_345), map(holder_12_345))
     assertEquals(8, map.size)
-    val order = holder_12_345.foldWithPathReversingChildren(List(), List[Reportable](), (acc: List[Reportable], list) => acc :+ list.head)
+    val order = holder_12_345.foldWithPathReversingChildren( List[Reportable](), (acc: List[Reportable], list) => acc :+ list.head)
     assertEquals(List(holder_12_345, holder345, rep5, rep4, rep3, holder12, rep2, rep1), order)
   }
 

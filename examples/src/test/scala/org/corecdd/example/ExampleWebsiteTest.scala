@@ -3,19 +3,20 @@
 package org.corecdd.example
 
 import org.cddcore.engine._
+
 import org.cddcore.engine.Test
 import org.cddcore.example.customerCategorisation.CategorisePerson
 import org.cddcore.example.processCheque_DM_Xml.ProcessChequeXml
 import org.cddcore.example.tennisScore.TennisScorer
 import org.corecdd.website.AbstractWebsiteTest
 import org.corecdd.website.CddHandler
-import org.corecdd.website.WebServer
 import org.junit.runner.RunWith
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.junit.JUnitRunner
 import org.cddcore.engine.EngineWithResult
+import org.corecdd.website.WebServer
 
 @RunWith(classOf[JUnitRunner])
 class ExampleWebsiteTest extends AbstractWebsiteTest with BeforeAndAfterAll {
@@ -26,7 +27,7 @@ class ExampleWebsiteTest extends AbstractWebsiteTest with BeforeAndAfterAll {
     TennisScorer.scorer)
 
   val server = WebServer(project);
-  val cddHandler: CddHandler = new CddHandler(project, WebServer.defaultPathHandlers);
+  val cddHandler: CddHandler = WebServer.defaultCddHandler(project);
   val report = cddHandler.reportCreator.report
   val reportableToUrl = cddHandler.reportCreator.reportableToUrl
   val urlMap = cddHandler.urlMap

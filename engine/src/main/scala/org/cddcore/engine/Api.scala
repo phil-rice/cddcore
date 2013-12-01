@@ -1,31 +1,37 @@
 package org.cddcore.engine
 
+import scala.language.implicitConversions
+
 object Reportable {
   type ReportableList = List[Reportable]
   type ReportableSet = Set[Reportable]
 
   def allTests(list: List[Reportable]): List[Test] = list.flatMap(_ match { case t: Test => List(t); case rh: ReportableHolder => allTests(rh.children) })
+
+  def templateName(a: Any): String = a match {
+    case l: List[_] => Reportable.templateName(l.head);
+    case r: ReportableWithTemplate => r.templateName;
+    case _ => a.getClass.getSimpleName()
+  }
 }
 
+/** Reportables are things that appear in reports. This includes Engines, Use cases and tests*/
+trait Reportable
+
+/** Templates was used to control the text is generated. This is used when the class simple name isn't good enough for template selection */
+trait ReportableWithTemplate {
+  def templateName: String
+}
+
+/** Classes implementing this are displayed using htmlDisplay, rather than toString when shown on a website, or in HTML pages.*/
 trait HtmlDisplay {
   def htmlDisplay: String
-
 }
 
-case class UrlMap(val toUrl: Map[Reportable, String], val fromUrl: Map[String, List[Reportable]]) {
-  def apply(r: Reportable): String = toUrl(r)
-  def get(r: Reportable): Option[String] = toUrl.get(r)
-  def apply(url: String) = fromUrl(url)
-  def get(url: String) = fromUrl.get(url)
-  def contains(r: Reportable) = toUrl.contains(r)
-  def +(kv: (List[Reportable], String)) = UrlMap(toUrl + (kv._1.head -> kv._2), fromUrl + (kv._2 -> kv._1))
-  def size = toUrl.size
-}
-
-trait Reportable {
-  def templateName: String = getClass.getSimpleName()
-}
-
+/**
+ * Quite a lot of reportables have 'child' reportables. Engines have usecases or scenarios. Scenarios have children. This trait requires the children method to be implemented, hten provides a number of common filtering, walking and folding operations
+ *  Note that this implements 'foreach' so using this as a traversable visits all the descendants in a depth first manner
+ */
 trait ReportableHolder extends Reportable with Traversable[Reportable] {
   import Reportable._
   def children: ReportableList
@@ -37,8 +43,10 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
     }
   }
 
+  /** All the descendants that implement the class. Doesn't include 'this' */
   def all[R <: Reportable](rClass: Class[R]) = foldLeft[List[R]](List())((acc, r) => if (rClass.isAssignableFrom(r.getClass)) r.asInstanceOf[R] :: acc else acc)
 
+  /** Calls this visitor with 'this' and all it's descendents. The parameter to visitor is the path from the head back up to 'this'. So head will be the deepest reportable */
   def walkWithPath(visitor: (ReportableList) => Unit): Unit = walkWithPath(List(), visitor)
 
   protected def walkWithPath(path: ReportableList, visitor: (ReportableList) => Unit): Unit = {
@@ -50,7 +58,10 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
         case _ => visitor(c :: newPath)
       }
   }
-  def foldWithPath[Acc](path: ReportableList, initial: Acc, fn: (Acc, ReportableList) => Acc): Acc = {
+  /** folds across 'this' and all it's descendents. The folding function takes the accumulator and the path from the descendant up to 'this' to return a new accumulator */
+  def foldWithPath[Acc](initial: Acc, fn: (Acc, ReportableList) => Acc): Acc = foldWithPath(List(), initial, fn)
+
+  private def foldWithPath[Acc](path: ReportableList, initial: Acc, fn: (Acc, ReportableList) => Acc): Acc = {
     val newPath = this :: path
     var acc = fn(initial, newPath)
     for (c <- children)
@@ -61,7 +72,10 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
       }
     acc
   }
-  def foldWithPathReversingChildren[Acc](path: ReportableList, initial: Acc, fn: (Acc, ReportableList) => Acc): Acc = {
+
+  /** folds across 'this' and all it's descendents. The folding function takes the accumulator and the path from the descendant up to 'this' to return a new accumulator  In this folding operation though, all the children are reversed.   */
+  def foldWithPathReversingChildren[Acc](initial: Acc, fn: (Acc, ReportableList) => Acc): Acc = foldWithPathReversingChildren(List(), initial, fn)
+  private def foldWithPathReversingChildren[Acc](path: ReportableList, initial: Acc, fn: (Acc, ReportableList) => Acc): Acc = {
     val newPath = this :: path
     var acc = fn(initial, newPath)
     for (c <- children.reverse)
@@ -72,44 +86,56 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
       }
     acc
   }
-
 }
 
+/** Paths are often used: see ReportableAndHolder walking and folding operations. A path is a List of Reportables in which the deepest item is the head of the list, and the top container is the last item in the list. PathUtils provides ways of getting information out of the path */
 object PathUtils {
   import Reportable._
-  def findUseCase(path: ReportableList) = findUseCasePath(path).head.asInstanceOf[RequirementAndHolder]
+
+  /** Walks up the path until it finds the first use case */
+  def findUseCase(path: ReportableList) = findUseCasePath(path).head.asInstanceOf[UseCase]
+  /** Walks up the path until it finds the first use case, return a truncated path with the usecase as the head */
   def findUseCasePath(path: ReportableList): ReportableList = path match {
-    case (usecase: RequirementAndHolder) :: tail => path
+    case (usecase: UseCase) :: tail => path
     case h :: tail => findUseCasePath(tail)
     case _ => throw new IllegalArgumentException
   }
 
+  /** Walks up the path until it finds the first engine with tests*/
   def findEngineWithTests(path: ReportableList) = engineWithTestsPath(path).head.asInstanceOf[EngineBuiltFromTests[_]]
+  /** Walks up the path until it finds the first engine with tests, return a truncated path with the engine as the head */
   def engineWithTestsPath(path: ReportableList): ReportableList = path match {
     case (engine: EngineBuiltFromTests[_]) :: tail => path
     case h :: tail => enginePath(tail)
     case _ => throw new IllegalArgumentException
   }
+  /** Walks up the path until it finds the first engine*/
   def findEngine(path: ReportableList) = enginePath(path).head.asInstanceOf[Engine]
+  /** Walks up the path until it finds the first engine, return a truncated path with the engine as the head */
   def enginePath(path: ReportableList): ReportableList = path match {
     case (engine: Engine) :: tail => path
     case h :: tail => enginePath(tail)
     case _ => throw new IllegalArgumentException
   }
+  /** Walks up the path until it finds the first project */
   def findProject(path: ReportableList) = projectPath(path).head.asInstanceOf[Project]
+  /** Walks up the path until it finds the first project, return a truncated path with the project as the head */
   def projectPath(path: ReportableList): ReportableList = path match {
     case (project: Project) :: tail => path
     case h :: tail => projectPath(tail)
     case _ => throw new IllegalArgumentException
   }
+  /** Walks up the path until it finds the first report*/
   def findReport(path: ReportableList) = reportPath(path).head.asInstanceOf[Report]
+  /** Walks up the path until it finds the first report, return a truncated path with the report as the head */
   def reportPath(path: ReportableList): ReportableList = path match {
     case (project: Report) :: tail => path
     case h :: tail => reportPath(tail)
     case _ => throw new IllegalArgumentException
   }
 
-  def maxPriority(path: ReportableList) = path.foldLeft[Option[Int]](None)((acc, r: Reportable) =>
+  /** returns the maximum priority or None*/
+  def maxPriority(path: ReportableList): Option[Int] = path.foldLeft[Option[Int]](None)((acc, r: Reportable) =>
     (acc, r) match {
       case (None, (r: Requirement)) => r.priority
       case (Some(p), r: Requirement) if (r.priority.isDefined && r.priority.get > p) => Some(p);
@@ -118,36 +144,52 @@ object PathUtils {
 
 }
 
-trait RequirementAndHolder extends ReportableHolder with Requirement
-
+/** Very little is known about Reportables: no methods are implemented. Requirements are the main Reportable. Requirements include Engines, UseCases and Scenarios */
 trait Requirement extends Reportable {
+  /** this will appear on reports as a title for that requirement*/
   def title: Option[String]
+  /** the title or an empty string*/
   def titleString = title.getOrElse("")
+  /** the title or if undefined the description or if undefined the default*/
   def titleOrDescription(default: String): String = title.getOrElse(description.getOrElse(default))
 
+  /** An optional description*/
   def description: Option[String]
+  /** The 'priority' that is used to determine the order that the decision trees are being built */
   def priority: Option[Int]
-  def references: List[Reference]
+  def references: Set[Reference]
 }
 
+/** As the name suggests this is both a requirement and a reportableholder */
+trait RequirementAndHolder extends ReportableHolder with Requirement
+
+/** Usecases are at the moment mostly 'just text'. They are effectively a grouping mechanism, to group tests */
 trait UseCase extends RequirementAndHolder {
+  /** The default 'code' for scenario's underneath it. It is very common for all things implementing a use case to use the same code block, and using this makes that clear */
   def optCode: Option[CodeHolder]
+  /** The default expected for scenario's underneath it. It is very common for all things implementing a use case to come to the same conclusion, and using this avoids duplication and makes it clear */
   def expected: Option[ROrException[_]]
 }
 
+/** This is a full 'test + optional reason why + optional code to implement the behaviour that will make the test past */
 trait Test extends Requirement {
-  def optCode: Option[CodeHolder]
-  def expected: Option[ROrException[_]]
-  def because: Option[CodeHolder]
-  def becauseString: String
+  /** The inputs for the test. The test is mostly saying 'if I pass the engine these parameters, then I expect this result*/
   def params: List[Any]
-  def paramPrinter: LoggerDisplayProcessor
+  /** The expected output for the test. The test is mostly saying 'if I pass the engine these parameters, then I expect this result*/
+  def expected: Option[ROrException[_]]
+  /** The because is a tool that the engine uses to come to the correct conclusions. A good because function should have no sideeffects and execute quickly*/
+  def because: Option[CodeHolder]
+  /** If you want to display the because, this returns the description or an empty string if none is defined */
+  def becauseString = because match { case Some(b) => b.description; case _ => "" }
+  /** The code for the scenario. This is optional as if the result is 'the expected' then the code is redundant */
+  def optCode: Option[CodeHolder]
 }
 
 object Report {
   def apply(reportTitle: String, requirements: Requirement*): Report = Report(reportTitle, None, requirements: _*)
 }
 
+/** A report is what it says: the object representation of a (usually) html report */
 case class Report(reportTitle: String, rootUrl: Option[String], reportables: Reportable*) extends ReportableHolder {
   val title = Some(reportTitle)
   val children = reportables.toList
@@ -156,35 +198,50 @@ case class Report(reportTitle: String, rootUrl: Option[String], reportables: Rep
   val references = List[Reference]()
 }
 
+/** A project is basically a list of the engines that are used on a software project */
 case class Project(projectTitle: String, engines: ReportableHolder*) extends RequirementAndHolder {
   val title = Some(projectTitle)
   val children = engines.toList
   def description = None
   def priority = None
-  def references = List()
+  def references = Set()
 }
 
 object Engine {
   protected def addToList[R] = (acc: List[R], r: R) => r :: acc
   protected def addToSet[R] = (acc: Set[R], r: R) => acc + r
   val noInitialValue = () => throw new IllegalStateException
+  /** returns a builder for an engine that implements Function[P,R] */
   def apply[P, R]() = new BuilderFactory1[P, R, R](None, noInitialValue).builder;
+  /** returns a builder for an engine that implements Function2[P1,P2,R] */
   def apply[P1, P2, R]() = new BuilderFactory2[P1, P2, R, R](None, noInitialValue).builder;
+  /** returns a builder for an engine that implements Function3[P1,P2,P3,R] */
   def apply[P1, P2, P3, R]() = new BuilderFactory3[P1, P2, P3, R, R](None, noInitialValue).builder;
 
+  /** returns a builder for an engine that implements Function[P,FullR. This builder will have child engines that implement Function[P,R]. The folding function and initial value are used to produce the final result of the engine from the child engines */
   def folding[P, R, FullR](foldFn: (FullR, R) => FullR, initialValue: => FullR) = new BuilderFactory1[P, R, FullR](Some(foldFn), () => initialValue).builder
+  /** returns a builder for an engine that implements Function2[P1,P2,FullR. This builder will have child engines that implement Function2[P1,P2,R]. The folding function and initial value are used to produce the final result of the engine from the child engines */
   def folding[P1, P2, R, FullR](foldFn: (FullR, R) => FullR, initialValue: => FullR) = new BuilderFactory2[P1, P2, R, FullR](Some(foldFn), () => initialValue).builder
+  /** returns a builder for an engine that implements Function3[P1,P2,P3,FullR. This builder will have child engines that implement Function3[P1,P2,P3,R]. The folding function and initial value are used to produce the final result of the engine from the child engines */
   def folding[P1, P2, P3, R, FullR](foldFn: (FullR, R) => FullR, initialValue: => FullR) = new BuilderFactory3[P1, P2, P3, R, FullR](Some(foldFn), () => initialValue).builder
 
+  /** returns a builder for an engine that implements Function[P,List[R]]. This builder will have child engines that implement Function[P,R]. The results of those engines are placed in a list, and become the result of the main engine*/
   def foldList[P, R] = folding[P, R, List[R]](addToList[R], List[R]())
+  /** returns a builder for an engine that implements Function2[P1,P2,List[R]]. This builder will have child engines that implement Function2[P1,P2,R]. The results of those engines are placed in a list, and become the result of the main engine*/
   def foldList[P1, P2, R] = folding[P1, P2, R, List[R]](addToList[R], List[R]())
+  /** returns a builder for an engine that implements Function3[P1,P2,P3,List[R]]. This builder will have child engines that implement Function[P1,P2,P3,R]. The results of those engines are placed in a list, and become the result of the main engine*/
   def foldList[P1, P2, P3, R] = folding[P1, P2, P3, R, List[R]](addToList[R], List[R]())
 
+  /** returns a builder for an engine that implements Function[P,List[R]]. This builder will have child engines that implement Function[P,R]. The results of those engines are placed in a set, and become the result of the main engine*/
   def foldSet[P, R] = folding[P, R, Set[R]](addToSet[R], Set[R]())
+  /** returns a builder for an engine that implements Function2[P1,P2,List[R]]. This builder will have child engines that implement Function2[P1,P2,R]. The results of those engines are placed in a set, and become the result of the main engine*/
   def foldSet[P1, P2, R] = folding[P1, P2, R, Set[R]](addToSet[R], Set[R]())
+  /** returns a builder for an engine that implements Function3[P1,P2,P3,List[R]]. This builder will have child engines that implement Function[P1,P2,P3,R]. The results of those engines  are placed in a set, and become the result of the main engine*/
   def foldSet[P1, P2, P3, R] = folding[P1, P2, P3, R, Set[R]](addToSet[R], Set[R]())
 
+  /** returns a builder for an engine that takes S and P and returns the tuple (newS, R). It is typically used when there is a state of type S that needs to be updated with the function */
   def state[S, P, R]() = new BuilderFactory2[S, P, (S, R), (S, R)](None, noInitialValue).builder;
+  /** returns a builder for an engine that takes S, P1, P2 and returns the tuple (newS, R). It is typically used when there is a state of type S that needs to be updated with the function */
   def state[S, P1, P2, R]() = new BuilderFactory3[S, P1, P2, (S, R), (S, R)](None, noInitialValue).builder;
 
   private var _traceBuilder: ThreadLocal[Option[TraceBuilder]] = new ThreadLocal[Option[TraceBuilder]] {
@@ -232,27 +289,41 @@ object Engine {
   }
 
 }
+
+/** The details about the parameters to an engine, including a parser for the live website and a default string value that allows the live website to be be tested by a selenium test easily*/
 case class ParamDetail(displayName: String, parser: (String) => _, testValue: Option[String])
 
+/** This is the visitor when folding a decision tree. */
 trait DecisionTreeFolder[Acc] {
   def apply(acc: Acc, c: Conclusion): Acc
   def apply(acc: Acc, d: Decision): Acc
 
 }
 
+/** This is the core object that describes an Engine. */
 trait Engine extends RequirementAndHolder {
-  lazy val useCases = all(classOf[UseCase])
+  /** How many parameters the engine takes. Engine1[P,R] has 1, Engine2[P1,P2,R] has 2 */
   def arity: Int
-  def logger: TddLogger
   def decisionTreeNodes: Int
 }
 
+/** Engines have loggers which record interesting events. However to avoid polluting the API with them, if you absolutely need access to the logger you can import EngineWithLogger._ */
+object EngineWithLogger {
+  implicit def toEngineWithLogger(e: Engine) = e.asInstanceOf[EngineWithLogger]
+}
+trait EngineWithLogger extends Engine {
+  /** used to meter the engine. It also doubles as a LoggerDisplayProcessor*/
+  def logger: TddLogger
+
+}
+
 trait EngineWithResult[R] extends Engine {
+  /** This is used when you don't know at compile time the types and arity of the parameters. For example by the live website. Normally the apply method would be used, which is type safe */
   def applyParams(params: List[Any]): R
 }
 
+/** This is the 'normal' engine. It */
 trait EngineBuiltFromTests[R] extends EngineWithResult[R] {
-
   def root: Either[Conclusion, Decision]
   lazy val tests = all(classOf[Test])
 
@@ -320,16 +391,20 @@ trait EngineBuiltFromTests[R] extends EngineWithResult[R] {
     toStringWith(List(), root, new DefaultIfThenPrinter())
 
 }
-trait ChildEngine[R] extends EngineBuiltFromTests[R] {
-}
 
+/** A child engine is an engine that 'belongs' to a full engine. Typically the results of the child engines (if they exist) will be 'folded' using a folding function to give the full result */
+trait ChildEngine[R] extends EngineBuiltFromTests[R]
+
+/** In order to avoid polluting the Engine trait, if you need access to the paramDetails, this can be imported */
 object ParamDetails {
   implicit def toParamDetails(e: Engine) = e.asInstanceOf[ParamDetails]
 }
+
 trait ParamDetails {
   def paramDetails: List[ParamDetail]
 }
 
+/** An engine with child engines and a folding function for aggregating the results */
 trait EngineFull[R, FullR] extends EngineWithResult[FullR] {
   import Reportable._
   def documents: List[Document]
@@ -359,7 +434,9 @@ trait Engine3[P1, P2, P3, R] extends Engine with Function3[P1, P2, P3, R] {
   def arity = 3
 }
 
+/** The decision tree inside an engine with tests is made of nodes that either a conclusion or a decision. Both conclusion and decision extend this*/
 trait ConclusionOrDecision extends Reportable {
+  /** All the conclusions under or including this node in the decision tree*/
   def allConclusion: Set[Conclusion]
   protected def allConclusion(either: Either[Conclusion, Decision]): Set[Conclusion] =
     either match {
@@ -368,28 +445,38 @@ trait ConclusionOrDecision extends Reportable {
     }
 }
 
+/** This represents a decision in the decision tree*/
 trait Decision extends ConclusionOrDecision {
+  /** The condition that be evaluated. Usually there will be only one item in the list. Because of the idea of 'node merging': see EngineOrTests, this is a list. Effectively the condition is true if any of the becauses are true */
   def because: List[CodeHolder]
+  /** If the because is true, then go this way*/
   def yes: Either[Conclusion, Decision]
+  /** If the because is false, then go this way*/
   def no: Either[Conclusion, Decision]
+  /** Some text to display the because with */
   def prettyString: String
+  /** All the conclusions under (and including) the yes branch */
   lazy val allYesConclusion = allConclusion(yes)
+  /** All the conclusions under (and including) the no branch */
   lazy val allNoConclusion = allConclusion(no)
   lazy val allConclusion: Set[Conclusion] = allYesConclusion ++ allNoConclusion
 }
 
+/** This represents a conclusion in the decision tree*/
 trait Conclusion extends ConclusionOrDecision {
+  /** The code that will be executed, should this node be reached. This will return the 'result' */
   def code: CodeHolder
+  /** All the scenarios that 'end up' coming to the conclusion this node represents */
   def scenarios: List[Test]
   val allConclusion = Set(this)
 }
 
+/** Documents are external documents such as requirements specifications, emails and so on. The are linked to scenarios, usecases and engines by references */
 case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, url: Option[String] = None) {
   def titleString = name.getOrElse(title.getOrElse(url.getOrElse(description.getOrElse(""))))
 }
 
-case class RefTree(ref: Reference, children: List[Reference])
-
+/** A reference is usually a link to a document. The 'ref' is a string of the form a.b.c..., where the fragments are string not containing a dot. The sort order is based on each fragment*/
 case class Reference(ref: String = "", document: Option[Document] = None) extends Comparable[Reference] {
 
   def titleString = document.collect { case d => d.titleString + " " }.getOrElse("") + ref

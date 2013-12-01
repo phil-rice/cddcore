@@ -39,13 +39,13 @@ class BuilderNodeTests extends EngineStringStringTests {
     val b1 = builder.document(doc1).reference("1.1")
     val b2 = builder.document(doc1).reference("1.2", "x").reference("1.3")
 
-    assertEquals(List(Reference("1.1")), b1.builderData.references);
-    assertEquals(List(Reference("1.3"), Reference("1.2", Some(doc1))), b2.builderData.references);
+    assertEquals(Set(Reference("1.1")), b1.builderData.references);
+    assertEquals(Set(Reference("1.3"), Reference("1.2", Some(doc1))), b2.builderData.references);
   }
   it should "allow references to be added even after other stuff added" in {
     val b1 = builder.document(doc1).reference("1.1").useCase("")
 
-    assertEquals(List(Reference("1.1")), b1.builderData.references);
+    assertEquals(Set(Reference("1.1")), b1.builderData.references);
   }
 
   it should "allow scenarios without usecases" in {
@@ -103,8 +103,8 @@ class BuilderNodeTests extends EngineStringStringTests {
     val uc1 = b1.builderData.all(classOf[UseCase])(0);
     val uc2 = b2.builderData.all(classOf[UseCase])(0);
 
-    assertEquals(List(Reference("1.1")), uc1.references);
-    assertEquals(List(Reference("1.3"), Reference("1.2", Some(doc1))), uc2.references);
+    assertEquals(Set(Reference("1.1")), uc1.references);
+    assertEquals(Set(Reference("1.3"), Reference("1.2", Some(doc1))), uc2.references);
   }
 
   "A scenario" should "have its builder nodes setable" in {
@@ -158,8 +158,8 @@ class BuilderNodeTests extends EngineStringStringTests {
     val s1 = firstScenario(b1.builderData)
     val s2 = firstScenario(b2.builderData);
 
-    assertEquals(List(Reference("1.1")), s1.references);
-    assertEquals(List(Reference("1.3"), Reference("1.2", Some(doc1))), s2.references);
+    assertEquals(Set(Reference("1.1")), s1.references);
+    assertEquals(Set(Reference("1.3"), Reference("1.2", Some(doc1))), s2.references);
   }
 
   "An engine" should "inherit the properties of the builder" in {

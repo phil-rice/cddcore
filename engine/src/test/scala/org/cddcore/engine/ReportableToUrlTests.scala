@@ -60,7 +60,7 @@ class ReportableToUrlTests extends AbstractTest with ReportableTestFramework {
     val e = Engine[Int, String]().useCase("").scenario(1).expected("x").build
     val reportableToUrl = new SimpleReportableToUrl
     val urlMap = reportableToUrl.makeUrlMap(e)
-    val uc1 = e.useCases(0)
+    val uc1 = e.all(classOf[UseCase])(0)
     val s1 = e.tests(0)
     assertEquals(3, urlMap.size)
     checkUrl(reportableToUrl, urlMap, e)
@@ -79,8 +79,8 @@ class ReportableToUrlTests extends AbstractTest with ReportableTestFramework {
       build
     val reportableToUrl = new SimpleReportableToUrl
     val urlMap = reportableToUrl.makeUrlMapWithDecisionsAndConclusions(e)
-    val uc1 = e.useCases(0)
-    val uc2 = e.useCases(1)
+    val uc1 = e.all(classOf[UseCase])(0)
+    val uc2 = e.all(classOf[UseCase])(1)
     val s1 = e.tests(0)
     val s2 = e.tests(1)
     val d = e.root.right.get

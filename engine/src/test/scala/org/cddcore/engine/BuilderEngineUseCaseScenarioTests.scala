@@ -93,7 +93,7 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
     val e = Engine.folding[Int, String, String]((acc, s) => acc, "").childEngine("engineDescription").
       useCase("uc1").useCase("uc2").
       build;
-    val useCases = e.useCases
+    val useCases = e.all(classOf[UseCase])
     assertEquals(List("uc1", "uc2"), useCases.map(_.titleString))
     val uc1 = useCases(0)
     val uc2 = useCases(1)
@@ -150,8 +150,8 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
 
     val engines = e.childEngines
     assertEquals(List("ed1", "ed2"), engines.map(_.titleString))
-    val uc1s = engines(0).useCases
-    val uc2s = engines(1).useCases
+    val uc1s = engines(0).all(classOf[UseCase])
+    val uc2s = engines(1).all(classOf[UseCase])
     assertEquals(List("uc11", "uc12"), uc1s.map(_.titleString))
     assertEquals(List(), uc2s.map(_.titleString))
     assertEquals(List("111", "112", "121", "122"), engines(0).tests.map(_.titleString))

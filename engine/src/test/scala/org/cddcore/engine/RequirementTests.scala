@@ -8,7 +8,7 @@ case class RequirementForTest(name: String) extends Requirement {
   def title: Option[String] = Some("Title_" + name)
   def description: Option[String] = Some("desc_" + name)
   def priority: Option[Int] = None
-  def references: List[Reference] = List()
+  def references: Set[Reference] = Set()
   def params: List[Any] = List()
   override def toString() = name
 }

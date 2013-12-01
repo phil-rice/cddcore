@@ -1,13 +1,13 @@
 package org.corecdd.website
 
 import org.eclipse.jetty.server.nio.SelectChannelConnector
-
 import org.eclipse.jetty.servlet.ServletHolder
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.server._
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.cddcore.engine.RequirementAndHolder
+import org.cddcore.engine.LoggerDisplayProcessor
 
 object WebServer {
   def defaultPort = {
@@ -19,10 +19,11 @@ object WebServer {
   }
 
   def defaultPathHandlers = List(new FavIconHandler, new RootPathHandler, new LivePathHandler, new PathHandler)
-  
-  def apply(port: Int, p: RequirementAndHolder, handlers: List[CddPathHandler] = defaultPathHandlers): WebServer = new WebServer(port, new CddHandler(p, handlers))
-  def withPreHandlers(port: Int, p: RequirementAndHolder, handlers: CddPathHandler*): WebServer = new WebServer(port, new CddHandler(p, handlers.toList ::: defaultPathHandlers))
-  def apply( p: RequirementAndHolder): WebServer = new WebServer(defaultPort, new CddHandler(p, defaultPathHandlers))
+  def defaultLoggerDisplayProcessor = LoggerDisplayProcessor()
+  def apply(port: Int, p: RequirementAndHolder, handlers: List[CddPathHandler] = defaultPathHandlers): WebServer = new WebServer(port, new CddHandler(defaultLoggerDisplayProcessor, p, handlers))
+  def withPreHandlers(port: Int, p: RequirementAndHolder, handlers: CddPathHandler*): WebServer = new WebServer(port, new CddHandler(defaultLoggerDisplayProcessor, p, handlers.toList ::: defaultPathHandlers))
+  def defaultCddHandler(p: RequirementAndHolder) =  new CddHandler(defaultLoggerDisplayProcessor, p, defaultPathHandlers)
+  def apply( p: RequirementAndHolder): WebServer = new WebServer(defaultPort, defaultCddHandler(p))
   def apply( handler: CddHandler): WebServer = new WebServer(defaultPort, handler)
 
 }

@@ -11,6 +11,7 @@ import org.junit.Assert
 
 @RunWith(classOf[JUnitRunner])
 class ReportCreatorTests extends AbstractTest {
+   import EngineWithLogger._
 
   val engine = Engine[Int, String]().title("EngTitle").
     useCase("uc1").
@@ -20,7 +21,7 @@ class ReportCreatorTests extends AbstractTest {
     scenario(21, "twentyone").expected("21->").because((x: Int) => x == 21).
     build
   val pForTitle = Project("ProjName", engine);
-  val rc = new ReportCreator(pForTitle, "ReportTitle", false, new SimpleReportableToUrl)
+  val rc = new ReportCreator(engine.logger, pForTitle, "ReportTitle", false, new SimpleReportableToUrl)
 
   "A ReportCreator" should "produce Html for a project " in {
     val html = rc.htmlFor(List(pForTitle)).get
@@ -42,10 +43,10 @@ class ReportCreatorTests extends AbstractTest {
 
   it should "produce HTML for scenarios" in {
     rc.report.walkWithPath((path) => path match {
-      case (s: Test) ::  _ =>
+      case (s: Test) :: _ =>
         val html = rc.htmlFor(path).get
         new ScenarioPageChecker(path, html, rc.reportableToUrl)
-      case _ =>{}
+      case _ => {}
     })
   }
 }

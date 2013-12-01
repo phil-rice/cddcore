@@ -2,6 +2,7 @@ package org.corecdd.website
 
 import org.cddcore.engine._
 
+import scala.language.implicitConversions
 import org.cddcore.engine.RequirementAndHolder
 import org.eclipse.jetty.server._
 import org.eclipse.jetty.server.Handler
@@ -11,7 +12,7 @@ import org.eclipse.jetty.servlet._
 import javax.servlet.http._
 import scala.xml.Elem
 
-class HandlerContext(val root: RequirementAndHolder, val reportCreator: ReportCreator[SimpleReportableToUrl], val method: String, val fullUri: String, val uriPath: String) {
+class HandlerContext(val loggerDisplayProcessor: LoggerDisplayProcessor, val root: RequirementAndHolder, val reportCreator: ReportCreator[SimpleReportableToUrl], val method: String, val fullUri: String, val uriPath: String) {
   import PathUtils._
   val reportableToUrl = reportCreator.reportableToUrl
   val urlMap = reportCreator.urlMap
@@ -30,8 +31,8 @@ trait CddPathHandler {
 
 case class Param(name: String, valueAsString: String, value: Any)
 
-class CddHandler(p: RequirementAndHolder, pathHandlers: List[CddPathHandler]) extends AbstractHandler {
-  val reportCreator = new ReportCreator(p, title = null, live = true, reportableToUrl = new SimpleReportableToUrl)
+class CddHandler(loggerDisplayProcessor: LoggerDisplayProcessor, p: RequirementAndHolder, pathHandlers: List[CddPathHandler]) extends AbstractHandler {
+  val reportCreator = new ReportCreator(loggerDisplayProcessor, p, title = null, live = true, reportableToUrl = new SimpleReportableToUrl)
   val urlMap = reportCreator.urlMap
 
   def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse) {
@@ -43,7 +44,7 @@ class CddHandler(p: RequirementAndHolder, pathHandlers: List[CddPathHandler]) ex
           baseRequest.setHandled(true);
           response.setContentType("text/html;charset=utf-8");
           response.setStatus(HttpServletResponse.SC_OK);
-          val context = new HandlerContext(p, reportCreator, baseRequest.getMethod(), path, ph.findUriPath(path))
+          val context = new HandlerContext(loggerDisplayProcessor, p, reportCreator, baseRequest.getMethod(), path, ph.findUriPath(path))
           val paramsINeed = ph.paramsINeed(context)
           val paramsNameAndValue = paramsINeed.map((name) => (name, baseRequest.getParameter(name)))
           val html = ph.html(context, paramsNameAndValue)
@@ -94,7 +95,7 @@ class LivePathHandler extends CddPathHandler {
       val result = engine.evaluateConclusion(engineParams, conclusion)
       (formHtml(context, paramNameAndValues, result.toString), Some(engineParams), Some(conclusion))
     } catch { case t: Throwable => t.printStackTrace(); (formHtml(context, params.map((n) => Param(n._1, n._2, "")), t.getClass + ": " + t.getMessage()), None, None) }
-    HtmlRenderer(true).liveEngineHtml(reportCreator.rootUrl, paramNameAndValues, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + engine.titleOrDescription(""), engine))
+    HtmlRenderer(loggerDisplayProcessor, true).liveEngineHtml(reportCreator.rootUrl, paramNameAndValues, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + engine.titleOrDescription(""), engine))
   }
 
   def formHtml(context: HandlerContext, paramNameAndValues: List[Param], result: String) = {

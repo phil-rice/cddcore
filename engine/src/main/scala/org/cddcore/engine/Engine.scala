@@ -51,15 +51,15 @@ trait ABuilderFactory1[P, R, FullR] extends EngineUniverse[R, FullR] with Engine
       case _ => new EngineWithChildrenImpl(builderData) with EngineFull[R, FullR] with Engine1[P, FullR] {
         def apply(p1: P): FullR = applyParams(List(p1));
       }
-    } 
+    }
   }
 }
 
-class BuilderFactory1[P, R, FullR](folder: Option[(FullR, R)=> FullR], initialFoldValue: ()=>FullR, override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory1[P, R, FullR] {
+class BuilderFactory1[P, R, FullR](folder: Option[(FullR, R) => FullR], initialFoldValue: () => FullR, override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory1[P, R, FullR] {
   type RealScenarioBuilder = Builder1
   def builder = new Builder1
 
-  class Builder1(val builderData: ScenarioBuilderData = ScenarioBuilderData(logger, arity = 1, folder=folder, initialFoldValue = initialFoldValue )) extends ABuilder1 {
+  class Builder1(val builderData: ScenarioBuilderData = ScenarioBuilderData(logger, arity = 1, folder = folder, initialFoldValue = initialFoldValue)) extends ABuilder1 {
     protected def thisAsBuilder = this
     def copy(builderData: ScenarioBuilderData) = new Builder1(builderData)
   }
@@ -81,28 +81,22 @@ trait ABuilderFactory2[P1, P2, R, FullR] extends EngineUniverse[R, FullR] with E
   }
 }
 
-class BuilderFactory2[P1, P2, R, FullR](folder: Option[(FullR, R)=> FullR], initialFoldValue: ()=>FullR,override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory2[P1, P2, R, FullR] {
+class BuilderFactory2[P1, P2, R, FullR](folder: Option[(FullR, R) => FullR], initialFoldValue: () => FullR, override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory2[P1, P2, R, FullR] {
   type RealScenarioBuilder = Builder2
   def builder = new Builder2
 
-  class Builder2(val builderData: ScenarioBuilderData = ScenarioBuilderData(logger, arity = 2, folder=folder, initialFoldValue = initialFoldValue)) extends ABuilder2 {
+  class Builder2(val builderData: ScenarioBuilderData = ScenarioBuilderData(logger, arity = 2, folder = folder, initialFoldValue = initialFoldValue)) extends ABuilder2 {
     protected def thisAsBuilder = this
     def copy(builderData: ScenarioBuilderData) = new Builder2(builderData)
   }
 }
+trait ABuilderFactory3[P1, P2, P3, R, FullR] extends EngineUniverse[R, FullR] with Engine3Types[P1, P2, P3, R, FullR] {
 
-class BuilderFactory3[P1, P2, P3, R, FullR](folder: Option[(FullR, R)=> FullR], initialFoldValue: ()=>FullR,override val logger: TddLogger = TddLogger.defaultLogger) extends EngineUniverse[R, FullR] with Engine3Types[P1, P2, P3, R, FullR] {
-
-  type RealScenarioBuilder = Builder3
-  def builder = new Builder3
-
-  class Builder3(val builderData: ScenarioBuilderData = ScenarioBuilderData(logger, arity = 3, folder=folder, initialFoldValue = initialFoldValue)) extends ScenarioBuilder {
-    protected def thisAsBuilder = this
-    def copy(builderData: ScenarioBuilderData) = new Builder3(builderData)
+  trait ABuilder3 extends ScenarioBuilder {
     def scenario(p1: P1, p2: P2, p3: P3, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2, p3))
-    def build = builderData.childEngines.size match {
+    def build: Engine3[P1, P2, P3, FullR] = builderData.childEngines.size match {
       case 0 => new EngineFromTestsImpl(builderData) with Engine3[P1, P2, P3, FullR] {
-        def apply(p1: P1, p2: P2, p3: P3) = applyParams(root, List(p1, p2, p3), true).asInstanceOf[FullR];
+        def apply(p1: P1, p2: P2, p3: P3): FullR = applyParams(root, List(p1, p2, p3), true).asInstanceOf[FullR];
         override def toString() = toStringWithScenarios
       }
       case _ => new EngineWithChildrenImpl(builderData) with EngineFull[R, FullR] with Engine3[P1, P2, P3, FullR] {
@@ -111,3 +105,14 @@ class BuilderFactory3[P1, P2, P3, R, FullR](folder: Option[(FullR, R)=> FullR], 
     }
   }
 }
+
+class BuilderFactory3[P1, P2, P3, R, FullR](folder: Option[(FullR, R) => FullR], initialFoldValue: () => FullR, override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory3[P1, P2, P3, R, FullR] {
+  type RealScenarioBuilder = Builder3
+  def builder = new Builder3
+
+  class Builder3(val builderData: ScenarioBuilderData = ScenarioBuilderData(logger, arity = 3, folder = folder, initialFoldValue = initialFoldValue)) extends ABuilder3 {
+    protected def thisAsBuilder = this
+    def copy(builderData: ScenarioBuilderData) = new Builder3(builderData)
+  }
+}
+

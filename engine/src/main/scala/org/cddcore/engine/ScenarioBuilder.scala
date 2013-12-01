@@ -59,7 +59,7 @@ object ROrException {
   def apply[R]() = new ROrException[R](None, None)
   def apply[R](value: R) = new ROrException[R](Some(value), None)
   def apply[R](exception: Throwable) = new ROrException[R](None, Some(exception))
-  def from[R](from: =>R) = try {apply(from) } catch { case e: Throwable => apply(e)}
+  def from[R](from: => R) = try { apply(from) } catch { case e: Throwable => apply(e) }
 
 }
 case class ROrException[R](value: Option[R], exception: Option[Throwable]) {
@@ -98,8 +98,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     def apply(s: Test) = scenario2Str(s)
     def existingAndBeingAdded(existing: Test, s: Test) =
       s"Existing: ${existing.titleString}\nBeing Added: ${s.titleString}\nDetailed existing:\n${existing}\nDetailed of being Added:\n${s}"
-    def full(s: Test) = s + "\nDetailed:\n  " + params(s)
-    def params(s: Test) = s.paramPrinter(s.params)
+    def full(ldp: LoggerDisplayProcessor, s: Test) = s + "\nDetailed:\n  " + ldp(s.params)
     def scenario2Str(s: Test) =
       if (fullScenario)
         s.titleString
@@ -111,7 +110,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   class ScenarioException(msg: String, val scenario: Test, cause: Throwable = null) extends EngineException(msg, cause)
 
   object NoExpectedException {
-    def apply(scenario: Test, cause: Throwable = null) = new NoExpectedException(s"No expected in ${ExceptionScenarioPrinter.full(scenario)}", scenario, cause)
+    def apply(ldp: LoggerDisplayProcessor, scenario: Test, cause: Throwable = null) = new NoExpectedException(s"No expected in ${ExceptionScenarioPrinter.full(ldp, scenario)}", scenario, cause)
   }
   class NoExpectedException(msg: String, scenario: Test, cause: Throwable) extends ScenarioException(msg, scenario, cause)
 
@@ -151,21 +150,21 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   }
 
   object ScenarioConflictingWithDefaultException {
-    def apply(actual: ROrException[R], s: Scenario) =
-      new ScenarioConflictingWithDefaultException(s"\nActual Result: ${actual}\nExpected ${s.expected.getOrElse("<N/A>")}\n Scenario ${ExceptionScenarioPrinter.full(s)}", actual, s)
+    def apply(loggerDisplayProcessor: LoggerDisplayProcessor, actual: ROrException[R], s: Scenario) =
+      new ScenarioConflictingWithDefaultException(s"\nActual Result: ${actual}\nExpected ${s.expected.getOrElse("<N/A>")}\n Scenario ${ExceptionScenarioPrinter.full(loggerDisplayProcessor, s)}", actual, s)
   }
   class ScenarioConflictingWithDefaultException(msg: String, val actual: ROrException[R], scenario: Scenario) extends ScenarioException(msg, scenario)
 
   object ScenarioConflictingWithoutBecauseException {
-    def apply(expected: ROrException[R], actual: ROrException[R], parents: List[NodePath], beingAdded: Scenario) = {
+    def apply(loggerDisplayProcessor: LoggerDisplayProcessor, expected: ROrException[R], actual: ROrException[R], parents: List[NodePath], beingAdded: Scenario) = {
       val pathString = PathPrinter(parents)
       parents match {
-        case NodePath(Left(l: CodeAndScenarios), _) :: Nil => throw ScenarioConflictingWithDefaultException(actual, beingAdded);
+        case NodePath(Left(l: CodeAndScenarios), _) :: Nil => throw ScenarioConflictingWithDefaultException(loggerDisplayProcessor, actual, beingAdded);
         case NodePath(Left(l: CodeAndScenarios), _) :: tail =>
           l.addedBy match {
             case Some(existing) =>
               new ScenarioConflictingWithoutBecauseException(s"\nCame to wrong conclusion: ${actual}\nInstead of ${expected}\nPath\n$pathString\n${ExceptionScenarioPrinter.existingAndBeingAdded(existing, beingAdded)}", existing, beingAdded)
-            case None => throw ScenarioConflictingWithDefaultException(actual, beingAdded);
+            case None => throw ScenarioConflictingWithDefaultException(loggerDisplayProcessor, actual, beingAdded);
           }
         case _ => throw new IllegalStateException;
       }
@@ -261,7 +260,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     assertions: List[Assertion[A]] = List(),
     configuration: Option[CfgFn] = None,
     priority: Option[Int] = None,
-    references: List[Reference] = List()) extends BuilderNode with Requirement with Test {
+    references: Set[Reference] = Set()) extends BuilderNode with Requirement with Test {
 
     def configure = if (configuration.isDefined) makeClosureForCfg(params)(configuration.get)
     lazy val actualCode: CodeFn[B, RFn, R] = optCode.getOrElse({
@@ -273,7 +272,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case _ => new CodeFn(rfnMaker(Left(() => new IllegalStateException("Do not have code or expected  for this scenario: " + ExceptionScenarioPrinter(Scenario.this)))), "No expected or Code")
       }
     })
-    def becauseString = because match { case Some(b) => b.description; case _ => "" }
+
     override def titleString = title.getOrElse(paramString)
     lazy val paramString = params.map(paramPrinter).mkString(",")
     override def toString =
@@ -288,15 +287,16 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     def contains(s: Test) = map.contains(s)
   }
 
-  case class UseCaseDescription(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: List[Reference] = List()) extends BuilderNode with UseCase {
-    override val templateName = "UseCase"
+  case class UseCaseDescription(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: Set[Reference] = Set()) extends BuilderNode with UseCase with ReportableWithTemplate {
+    val templateName = "UseCase"
     override def toString = "UseCase(" + titleString + " children=" + children.mkString(",") + ")"
   }
-  case class ChildEngineDescription(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
+  case class ChildEngineDescription(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: Set[Reference] = Set()) extends BuilderNode with RequirementAndHolder {
     override def toString = "ChildEngine(" + titleString + " children=" + children.mkString(",") + ")"
   }
 
   class ChildEngineImpl(val logger: TddLogger, val arity: Int, val desc: ChildEngineDescription) extends ChildEngine[R] with BuildEngine with EvaluateEngineWithRoot {
+    def loggerDisplayProcessor = logger
     def priority = desc.priority
     def title = desc.title
     def description = desc.description
@@ -314,14 +314,14 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     title: Option[String] = None,
     description: Option[String] = None,
     children: ReportableList = List(),
-    folder: Option[FoldFn] ,
-    initialFoldValue: InitialValueMaker ,
+    folder: Option[FoldFn],
+    initialFoldValue: InitialValueMaker,
     expected: Option[ROrException[R]] = None,
     optCode: Option[Code] = None,
     priority: Option[Int] = None,
     documents: List[Document] = List(),
     paramDetails: List[ParamDetail] = List(),
-    references: List[Reference] = List()) extends BuilderNode with RequirementAndHolder {
+    references: Set[Reference] = Set()) extends BuilderNode with RequirementAndHolder {
 
     def firstExpected(path: ReportableList): Option[ROrException[R]] = path.foldLeft[Option[ROrException[R]]](None)((acc, r: Reportable) =>
       (acc, r) match {
@@ -344,7 +344,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     lazy val childrenModifiedForBuild =
       modifyChildrenForBuild(children, List(this));
 
-    lazy val childEngines = childrenModifiedForBuild.collect { case e: ChildEngine[R] => e}
+    lazy val childEngines = childrenModifiedForBuild.collect { case e: ChildEngine[R] => e }
 
   }
   def validateBecause(s: Scenario) = {
@@ -352,7 +352,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     s.because match {
       case Some(b) =>
         if (!makeClosureForBecause(s.params).apply(b.because))
-          throw new ScenarioBecauseException(s.becauseString + " is not true for " + ExceptionScenarioPrinter.full(s) + "\n", s);
+          throw new ScenarioBecauseException(s.becauseString + " is not true for " + ExceptionScenarioPrinter.full(logger, s) + "\n", s);
       case None =>
     }
   }
@@ -380,6 +380,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
             case (childEngine: ChildEngineDescription) :: tail => setWithDepth(depth + 1, childEngine, x, bFn, ceFn, uFn, sFn, checkFn) :: tail
             case (useCase: UseCase) :: tail => setWithDepth(depth + 1, useCase, x, bFn, ceFn, uFn, sFn, checkFn) :: tail
             case (scenario: Scenario) :: tail => setWithDepth(depth + 1, scenario, x, bFn, ceFn, uFn, sFn, checkFn) :: tail
+            case x => throw new IllegalStateException (x.toString)
           }
 
         if (depth == builderData.depth) {
@@ -434,7 +435,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       optCode: Option[Code] = builderData.optCode,
       expected: Option[ROrException[R]] = builderData.expected,
       priority: Option[Int] = builderData.priority,
-      references: List[Reference] = builderData.references,
+      references: Set[Reference] = builderData.references,
       documents: List[Document] = builderData.documents,
       paramDetails: List[ParamDetail] = builderData.paramDetails): RealScenarioBuilder =
       copy(ScenarioBuilderData(builderData.logger, builderData.arity, depth, title, description, children, foldFn, initialFoldValue, expected, optCode, priority, documents, paramDetails, references))
@@ -471,7 +472,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         (n, description) => if (n.description.isDefined) throw CannotDefineDescriptionTwiceException(n.description.get, description.get))
 
     /** This is only used when using the 'live' website option. It turns a string into a parameter, and gives the parameter a 'nice' name on the website */
-    def param(parser: (String) => _, name: String = s"Param${builderData.paramDetails.size}", testValue : String = null) = 
+    def param(parser: (String) => _, name: String = s"Param${builderData.paramDetails.size}", testValue: String = null) =
       copy(paramDetails = builderData.paramDetails :+ ParamDetail(name, parser, Option(testValue)))
 
     /**
@@ -536,10 +537,10 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     def reference(ref: String, document: Option[Document] = None): RealScenarioBuilder =
       set[Reference](
         Reference(ref, document),
-        (b, r) => b.copy(references = r :: b.builderData.references),
-        (ce, r) => ce.copy(references = r :: ce.references),
-        (u, r) => u.copy(references = r :: u.references),
-        (s, r) => s.copy(references = r :: s.references))
+        (b, r) => b.copy(references = b.builderData.references + r),
+        (ce, r) => ce.copy(references = ce.references + r),
+        (u, r) => u.copy(references = u.references + r),
+        (s, r) => s.copy(references = s.references + r))
 
     /**
      * This method is used if you are action on mutable parameters. The cgnFn is called to setup the parameters prior to them being used in the because clause
@@ -607,6 +608,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case (Some(sb: ScenarioBuilder), s: Scenario) => newUseCase(depth - 1)
         case (Some(ce: ChildEngineDescription), s: Scenario) => newUseCase(depth - 1)
         case (Some(uc: UseCase), s: Scenario) => newUseCase(depth - 2)
+        case x => throw new IllegalStateException(x.toString)
       }
       //      copy(children = UseCase(title = Some(useCaseTitle), description = useCaseDescription) :: builderData.children);
     }
@@ -665,6 +667,8 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
   trait EvaluateEngine {
 
+    implicit def loggerDisplayProcessor: LoggerDisplayProcessor
+
     def evaluate(fn: BecauseClosure, n: RorN, log: Boolean = true): CodeAndScenarios = {
       val result = n match {
         case Left(r) =>
@@ -715,9 +719,10 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
   trait BuildEngine extends EvaluateEngine {
     import org.cddcore.engine.Engine._
-
+    def loggerDisplayProcessor: LoggerDisplayProcessor
     def toString(indent: String, root: Either[Conclusion, Decision]): String
     def optCode: Option[Code]
+
     val defaultRoot: RorN = optCode match {
       case Some(code) => Left(new CodeAndScenarios(code, List(), true))
       case _ => Left(new CodeAndScenarios(rfnMaker(Left(() =>
@@ -770,7 +775,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       val rFn: RFn = evaluate(bec, root, false).code.rfn
       val actualFromScenario: ROrException[R] = safeCall(makeClosureForResult(s.params), rFn)
       if (s.expected.isEmpty)
-        throw NoExpectedException(s)
+        throw NoExpectedException(loggerDisplayProcessor, s)
       if (actualFromScenario != s.expected)
         throw new ScenarioResultException("Wrong result for " + s.actualCode.description + " for " + ExceptionScenarioPrinter(s) + "\nActual: " + actualFromScenario + "\nExpected: " + s.expected.getOrElse("<N/A>") + "\nRoot:\n" + toString("", root), s);
     }
@@ -782,7 +787,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         val rFn: RFn = evaluate(bec, root, false).code.rfn
         val actualFromScenario: ROrException[R] = safeCall(makeClosureForResult(s.params), rFn)
         if (s.expected.isEmpty)
-          throw NoExpectedException(s)
+          throw NoExpectedException(loggerDisplayProcessor, s)
         if (Some(actualFromScenario) != s.expected)
           throw new ScenarioResultException("Wrong result for " + s.actualCode.description + " for " + ExceptionScenarioPrinter(s) + "\nActual: " + actualFromScenario + "\nExpected: " + s.expected.getOrElse("<N/A>") + "\nRoot:\n" + toString("", root), s);
         val assertionClosure = makeClosureForAssertion(s.params, actualFromScenario);
@@ -838,7 +843,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         val fna = makeClosureForAssertion(s.params, result)
         for (a <- s.assertions) {
           if (!fna(a.assertion))
-            throw new AssertionException("\nAssertion " + a.description + " failed.\nScenario" + ExceptionScenarioPrinter.full(s) + "\nResult was " + result, s)
+            throw new AssertionException("\nAssertion " + a.description + " failed.\nScenario" + ExceptionScenarioPrinter.full(loggerDisplayProcessor, s) + "\nResult was " + result, s)
         }
       }
     }
@@ -924,8 +929,8 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       val actualResultIfUseThisScenariosCode: ROrException[R] = safeCall(makeClosureForResult(s.params), codeAndScenarios.code.rfn);
       val result = (s.expected, actualResultIfUseThisScenariosCode) match {
         case (Some(ROrException(Some(v1), None)), ROrException(Some(v2), None)) if (v1 == v2) => { logger.addScenarioFor(s.titleString, codeAndScenarios.code); Left(codeAndScenarios.copy(scenarios = s :: codeAndScenarios.scenarios)) }
-        case (Some(ROrException(Some(_), None)), ROrException(Some(_), None)) if (fullPath.isEmpty) => throw ScenarioConflictingWithDefaultException(actualResultIfUseThisScenariosCode, s)
-        case (Some(ROrException(Some(_), None)), ROrException(Some(_), None)) => throw ScenarioConflictingWithoutBecauseException(s.expected.get, actualResultIfUseThisScenariosCode, fullPath, s)
+        case (Some(ROrException(Some(_), None)), ROrException(Some(_), None)) if (fullPath.isEmpty) => throw ScenarioConflictingWithDefaultException(loggerDisplayProcessor, actualResultIfUseThisScenariosCode, s)
+        case (Some(ROrException(Some(_), None)), ROrException(Some(_), None)) => throw ScenarioConflictingWithoutBecauseException(loggerDisplayProcessor, s.expected.get, actualResultIfUseThisScenariosCode, fullPath, s)
         case (Some(ROrException(Some(_), None)), ROrException(None, Some(e2))) => throw e2
 
         case (Some(ROrException(None, Some(e1))), ROrException(None, Some(e2))) if (e1.getClass == e2.getClass) => { logger.addScenarioFor(s.titleString, codeAndScenarios.code); Left(codeAndScenarios.copy(scenarios = s :: codeAndScenarios.scenarios)) }
@@ -1038,15 +1043,15 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     def paramDetails = builderData.paramDetails
   }
 
-  abstract class AbstractEngine extends Engine with ParamDetails{
-
+  abstract class AbstractEngine extends Engine with ParamDetails with ReportableWithTemplate with EngineWithLogger {
     def logger = EngineUniverse.this.logger
-    override def templateName = "Engine"
+    def templateName = "Engine"
+    def loggerDisplayProcessor = logger
   }
 
   abstract class EngineWithChildrenImpl(val builderData: ScenarioBuilderData) extends AbstractEngine with EngineFull[R, FullR] with ScenarioBuilderDataAsReadableFields {
     lazy val children = builderData.childrenModifiedForBuild
-    if (folder.isEmpty) 
+    if (folder.isEmpty)
       throw new CannotHaveChildEnginesWithoutFolderException
   }
 

@@ -52,7 +52,9 @@ trait WebPageChecker extends AssertEquals {
   class EmbeddedSection(path: ReportableList, node: Node) extends CddSection(path)
 
   class EngineSummaryChecker(path: ReportableList, engineNode: Node, withTest: Boolean) extends EmbeddedSection(path, engineNode) {
+    import EngineWithLogger._
     val engine = findEngine(path)
+    val loggerDisplayProcessor = engine.logger
     val engineSummary = onlyDivWith("engineSummary", engineNode.child)
     val engineText = onlyDivWith("engineText", engineSummary.child)
     val engineTable = onlyDivWith("engineTable", engineSummary.child)
@@ -107,7 +109,10 @@ trait WebPageChecker extends AssertEquals {
   }
 
   class ScenarioDetailSectionChecker(path: ReportableList, scenarioNode: Node) extends EmbeddedSection(path, scenarioNode) {
+     import EngineWithLogger._
     val test: Test = path.head.asInstanceOf[Test]
+    val engine = PathUtils.findEngine(path)
+    val loggerDisplayProcessor = engine.logger
     val scenarioText = onlyDivWith("scenarioText", scenarioNode.child)
     val linkNode = only(scenarioText \ "a")
     val link = linkNode.attribute("href").get
@@ -118,7 +123,7 @@ trait WebPageChecker extends AssertEquals {
     val paramText = paramTd.get.text
     for (p <- test.params) p match {
       case h: HtmlDisplay => // Don't know how to test this
-      case _ => assert(paramText.contains(test.paramPrinter(p)))
+      case _ => assert(paramText.contains(loggerDisplayProcessor(p)))
     }
 
     val expectedTd = findTdInRowWithTitle(table, "Expected")

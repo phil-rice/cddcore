@@ -11,6 +11,7 @@ import org.cddcore.example.processCheque_DM_Xml.ProcessChequeXml
 import org.cddcore.engine.DefaultIfThenPrinter
 import org.cddcore.engine.HtmlIfThenPrinter
 import org.cddcore.engine.ReportCreator
+import org.cddcore.engine.LoggerDisplayProcessor
 
 object Reports {
 
@@ -19,7 +20,7 @@ object Reports {
       CategorisePerson.categorise,
       ProcessChequeXml.processCheque,
       TennisScorer.scorer)
-    ReportCreator.fileSystem(project).create
+    ReportCreator.fileSystem(LoggerDisplayProcessor(), project).create
     println("done")
   }
 }
