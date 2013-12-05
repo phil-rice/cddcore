@@ -210,6 +210,8 @@ case class Project(projectTitle: String, engines: ReportableHolder*) extends Req
 object Engine {
   protected def addToList[R] = (acc: List[R], r: R) => r :: acc
   protected def addToSet[R] = (acc: Set[R], r: R) => acc + r
+  protected def addOption[R] = (acc: List[R], optR: Option[R]) => optR match { case Some(r) => r :: acc; case None => acc; }
+  protected def addList[R] = (acc: List[R], listR: List[R]) => listR ::: acc
   val noInitialValue = () => throw new IllegalStateException
   /** returns a builder for an engine that implements Function[P,R] */
   def apply[P, R]() = new BuilderFactory1[P, R, R](None, noInitialValue).builder;
@@ -238,6 +240,14 @@ object Engine {
   def foldSet[P1, P2, R] = folding[P1, P2, R, Set[R]](addToSet[R], Set[R]())
   /** returns a builder for an engine that implements Function3[P1,P2,P3,List[R]]. This builder will have child engines that implement Function[P1,P2,P3,R]. The results of those engines  are placed in a set, and become the result of the main engine*/
   def foldSet[P1, P2, P3, R] = folding[P1, P2, P3, R, Set[R]](addToSet[R], Set[R]())
+
+  def flatMapOption[P, R] = folding[P, Option[R], List[R]](addOption[R], List())
+  def flatMapOption[P1, P2, R] = folding[P1, P2, Option[R], List[R]](addOption[R], List())
+  def flatMapOption[P1, P2, P3, R] = folding[P1, P2, P3, Option[R], List[R]](addOption[R], List())
+
+  def flatMapList[P, R] = folding[P, List[R], List[R]](addList[R], List())
+  def flatMapList[P1, P2, R] = folding[P1, P2, List[R], List[R]](addList[R], List())
+  def flatMapList[P1, P2, P3, R] = folding[P1, P2, P3, List[R], List[R]](addList[R], List())
 
   /** returns a builder for an engine that takes S and P and returns the tuple (newS, R). It is typically used when there is a state of type S that needs to be updated with the function */
   def state[S, P, R]() = new BuilderFactory2[S, P, (S, R), (S, R)](None, noInitialValue).builder;
@@ -280,10 +290,10 @@ object Engine {
 
   def testing = _testing
   private var _testing = false
-  def test[T](x: () => T) = {
+  def test[X](x:  => X) = {
     _testing = true;
     try {
-      x()
+      x
     } finally
       _testing = false
   }
@@ -314,7 +324,23 @@ object EngineWithLogger {
 trait EngineWithLogger extends Engine {
   /** used to meter the engine. It also doubles as a LoggerDisplayProcessor*/
   def logger: TddLogger
+}
 
+case class ScenarioExceptionMap(map: Map[Test, Throwable] = Map(), first: Option[Throwable] = None) {
+  def size = map.size
+  def values = map.values
+  def +(x: (Test, Throwable)) = ScenarioExceptionMap(map + x, Some(first.getOrElse(x._2)))
+  def +(s: ScenarioExceptionMap) = ScenarioExceptionMap(map ++ s.map, first match {case Some(f) => first; case _=> s.first})
+  def apply(s: Test) = map(s)
+  def contains(s: Test) = map.contains(s)
+}
+
+/** Engines have loggers which record interesting events. However to avoid polluting the API with them, if you absolutely need access to the logger you can import EngineWithLogger._ */
+object EngineWithScenarioExceptionMap {
+  implicit def toEngineWithScenarioExceptionMap(e: Engine) = e.asInstanceOf[EngineWithScenarioExceptionMap]
+}
+trait EngineWithScenarioExceptionMap extends Engine {
+  def scenarioExceptionMap: ScenarioExceptionMap
 }
 
 trait EngineWithResult[R] extends Engine {

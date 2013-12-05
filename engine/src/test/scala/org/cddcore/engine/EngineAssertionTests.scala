@@ -7,8 +7,8 @@ import org.cddcore.engine._
 @RunWith(classOf[JUnitRunner])
 class EngineAssertionTests extends EngineStringStringTests {
 import org.cddcore.engine.Engine._
-  "Assertions" should "be executed one when testing" in {
-    test { () => checkAssertionExecuted(1) }
+  "Assertions" should "be executed once when testing" in {
+    test { checkAssertionExecuted(1) }
   }
 
   "Assertions" should "be executed twice when not testing - one once building scenario, and once at end " in {

@@ -1,6 +1,7 @@
 package org.cddcore.engine.test
 
 import org.cddcore.engine._
+import scala.language.implicitConversions
 import org.cddcore.engine.AbstractEngine1Test
 import org.cddcore.engine.tests._
 import org.junit.runner._
@@ -67,7 +68,7 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
   }
 
   it should "report an exception while building to junit" in {
-    val engine1 = test(() => builder.useCase("uc1").
+    val engine1 = test( builder.useCase("uc1").
       scenario("one", "d1").
       expected("exp").
       because((p: String) => p == "two").

@@ -291,6 +291,9 @@ object Renderer {
   type StringRendererRenderer = Tuple3[String, Renderer, Renderer]
   implicit def apply(s: String) = StringTemplateRenderer(s)
 
+  val engineFromTestsKey = "EngineFromTests"
+  val engineWithChildrenKey = "EngineWithChildren"
+
   val renderer = new ValueForRenderer
   val refRenderer = new ReferenceRenderer
   private val dateFormat: String = "HH:mm EEE MMM d yyyy"
@@ -324,10 +327,10 @@ object Renderer {
       stringTemplate.setAttribute("urlId", reportableToUrl.urlId(path.head))
     }
   })
-  protected def engineConfig = RenderAttributeConfigurer[Engine]("Engine", rc => { import rc._; stringTemplate.setAttribute("decisionTreeNodes", r.decisionTreeNodes) })
+  protected def engineConfig = RenderAttributeConfigurer[Engine](engineFromTestsKey, rc => { import rc._; stringTemplate.setAttribute("decisionTreeNodes", r.decisionTreeNodes) })
 
   def decisionTreeConfig(params: Option[List[Any]], conclusion: Option[Conclusion], test: Option[Test]) =
-    RenderAttributeConfigurer[EngineBuiltFromTests[_]]("Engine", (rc) => {
+    RenderAttributeConfigurer[EngineBuiltFromTests[_]](engineFromTestsKey, (rc) => {
       import rc._
       stringTemplate.setAttribute("decisionTree", r.toStringWith(params match {
         case Some(p) => new HtmlWithTestIfThenPrinter(p, conclusion, test, reportableToUrl, urlMap)
@@ -492,14 +495,14 @@ object HtmlRenderer {
     ("Project", "<div class='project'><div class='projectText'><b>Project: $title$</b> " + description + "</div>\n", "</div> <!-- Project -->\n")
 
   val engineTemplate: StringRendererRenderer =
-    ("Engine", "<div class='engine'>" +
+    (engineFromTestsKey, "<div class='engine'>" +
       "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow, nodesCountRow),
 
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
       "</div><!-- engine -->\n")
   val liveEngineTemplate: StringRendererRenderer =
-    ("Engine", "<div class='engine'>" +
+    (engineFromTestsKey, "<div class='engine'>" +
       "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + table("engineTable", refsRow, useCasesRow, nodesCountRow) + "$engineForm$",
 
       "</div><!-- engineSummary -->" +
@@ -545,7 +548,7 @@ class HtmlRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, live: Boolean
     configureReportable(scenarioSummaryTemplate)
 
   def liveEngineHtml(rootUrl: Option[String], params: Option[List[Any]], conclusion: Option[Conclusion], restrict: ReportableSet = Set(), engineForm: String) = Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
-    configureAttribute(Renderer.decisionTreeConfig(params, conclusion, None), Renderer.setAttribute("Engine", "engineForm", engineForm), Renderer.setAttribute("Engine", "live", true)).
+    configureAttribute(Renderer.decisionTreeConfig(params, conclusion, None), Renderer.setAttribute(Renderer.engineFromTestsKey, "engineForm", engineForm), Renderer.setAttribute("Engine", "live", true)).
     configureReportableHolder(reportTemplate, projectTemplate, liveEngineTemplate)
 
   def usecaseHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set()) = Renderer(loggerDisplayProcessor, rootUrl, restrict, live).

@@ -1,12 +1,13 @@
 package org.cddcore.engine
 
 import org.junit.runner.RunWith
+import scala.language.implicitConversions
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class EngineDefaultTests extends EngineStringStringTests {
   implicit override def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineFromTestsImpl]
-  
+
   "An engine" should "throw UndecidedException if no code has been given" in {
     val e = builderWithUseCase.build
     evaluating { e("x") } should produce[UndecidedException]
@@ -74,10 +75,24 @@ class EngineDefaultTests extends EngineStringStringTests {
 
   it should "Allow throw exception if second default value is specified" in {
     val bldr = builder.code((s: String) => "default")
-    val e = evaluating { bldr.code((s: String) => "default2") } should produce[CannotDefineCodeTwiceException ]
+    val e = evaluating { bldr.code((s: String) => "default2") } should produce[CannotDefineCodeTwiceException]
     assertEquals("Original Code:\nCodeFn(((s: String) => \"default\"))\nBeingAdded\nCodeFn(((s: String) => \"default2\"))", e.getMessage())
   }
 
+  "An engine with child engines" should "use the engine default code, if the child engine code isn't specified" in {
+    val e = Engine.foldList[Int, String].code((x: Int) => "Engine" + x).
+      childEngine("").
+      build
+
+    assertEquals(List("Engine1"), e(1))
+  }
+  "An engine with child engines" should "use the childengine default code" in {
+    val e = Engine.foldList[Int, String].
+      childEngine("").code((x: Int) => "ChildEngine" + x).
+      build
+
+    assertEquals(List("ChildEngine1"), e(1))
+  }
   //    assertEquals("X", e("A"))
   //    assertEquals("Y", e("B"))
   //    assertEquals("Z", e("C"))

@@ -1,6 +1,7 @@
 package org.cddcore.engine
 
 import org.junit.runner.RunWith
+import scala.language.implicitConversions
 import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class ReportableToUrlTests extends AbstractTest with ReportableTestFramework {

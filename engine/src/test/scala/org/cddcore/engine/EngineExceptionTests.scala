@@ -2,7 +2,7 @@ package org.cddcore.engine
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-
+import scala.language.implicitConversions
 @RunWith(classOf[JUnitRunner])
 class EngineExceptionTests extends EngineStringStringTests {
 
@@ -35,14 +35,15 @@ class EngineExceptionTests extends EngineStringStringTests {
   }
   "An engine" should "record all the exceptions in the scenarioExceptionMap, if testing" in {
     implicit def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineFromTestsImpl]
-    val engine = org.cddcore.engine.Engine.test(() =>
+    val engine = org.cddcore.engine.Engine.test {
       builderWithUseCase.
         scenario("one").because((s: String) => false, "always false").
         scenario("two").because((s: String) => false, "always false").
         scenario("three").expected("x").code((s: String) => "y").
         scenario("four").expected("x").code((s: String) => "y").
         scenario("ok").expected("x"). //because((s: String) => s == "ok").
-        build)
+        build
+    }
     val sOne = engine.tests(0)
     val stwo = engine.tests(1)
     val sThree = engine.tests(2)

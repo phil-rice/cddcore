@@ -40,8 +40,9 @@ trait ABuilderFactory1[P, R, FullR] extends EngineUniverse[R, FullR] with Engine
 
   trait ABuilder1 extends ScenarioBuilder {
     def scenario(p: P, title: String = null, description: String = null) = newScenario(title, description, List(p))
-    def build: Engine1[P, FullR] = builderData.childEngines.size match {
-      case 0 => new EngineFromTestsImpl(builderData) with Engine1[P, FullR] {
+    def build: Engine1[P, FullR] = (builderData.folder, builderData.childEngines.size) match {
+      case (Some(_), 0) => throw new CannotHaveFolderWithoutChildEnginesException
+      case (None, 0) => new EngineFromTestsImpl(builderData) with Engine1[P, FullR] {
         protected def executeChildEngine(e: ChildEngineDescription, p: P): FullR = {
           throw new IllegalStateException
         }
@@ -69,8 +70,9 @@ trait ABuilderFactory2[P1, P2, R, FullR] extends EngineUniverse[R, FullR] with E
 
   trait ABuilder2 extends ScenarioBuilder {
     def scenario(p1: P1, p2: P2, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2))
-    def build: Engine2[P1, P2, FullR] = builderData.childEngines.size match {
-      case 0 => new EngineFromTestsImpl(builderData) with Engine2[P1, P2, FullR] {
+    def build: Engine2[P1, P2, FullR] = (builderData.folder, builderData.childEngines.size) match {
+      case (Some(_), 0) => throw new CannotHaveFolderWithoutChildEnginesException
+      case (None, 0) => new EngineFromTestsImpl(builderData) with Engine2[P1, P2, FullR] {
         def apply(p1: P1, p2: P2): FullR = applyParams(root, List(p1, p2), true).asInstanceOf[FullR];
         override def toString() = toStringWithScenarios
       }
@@ -94,8 +96,9 @@ trait ABuilderFactory3[P1, P2, P3, R, FullR] extends EngineUniverse[R, FullR] wi
 
   trait ABuilder3 extends ScenarioBuilder {
     def scenario(p1: P1, p2: P2, p3: P3, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2, p3))
-    def build: Engine3[P1, P2, P3, FullR] = builderData.childEngines.size match {
-      case 0 => new EngineFromTestsImpl(builderData) with Engine3[P1, P2, P3, FullR] {
+    def build: Engine3[P1, P2, P3, FullR] = (builderData.folder, builderData.childEngines.size) match {
+      case (Some(_), 0) => throw new CannotHaveFolderWithoutChildEnginesException
+      case (None, 0) => new EngineFromTestsImpl(builderData) with Engine3[P1, P2, P3, FullR] {
         def apply(p1: P1, p2: P2, p3: P3): FullR = applyParams(root, List(p1, p2, p3), true).asInstanceOf[FullR];
         override def toString() = toStringWithScenarios
       }

@@ -40,7 +40,8 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
 
   def addEngineForTest(name: String, engine: Any) = addEngine(name, engine.asInstanceOf[EngineFromTestsImpl])
 
-  def addEngine(name: String, engine: EngineFromTestsImpl) = {
+  def addEngine(name: String, engine: Engine) = {
+    import EngineWithScenarioExceptionMap._
     val engineDescription = Description.createSuiteDescription(name)
     println(name)
     println(engine)
@@ -80,7 +81,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
       run(notifier, d, engine)
 
   def run(notifier: RunNotifier, description: Description, engine: Option[Engine]) {
-    test(() => {
+    test {
       notifier.fireTestStarted(description)
       log("notifier.fireTestStarted" + description)
       try {
@@ -102,7 +103,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
           log("notifier.fireTestFailure" + description)
           notifier.fireTestFailure(new Failure(description, t))
       }
-    })
+    }
   }
 
   def returnTypeIsEngine(m: Method): Boolean = {
@@ -131,20 +132,20 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
   import org.cddcore.engine.Engine._
   val getDescription = Description.createSuiteDescription("ATDD: " + clazz.getName);
 
-  val instance = test(() => { instantiate(clazz) });
+  val instance = test { instantiate(clazz) };
 
-  override def addEngine(name: String, engine: EngineFromTestsImpl) = {
+  override def addEngine(name: String, engine: Engine) = {
     val ed = super.addEngine(name, engine)
     recordEngine(clazz, ed, engine)
     ed
   }
 
   for (m <- clazz.getDeclaredMethods().filter((m) => returnTypeIsEngine(m))) {
-    val engine: EngineFromTestsImpl = m.invoke(instance).asInstanceOf[EngineFromTestsImpl];
+    val engine: Engine = m.invoke(instance).asInstanceOf[Engine];
     addEngine(m.getName(), engine)
   }
   for (f <- clazz.getFields().filter((f) => typeIsEngine(f))) {
-    val engine: EngineFromTestsImpl = f.get(instance).asInstanceOf[EngineFromTestsImpl];
+    val engine: Engine = f.get(instance).asInstanceOf[Engine];
     addEngine(f.getName, engine)
   }
 
@@ -164,9 +165,10 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
     }
   }
 
-  def recordEngine(clazz: Class[Any], engineDescription: Description, engine: EngineFromTestsImpl) {
+  def recordEngine(clazz: Class[Any], engineDescription: Description, engine: Engine) {
+    import EngineWithLogger._
     val project = Project("Junit_" + engine.titleOrDescription("Unnamed"), engine)
-    ReportCreator.fileSystem(engine.loggerDisplayProcessor, project).create
+    ReportCreator.fileSystem(engine.logger, project).create
   }
 
   trait SomeTrait { def someMethod: String }

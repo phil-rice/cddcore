@@ -3,6 +3,7 @@ package org.cddcore.engine
 import org.cddcore.engine._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import scala.language.implicitConversions
 
 @RunWith(classOf[JUnitRunner])
 class BuilderPriorityTests extends AbstractTest {

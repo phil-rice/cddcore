@@ -40,4 +40,17 @@ class ChildEngineTests extends AbstractTest {
     assertEquals("InitZeroOne", e(123))
   }
 
+  it should "throw a exception if a fold function has been specified and there are no child engines" in {
+    evaluating {
+      Engine.foldList[Int, String].build
+    } should produce[CannotHaveFolderWithoutChildEnginesException]
+    evaluating { Engine.foldList[Int, Int, String].build } should produce[CannotHaveFolderWithoutChildEnginesException]
+    evaluating { Engine.foldList[Int, Int, Int, String].build } should produce[CannotHaveFolderWithoutChildEnginesException]
+
+  }
+
+  it should "have a ScenarioExceptionMap that is the aggregate of the child engine's" in {
+    fail
+  }
+
 }
