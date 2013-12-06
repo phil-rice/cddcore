@@ -419,7 +419,9 @@ trait EngineBuiltFromTests[R] extends EngineWithResult[R] {
 }
 
 /** A child engine is an engine that 'belongs' to a full engine. Typically the results of the child engines (if they exist) will be 'folded' using a folding function to give the full result */
-trait ChildEngine[R] extends EngineBuiltFromTests[R]
+trait ChildEngine[R] extends EngineBuiltFromTests[R] with ReportableWithTemplate {
+  def templateName = Renderer.engineChildKey
+}
 
 /** In order to avoid polluting the Engine trait, if you need access to the paramDetails, this can be imported */
 object ParamDetails {

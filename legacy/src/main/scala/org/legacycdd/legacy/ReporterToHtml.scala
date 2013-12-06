@@ -86,10 +86,10 @@ class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyDat
 
   }
 
-  def legacyDecisionTreeConfig(rep: Rep, conclusionNode: Set[Conclusion]) = RenderAttributeConfigurer[EngineBuiltFromTests[_]]("Engine",
+  def legacyDecisionTreeConfig(rep: Rep, conclusionNode: Set[Conclusion]) = RenderAttributeConfigurer[EngineBuiltFromTests[_]](Set("Engine"),
     (rc) => { import rc._; stringTemplate.setAttribute("decisionTree", r.toStringWith(new LegacyIfThenHtmlPrinter(r, conclusionNode, reportableToUrl, urlMap))) })
 
-  def legacyConclusionConfig = RenderAttributeConfigurer[Conclusion]("CodeAndScenarios", (rc) => {
+  def legacyConclusionConfig = RenderAttributeConfigurer[Conclusion](Set("CodeAndScenarios"), (rc) => {
     import rc._
     stringTemplate.setAttribute("conclusion", r.code.pretty)
     stringTemplate.setAttribute("conclusionCount", rep.itemsFor(r).size)
@@ -100,7 +100,7 @@ class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyDat
       "<div class='legacyConclusion'><div class='legacyConclusionTest'>" + a("Conclusion") + " $conclusion$ $conclusionCount$</div><!-- legacyConclusionTest -->" + table("legacyConclusionTable"),
       "</div><!-- legacyConclusion' -->")
 
-  def legacyItemConfig = RenderAttributeConfigurer[LegacyItem[ID, R]]("LegacyItem", (rendererContext) => {
+  def legacyItemConfig = RenderAttributeConfigurer[LegacyItem[ID, R]](Set("LegacyItem"), (rendererContext) => {
     import EngineWithLogger._
     import rendererContext._
     import r._
@@ -117,12 +117,12 @@ class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyDat
 
   def legacyHtml(rep: Rep, rootUrl: Option[String], restrict: ReportableSet = Set()) = Renderer(loggerDisplayProcessor, rootUrl, restrict, false, new EngineConclusionLegacyWalker).
     configureAttribute(legacyDecisionTreeConfig(rep, Set()), legacyConclusionConfig, legacyItemConfig).
-    configureReportableHolder(reportTemplate, engineTemplate, conclusionSummary).
+    configureReportableHolder(reportTemplate, engineWithTestsTemplate, conclusionSummary).
     configureReportable(legacyItemSummary)
 
   def legacyConclusionHtml(rep: Rep, rootUrl: Option[String], restrict: ReportableSet = Set(), conclusion: Set[Conclusion]) = Renderer(loggerDisplayProcessor, rootUrl, restrict, false, new EngineConclusionLegacyWalker).
     configureAttribute(legacyDecisionTreeConfig(rep, conclusion), legacyConclusionConfig, legacyItemConfig).
-    configureReportableHolder(reportTemplate, engineTemplate, conclusionSummary).
+    configureReportableHolder(reportTemplate, engineWithTestsTemplate, conclusionSummary).
     configureReportable(legacyItemSummary)
 
   def apply: String = {

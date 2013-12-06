@@ -325,7 +325,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case (None, (sb: ScenarioBuilderData)) => sb.expected
         case (acc, _) => acc
       });
-    
+
     def firstCode(path: ReportableList): Option[Code] = path.foldLeft[Option[Code]](None)((acc, r: Reportable) =>
       (acc, r) match {
         case (None, (s: Scenario)) => s.optCode
@@ -583,12 +583,12 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
           s.copy(because = Some(b))
         })
 
-    def childEngine(engineTitle: String) = {
+    def childEngine(engineTitle: String, description: String = null) = {
       for (c <- builderData.children)
         if (!c.isInstanceOf[ChildEngineDescription])
           throw new CanAddChildEngineAfterUseCaseOrScenarioException
-
-      copy(builderData.copy(depth = 1, children = new ChildEngineDescription(title = Some(engineTitle)) :: builderData.children))
+      val optDescription = description match { case null => None; case d => Some(d) }
+      copy(builderData.copy(depth = 1, children = new ChildEngineDescription(title = Some(engineTitle), description = optDescription) :: builderData.children))
     }
 
     protected def withUseCase(useCaseTitle: String, useCaseDescription: Option[String]) = {

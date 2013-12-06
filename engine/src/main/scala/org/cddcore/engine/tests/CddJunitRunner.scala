@@ -130,25 +130,27 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
 
 class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
   import org.cddcore.engine.Engine._
+  import EngineWithLogger._
   val getDescription = Description.createSuiteDescription("ATDD: " + clazz.getName);
 
   val instance = test { instantiate(clazz) };
 
   override def addEngine(name: String, engine: Engine) = {
     val ed = super.addEngine(name, engine)
-    recordEngine(clazz, ed, engine)
     ed
   }
 
-  for (m <- clazz.getDeclaredMethods().filter((m) => returnTypeIsEngine(m))) {
-    val engine: Engine = m.invoke(instance).asInstanceOf[Engine];
-    addEngine(m.getName(), engine)
-  }
-  for (f <- clazz.getFields().filter((f) => typeIsEngine(f))) {
-    val engine: Engine = f.get(instance).asInstanceOf[Engine];
-    addEngine(f.getName, engine)
-  }
+  val rootEnginesAndNames =
+    clazz.getDeclaredMethods().filter((m) => returnTypeIsEngine(m)).map((m) => (m.getName, m.invoke(instance).asInstanceOf[Engine])) ++
+      clazz.getFields().filter((f) => typeIsEngine(f)).map((f) => (f.getName, f.get(instance).asInstanceOf[Engine]))
 
+  for ((name, engine) <- rootEnginesAndNames)
+    addEngine(name, engine)
+
+  val rootEngines = rootEnginesAndNames.map(_._2)
+  val project = Project("Junit test run for " + clazz.getPackage().getName +"/" + clazz.getSimpleName, rootEngines: _*)
+  if (rootEngines.size > 0) 
+    ReportCreator.fileSystem(rootEngines.head.logger, project).create
   def instantiate(clazz: Class[_]): Any = {
     val rm = ru.runtimeMirror(clazz.getClassLoader())
     val declaredFields = clazz.getDeclaredFields().toList
@@ -165,11 +167,11 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
     }
   }
 
-  def recordEngine(clazz: Class[Any], engineDescription: Description, engine: Engine) {
-    import EngineWithLogger._
-    val project = Project("Junit_" + engine.titleOrDescription("Unnamed"), engine)
-    ReportCreator.fileSystem(engine.logger, project).create
-  }
+//  def recordEngine(clazz: Class[Any], engineDescription: Description, engine: Engine) {
+//    import EngineWithLogger._
+//    val project = Project("Junit_" + engine.titleOrDescription("Unnamed"), engine)
+//    ReportCreator.fileSystem(engine.logger, project).create
+//  }
 
   trait SomeTrait { def someMethod: String }
   object SomeObject extends SomeTrait { def someMethod = "something" }

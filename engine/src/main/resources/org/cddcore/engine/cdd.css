@@ -5,6 +5,13 @@ html {
 	box-sizing: border-box;
 }
 
+img {
+	padding-top: 0px;
+	padding-bottom: 0px;
+	padding-right: 3px;
+	padding-left: 3px;
+}
+
 div {
 	position: relative;
 	padding: 5px;
@@ -62,6 +69,7 @@ br {
 .cddLogo {
 	position: relative;
 	float: left;
+	padding: 0px;
 }
 
 .cddBox {
@@ -127,9 +135,32 @@ br {
 	border: 1px solid gray;
 }
 
+.childEngine {
+	width: auto;
+	margin: 0px;
+	padding: 0px;
+	border: 1px solid gray;
+}
+
+.engineWithChildren {
+	width: 100%;
+	margin: 0px;
+	padding: 0px;
+	border: 1px solid gray;
+}
+
 .engineSummary {
 	float: left;
 	width: 35%;
+	margin: 0px;
+	margin: 6px;
+	padding: 0px;
+	border: 1px solid gray;
+}
+
+.engineWithChildrenSummary {
+	float: left;
+	width: 100%;
 	margin: 0px;
 	margin: 6px;
 	padding: 0px;
@@ -245,6 +276,7 @@ br {
 	width: 100%;
 	border: 2px solid green;
 }
+
 .ifFalseOnPath {
 	margin: 0px;
 	padding: 0px;
