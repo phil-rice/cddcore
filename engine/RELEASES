@@ -15,3 +15,4 @@
 1.7.2 Refactored the website code to allow examples to show requirements
 1.7.3 Can now make traces, although not using them yet
 1.8.0 Engines can have child engines, and a folding function to aggregate the results
+1.8.1 Stabilisation: JUnit works better with child engines
