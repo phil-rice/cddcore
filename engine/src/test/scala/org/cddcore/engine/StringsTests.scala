@@ -19,6 +19,14 @@ class StringsTests extends AbstractTest {
   
   "The url cleaner" should "use alphas digits underscores and turn spaces to underscore" in {
 	  assertEquals("abc_123_", Strings.urlClean("abc 123;_'#\n~()<>{}\\\\")) //no defined characters
-    
+  }
+  
+  "The blanks method" should "return the correct number of blanks" in {
+    assertEquals("", Strings.blanks(0))
+    assertEquals(" ", Strings.blanks(1))
+    assertEquals("  ", Strings.blanks(2))
+    assertEquals("   ", Strings.blanks(3))
+    assertEquals("    ", Strings.blanks(4))
+    assertEquals("      ", Strings.blanks(6))
   }
 }

@@ -1,6 +1,7 @@
 package org.cddcore.engine.tests
 
 import org.junit.runner.Description
+
 import scala.collection.JavaConversions._
 import org.junit.runner.Runner
 import org.junit.runner.notification.RunNotifier
@@ -14,6 +15,7 @@ import scala.collection.mutable.StringBuilder
 import sys.process._
 import java.lang.reflect.Field
 import junit.framework.AssertionFailedError
+import org.cddcore.engine.ReportableWithTemplate
 
 object CddRunner {
   val separator = "\n#########\n"
@@ -37,8 +39,29 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
   import org.cddcore.engine.Engine._
   var exceptionMap: Map[Test, Throwable] = Map()
   var biMap: BiMap = (Map(), Map())
+  var engines = List[Engine]()
+  var names = Set[String]()
 
-  def addEngineForTest(name: String, engine: Any) = addEngine(name, engine.asInstanceOf[EngineFromTestsImpl])
+  def addEngineForTest(name: String, engine: Any) = addEngine(name, engine.asInstanceOf[Engine])
+
+  /** this code is here for a truely hideous Eclipse interop bug that I wasn't able to duplicate in a test :( Basically if you have two tests with the same name, and one passes and one failes, then the Eclipse JUnit plugin I was using didn't work well */
+  def descriptionfor(r: Reportable): Description = {
+    var name = descriptionfor(r, "")
+    var i = 0
+    while (names.contains(name)) {
+      i += 1
+      name = descriptionfor(r, i.toString)
+    }
+    name
+  }
+  def descriptionfor(r: Reportable, postFix: String): Description = {
+    val name = Strings.clean(r match {
+      case t: Test => t.titleString + " => " + logger(t.expected.getOrElse(""))
+      case r: Requirement => r.title.getOrElse("")
+      case _ => throw new IllegalStateException(r.getClass() + "/" + r)
+    })
+    Description.createSuiteDescription(name)
+  }
 
   def addEngine(name: String, engine: Engine) = {
     import EngineWithScenarioExceptionMap._
@@ -46,19 +69,47 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
     println(name)
     println(engine)
     getDescription.addChild(engineDescription)
-    val result = engine.foldWithPathReversingChildren[BiMap]((biMap._1 + (engine -> engineDescription), biMap._2 + (engineDescription -> engine)), (acc, path) => (acc, path) match {
-      case ((from, to), (r: Requirement) :: tail) if !from.contains(r) =>
-        val d = Description.createSuiteDescription(Strings.clean(r match {
-          case t: Test => t.titleString + " => " + logger(t.expected.getOrElse(""))
-          case _ => r.title.getOrElse("")
-        }))
-        tail.headOption match { case Some(parent) => from(parent).addChild(d); case _ => }
-        (from + (r -> d), to + (d -> r))
-      case _ => acc
-    })
+
+    //    val result = engine.foldWithPathReversingChildren[BiMap]((biMap._1 + (engine -> engineDescription), biMap._2 + (engineDescription -> engine)), (acc, path) => (acc, path) match {
+    //      case ((from, to), (r: Requirement) :: tail) if !from.contains(r) =>
+    //        val d = Description.createSuiteDescription(Strings.clean(r match {
+    //          case t: Test => t.titleString + " => " + logger(t.expected.getOrElse(""))
+    //          case _ => r.title.getOrElse("")
+    //        }))
+    //        tail.headOption match { case Some(parent) => from(parent).addChild(d); case _ => }
+    //        (from + (r -> d), to + (d -> r))
+    //      case _ => acc
+    //    })
+    val result = addChildren(List(engine), engineDescription, (biMap._1 + (engine -> engineDescription), biMap._2 + (engineDescription -> engine)));
     biMap = result
     exceptionMap = exceptionMap ++ engine.scenarioExceptionMap.map
+    engines = engine :: engines
+
     engineDescription
+  }
+
+  def addChildren(path: List[Reportable], d: Description, biMap: BiMap): BiMap = {
+    (biMap, path) match {
+      case ((from, to), (r: RequirementAndHolder) :: _) =>
+        r.children.foldLeft(biMap)((acc, child) => add(child :: path, d, acc))
+      case _ => biMap
+    }
+  }
+  def add(path: List[Reportable], parentDescription: Description, biMap: BiMap): BiMap = {
+    def makeAndAddDescription(r: Requirement) = {
+      val d = descriptionfor(r)
+      parentDescription.addChild(d)
+      d
+    }
+    (biMap, path) match {
+      case ((from, to), (r: RequirementAndHolder) :: _) =>
+        val d = makeAndAddDescription(r)
+        r.children.foldLeft((from + (r -> d), to + (d -> r)))((acc, child) => add(child :: path, d, acc))
+      case ((from, to), (r: Requirement) :: _) if !from.contains(r) =>
+        val d = makeAndAddDescription(r)
+        (from + (r -> d), to + (d -> r))
+    }
+
   }
 
   def fileFor(clazz: Class[Any], ed: Description, extension: String) = new File(CddRunner.directory, clazz.getName() + "." + ed.getDisplayName() + "." + extension)
@@ -70,38 +121,57 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
 
   def log(s: String) = println(s)
 
-  def run(notifier: RunNotifier) =
-    run(notifier, getDescription(), None)
+  def run(notifier: RunNotifier) = {
+    val exceptionScenarios = exceptionMap.keySet
+    val allScenarios = biMap._1.keySet.collect { case t: Test => t }
+    val left = exceptionScenarios -- allScenarios
+    if (left.size > 0)
+      throw new IllegalStateException
+    val description = getDescription()
+    notifier.fireTestStarted(description)
+    for ((e, ed) <- engines.reverse.zip(description.getChildren()).reverse)
+      run(1, notifier, ed, e, Some(e))
+    notifier.fireTestFinished(description)
+  }
 
-  def runChildren(notifier: RunNotifier, r: Reportable, engine: Option[Engine]): Unit =
-    runChildren(notifier, biMap._1(r), engine)
+  def runChildren(depth: Int, notifier: RunNotifier, description: Description, r: Reportable, engine: Option[Engine]): Unit =
+    r match {
+      case holder: ReportableHolder => {
+        val children = holder.children.zip(description.getChildren()).reverse
+        for ((c, cd) <- children)
+          run(depth + 1, notifier, cd, c, engine)
+      }
+      case _ =>
+    }
 
-  def runChildren(notifier: RunNotifier, description: Description, engine: Option[Engine]) =
-    for (d <- description.getChildren)
-      run(notifier, d, engine)
+  private def msg(depth: Int, activity: String, reportable: Reportable, description: Description) = {
+    val dodgy = if (biMap._1(reportable) != description) "dodgy " + (reportable match { case r: Requirement => r.titleOrDescription("<NOTITLE>"); case _ => "" }) else ""
+    String.format(s"%-${10 + depth}s  %-20s %s %s", activity, Reportable.templateName(reportable), description, dodgy)
+  }
 
-  def run(notifier: RunNotifier, description: Description, engine: Option[Engine]) {
+  def run(depth: Int, notifier: RunNotifier, description: Description, reportable: Reportable, engine: Option[Engine]) {
     test {
       notifier.fireTestStarted(description)
-      log("notifier.fireTestStarted" + description)
+      log(msg(depth, "started", reportable, description))
       try {
-        (engine, biMap._2.get(description)) match {
-          case (_, Some(engine: EngineBuiltFromTests[_])) => runChildren(notifier, engine, Some(engine))
-          case (_, Some(t: Test)) if exceptionMap.contains(t) => throw exceptionMap(t)
-          case (Some(e: EngineBuiltFromTests[_]), Some(t: Test)) => {
+        (engine, reportable) match {
+          case (_, engine: EngineBuiltFromTests[_]) => runChildren(depth, notifier, description, engine, Some(engine))
+          case (_, t: Test) if exceptionMap.contains(t) =>
+            throw exceptionMap(t)
+          case (Some(e: EngineBuiltFromTests[_]), t: Test) => {
             val actual = ROrException.from(e.applyParams(t.params))
             if (t.expected != Some(actual))
               throw new AssertionFailedError("Expected:\n" + t.expected + "\nActual:\n" + actual + "\n" + t)
           }
-          case (_, Some(x)) => runChildren(notifier, x, engine)
-          case _ => runChildren(notifier, description, engine)
+          case _ => runChildren(depth, notifier, description, reportable, engine)
         }
-        log("notifier.fireTestFinished" + description)
+        log(msg(depth, "finished", reportable, description))
         notifier.fireTestFinished(description)
       } catch {
         case t: Throwable =>
-          log("notifier.fireTestFailure" + description)
+          log(msg(depth, "failed", reportable, description))
           notifier.fireTestFailure(new Failure(description, t))
+          t.printStackTrace()
       }
     }
   }
@@ -128,10 +198,17 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
 
 }
 
+object CddJunitRunner {
+  var logging = ("true" == System.getenv("cdd.junit.log")) || true
+}
+
 class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
   import org.cddcore.engine.Engine._
+  import CddJunitRunner._
   import EngineWithLogger._
   val getDescription = Description.createSuiteDescription("ATDD: " + clazz.getName);
+  if (logging)
+    println("Description: " + getDescription)
 
   val instance = test { instantiate(clazz) };
 
@@ -142,15 +219,19 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
 
   val rootEnginesAndNames =
     clazz.getDeclaredMethods().filter((m) => returnTypeIsEngine(m)).map((m) => (m.getName, m.invoke(instance).asInstanceOf[Engine])) ++
-      clazz.getFields().filter((f) => typeIsEngine(f)).map((f) => (f.getName, f.get(instance).asInstanceOf[Engine]))
+      clazz.getFields().filter((f) => typeIsEngine(f)).map((f) => (f.getName, f.get(instance).asInstanceOf[Engine])).sortBy(_._1)
+  if (logging)
+    for ((name, engine) <- rootEnginesAndNames)
+      println("Engine: " + name)
 
   for ((name, engine) <- rootEnginesAndNames)
     addEngine(name, engine)
 
   val rootEngines = rootEnginesAndNames.map(_._2)
-  val project = Project("Junit test run for " + clazz.getPackage().getName +"/" + clazz.getSimpleName, rootEngines: _*)
-  if (rootEngines.size > 0) 
+  val project = Project("Junit test run for " + clazz.getPackage().getName + "/" + clazz.getSimpleName, rootEngines: _*)
+  if (rootEngines.size > 0)
     ReportCreator.fileSystem(rootEngines.head.logger, project).create
+
   def instantiate(clazz: Class[_]): Any = {
     val rm = ru.runtimeMirror(clazz.getClassLoader())
     val declaredFields = clazz.getDeclaredFields().toList
@@ -167,11 +248,11 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
     }
   }
 
-//  def recordEngine(clazz: Class[Any], engineDescription: Description, engine: Engine) {
-//    import EngineWithLogger._
-//    val project = Project("Junit_" + engine.titleOrDescription("Unnamed"), engine)
-//    ReportCreator.fileSystem(engine.logger, project).create
-//  }
+  def recordEngine(clazz: Class[Any]) {
+    import EngineWithLogger._
+    val project = Project("Junit" + clazz.getPackage().getName() + "/" + clazz.getSimpleName(), engines: _*)
+    ReportCreator.fileSystem(rootEngines.head.logger, project).create
+  }
 
   trait SomeTrait { def someMethod: String }
   object SomeObject extends SomeTrait { def someMethod = "something" }

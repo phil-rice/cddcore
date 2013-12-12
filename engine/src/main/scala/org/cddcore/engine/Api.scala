@@ -18,6 +18,10 @@ object Reportable {
 /** Reportables are things that appear in reports. This includes Engines, Use cases and tests*/
 trait Reportable
 
+object ReportableWithTemplate{
+  implicit def toReportableWithTemplate(r: Reportable) = r.asInstanceOf[ReportableWithTemplate]
+}
+
 /** Templates was used to control the text is generated. This is used when the class simple name isn't good enough for template selection */
 trait ReportableWithTemplate {
   def templateName: String

@@ -30,7 +30,7 @@ object Xml {
   def date: (NodeSeq) => Option[DateTime] = date("yyyy-MM-dd")
   def date(pattern: String) = (n: NodeSeq) =>
     try { Some(DateTimeFormat.forPattern(pattern).parseDateTime(n.text)) } catch {
-      case e: Throwable => e.printStackTrace(); None
+      case e: Throwable =>  None
     };
 
   def string = (n: NodeSeq) => Some(n.text)

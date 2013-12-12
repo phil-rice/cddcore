@@ -5,6 +5,7 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class BuilderExpectedTests extends AbstractTest {
+
   "A scenario" should "get its expected from it's antecendants if not defined" in {
     val e = Engine[Int, String].expected("engine").
       useCase("uc0").
@@ -19,7 +20,7 @@ class BuilderExpectedTests extends AbstractTest {
     assertEquals("usecase", e(1))
     assertEquals("scenario", e(2))
   }
-  
+
   it should "get its expected from it's antecendants if not defined, when in a child engine" in {
     val b = Engine.foldList[Int, String].expected("engine").
       childEngine("ce0").expected("childEngine").

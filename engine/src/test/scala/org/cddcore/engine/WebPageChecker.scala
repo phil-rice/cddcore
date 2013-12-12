@@ -275,7 +275,7 @@ class ProjectPageChecker(val path: ReportableList, val html: String, val reporta
   val project = path(0).asInstanceOf[Project]
   val report = path(1).asInstanceOf[Report]
   new TopLineChecker("Project: " + project.titleString)
-  val engineDivs = divsWith("engine", reportDiv.child)
+  val engineDivs = divsWith("engineWithTests", reportDiv.child)
   val engineSectionCheckers = project.engines.zip(engineDivs).map(_ match { case (e: Engine, node) => new EngineSectionChecker(e :: path, node, false) }).toList
   assertEquals(project.engines.size, engineSectionCheckers.size)
   assertEquals(project.engines.size, engineDivs.size)
@@ -289,7 +289,7 @@ class EnginePageChecker(val path: ReportableList, val html: String, val reportab
   val report = path(2).asInstanceOf[Report]
   new TopLineChecker("Engine: " + engine.titleOrDescription(""))
 
-  val engineDivs = divsWith("engine", reportDiv.child)
+  val engineDivs = divsWith("engineWithTests", reportDiv.child)
   assertEquals(1, engineDivs.size)
   new EngineSectionChecker(path, engineDivs.head, false).checkHasUseCaseSummarySections
 }
@@ -300,7 +300,7 @@ class UseCasePageChecker(path: ReportableList, val html: String, val reportableT
   val report = path(3).asInstanceOf[Report]
 
   new TopLineChecker("Usecase: " + useCase.titleString)
-  val engineDivs = divsWith("engine", reportDiv.child)
+  val engineDivs = divsWith("engineWithTests", reportDiv.child)
   assertEquals(1, engineDivs.size)
   val engineSummaryChecker = new EngineSummaryChecker(path.tail, engineDivs.head, false)
   val useCaseDiv = onlyDivWith("usecase", engineSummaryChecker.engineSummary.child)
@@ -315,7 +315,7 @@ class ScenarioPageChecker(path: ReportableList, val html: String, val reportable
   val report = path(4).asInstanceOf[Report]
 
   new TopLineChecker("Scenario:" + scenario.title.collect { case t => " " + t }.getOrElse(""))
-  val engineDivs = divsWith("engine", reportDiv.child)
+  val engineDivs = divsWith("engineWithTests", reportDiv.child)
   assertEquals(1, engineDivs.size)
   val engineSummaryChecker = new EngineSummaryChecker(path.tail, engineDivs.head, true)
   val useCaseDiv = onlyDivWith("usecase", engineSummaryChecker.engineSummary.child)

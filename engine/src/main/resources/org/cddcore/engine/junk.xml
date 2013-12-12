@@ -1,13 +1,19 @@
-
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>CDD Report: Legacy: Replacement Tennis scorer</title>
+		<title>CDD Report: Project: ProjName</title>
 		<style>html {
 			font-family: Arial, Helvetica, sans-serif;
 			vertical-align: top;
 			word-wrap: break-word;
 			box-sizing: border-box;
+			}
+
+			img {
+			padding-top: 0px;
+			padding-bottom: 0px;
+			padding-right: 3px;
+			padding-left: 3px;
 			}
 
 			div {
@@ -67,6 +73,7 @@
 			.cddLogo {
 			position: relative;
 			float: left;
+			padding: 0px;
 			}
 
 			.cddBox {
@@ -132,9 +139,32 @@
 			border: 1px solid gray;
 			}
 
+			.childEngine {
+			width: auto;
+			margin: 0px;
+			padding: 0px;
+			border: 1px solid gray;
+			}
+
+			.engineWithChildren {
+			width: 100%;
+			margin: 0px;
+			padding: 0px;
+			border: 1px solid gray;
+			}
+
 			.engineSummary {
 			float: left;
 			width: 35%;
+			margin: 0px;
+			margin: 6px;
+			padding: 0px;
+			border: 1px solid gray;
+			}
+
+			.engineWithChildrenSummary {
+			float: left;
+			width: 100%;
 			margin: 0px;
 			margin: 6px;
 			padding: 0px;
@@ -224,6 +254,7 @@
 			width: 100%;
 			clear: both;
 			}
+
 			.if {
 			margin: 0px;
 			padding: 0px;
@@ -240,6 +271,7 @@
 			width: 100%;
 			border: 2px solid #FF7E00;
 			}
+
 			.ifTrueOnPath {
 			margin: 0px;
 			padding: 0px;
@@ -247,6 +279,15 @@
 			clear: both;
 			width: 100%;
 			border: 2px solid green;
+			}
+
+			.ifFalseOnPath {
+			margin: 0px;
+			padding: 0px;
+			width: 90%;
+			clear: both;
+			width: 100%;
+			border: 2px solid red;
 			}
 
 			.because {
@@ -302,13 +343,19 @@
 			.XmlTitle {
 			font-weight: bold;
 			}
+
+			.legacyTR {
+			background-color: #d6c6c4;
+			}
 		</style>
 	</head>
 	<body>
 		<div class='report'>
 			<div class='topLine'>
 				<div class='cddLogo'>
-					<img src='http://img24.imageshack.us/img24/4325/gp9j.png' alt='CDD' />
+					<a id='cddLogo' href='/ReportTitle/ProjName.Project.html'>
+						<img src='http://img32.imageshack.us/img32/8151/xy9u.png' alt='Report Home Page' />
+					</a>
 				</div>
 				<div class='cddBox'>
 					<div class='kindlySupportedBy'>Kindly supported by</div>
@@ -324,184 +371,120 @@
 				</div>
 				<div class='reportTopBox'>
 					<div class='reportTitle'>Report name</div>
-					<div class='reportText'>Legacy: Replacement Tennis scorer </div>
+					<div class='reportText'>Project: ProjName </div>
 					<div class='reportTitle'>Report date</div>
-					<div class='reportDate'>17:28 Thu Nov 7 2013</div>
+					<div class='reportDate'>08:59 Thu Dec 12 2013</div>
 				</div><!--Report Top Box -->
 			</div><!-- top Line -->
-			<div class='engine'>
+			<div class='engineWithTests'>
 				<div class='engineSummary'>
 					<div class='engineText'>
-						<a id='Engine_Engine1' href='file:///C:\Users\Phil\.cdd\Report1\Engine10.Engine.html'>Engine </a>
-						Replacement Tennis scorer
+						<a id='EngineFromTests_EngTitle' href='/ReportTitle/ProjName/EngTitle.EngineFromTests.html'>
+							<img
+								src='http://i782.photobucket.com/albums/yy108/phil-rice/engine_zps9a86cef4.png'
+								alt='engine with tests icon' />
+							Engine EngTitle
+						</a>
 					</div>
 					<table class='engineTable'>
 						<tr>
 							<td class='title'>Usecases</td>
-							<td class='value'>5</td>
+							<td class='value'>2</td>
 						</tr>
 						<tr>
 							<td class='title'>Nodes</td>
-							<td class='value'>15</td>
+							<td class='value'>5</td>
 						</tr>
 					</table>
-					<div class='legacyConclusion'>
-						<div class='legacyConclusionText'>
-							<a id='CodeAndScenarios_CodeAndScenarios2'
-								href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios12.CodeAndScenarios.html'>Conclusion </a>
+					<div class='usecaseSummary'>
+						<h4>
+							<a id='UseCase_uc2' href='/ReportTitle/ProjName/EngTitle/uc2.UseCase.html'>
+								<img
+									src='http://i782.photobucket.com/albums/yy108/phil-rice/useCase_zps23a7250c.png'
+									alt='usecase icon' />
+								uc2
+							</a>
+							<a id='Scenario_twentyone'
+								href='/ReportTitle/ProjName/EngTitle/uc2/twentyone.Scenario.html'>
+								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
+							</a>
+							<a id='Scenario_twenty' href='/ReportTitle/ProjName/EngTitle/uc2/twenty.Scenario.html'>
+								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
+							</a>
+						</h4>
+					</div><!-- usecaseSummary -->
+					<div class='usecaseSummary'>
+						<h4>
+							<a id='UseCase_uc1' href='/ReportTitle/ProjName/EngTitle/uc1.UseCase.html'>
+								<img
+									src='http://i782.photobucket.com/albums/yy108/phil-rice/useCase_zps23a7250c.png'
+									alt='usecase icon' />
+								uc1
+							</a>
+							<a id='Scenario_ten' href='/ReportTitle/ProjName/EngTitle/uc1/ten.Scenario.html'>
+								<img src='http://img201.imageshack.us/img201/1442/a9t.png' />
+							</a>
+						</h4>
+					</div><!-- usecaseSummary -->
+				</div><!-- engineSummary -->
+				<div class='decisionTree'>
+					<div class='decision'>
+						<div class='because'>
+							<div class='indent'>&#160;</div>
+							<span class='keyword'>if&#160;</span>
+							<div class='because'>(x.==(20))</div><!-- because -->
+						</div><!-- because -->
+						<div class='result'>
+							<div class='indent'>&#160;&#160;</div>
+							<span class='keyword'>then&#160;</span>
+							<a class='scenarioLink'
+								href='/ReportTitle/ProjName/EngTitle/uc2/twenty.Scenario.html'>
+								<img height='15' width='15'
+									src='http://img201.imageshack.us/img201/1442/a9t.png' title='twenty'
+									alt='Test' />
+							</a>
+							<div class='conclusion'>20-></div><!-- conclusion -->
+						</div><!-- result -->
+						<div class='else'>
+							<div class='indent'>&#160;</div>
+							<span class='keyword'>else&#160;</span>
 						</div>
-						<table class='legacyConclusionTable'></table>
-					</div><!-- legacyConclusion' -- ><div class='legacyConclusion'><div 
-						class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios3' href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios14.CodeAndScenarios.html'>Conclusion 
-						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
-						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios4' 
-						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios16.CodeAndScenarios.html'>Conclusion 
-						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
-						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios5' 
-						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios19.CodeAndScenarios.html'>Conclusion 
-						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
-						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios6' 
-						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios20.CodeAndScenarios.html'>Conclusion 
-						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
-						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios7' 
-						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios22.CodeAndScenarios.html'>Conclusion 
-						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
-						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios8' 
-						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios24.CodeAndScenarios.html'>Conclusion 
-						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
-						-- ><div class='legacyConclusion'><div class='legacyConclusionText'><a id='CodeAndScenarios_CodeAndScenarios9' 
-						href='file:///C:\Users\Phil\.cdd\Report1\Engine10\CodeAndScenarios25.CodeAndScenarios.html'>Conclusion 
-						</a></div><table class='legacyConclusionTable'></table></div><!-- legacyConclusion' 
-						-- ></div><!-- engineSummary -->
-					<div class='decisionTree'>
 						<div class='decision'>
 							<div class='because'>
-								<div class='indent'>&#160;</div>
+								<div class='indent'>&#160;&#160;</div>
 								<span class='keyword'>if&#160;</span>
-								<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r)))
-								</div><!-- because -->
+								<div class='because'>(x.==(21))</div><!-- because -->
 							</div><!-- because -->
 							<div class='result'>
-								<div class='indent'>&#160;&#160;</div>
+								<div class='indent'>&#160;&#160;&#160;</div>
 								<span class='keyword'>then&#160;</span>
-								<div class='conclusion'>3 deuce</div><!-- conclusion -->
+								<a class='scenarioLink'
+									href='/ReportTitle/ProjName/EngTitle/uc2/twentyone.Scenario.html'>
+									<img height='15' width='15'
+										src='http://img201.imageshack.us/img201/1442/a9t.png' title='twentyone'
+										alt='Test' />
+								</a>
+								<div class='conclusion'>21-></div><!-- conclusion -->
 							</div><!-- result -->
 							<div class='else'>
-								<div class='indent'>&#160;</div>
+								<div class='indent'>&#160;&#160;</div>
 								<span class='keyword'>else&#160;</span>
 							</div>
-							<div class='decision'>
-								<div class='because'>
-									<div class='indent'>&#160;&#160;</div>
-									<span class='keyword'>if&#160;</span>
-									<div class='because'>(l.-(r).>=(2).&amp;&amp;(l.>=(4)))</div><!-- because -->
-								</div><!-- because -->
-								<div class='result'>
-									<div class='indent'>&#160;&#160;&#160;</div>
-									<span class='keyword'>then&#160;</span>
-									<div class='conclusion'>4 left won</div><!-- conclusion -->
-								</div><!-- result -->
-								<div class='else'>
-									<div class='indent'>&#160;&#160;</div>
-									<span class='keyword'>else&#160;</span>
-								</div>
-								<div class='decision'>
-									<div class='because'>
-										<div class='indent'>&#160;&#160;&#160;</div>
-										<span class='keyword'>if&#160;</span>
-										<div class='because'>(r.-(l).>=(2).&amp;&amp;(r.>=(4)))</div><!-- because -->
-									</div><!-- because -->
-									<div class='result'>
-										<div class='indent'>&#160;&#160;&#160;&#160;</div>
-										<span class='keyword'>then&#160;</span>
-										<div class='conclusion'>4 right won</div><!-- conclusion -->
-									</div><!-- result -->
-									<div class='else'>
-										<div class='indent'>&#160;&#160;&#160;</div>
-										<span class='keyword'>else&#160;</span>
-									</div>
-									<div class='decision'>
-										<div class='because'>
-											<div class='indent'>&#160;&#160;&#160;&#160;</div>
-											<span class='keyword'>if&#160;</span>
-											<div class='because'>(l.&lt;(4).&amp;&amp;(r.&lt;(4)))</div><!-- because -->
-										</div><!-- because -->
-										<div class='decision'>
-											<div class='because'>
-												<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
-												<span class='keyword'>if&#160;</span>
-												<div class='because'>(l.==(r).&amp;&amp;(l.&lt;(3)))</div><!-- because -->
-											</div><!-- because -->
-											<div class='result'>
-												<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-												<span class='keyword'>then&#160;</span>
-												<div class='conclusion'>0 scala.StringContext(&quot;&quot;, &quot;
-													all&quot;).s(TennisExample.lookup(l))</div><!-- conclusion -->
-											</div><!-- result -->
-											<div class='else'>
-												<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
-												<span class='keyword'>else&#160;</span>
-											</div>
-											<div class='result'>
-												<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-												<span class='keyword'>then&#160;</span>
-												<div class='conclusion'>2 scala.StringContext(&quot;&quot;, &quot;,
-													&quot;, &quot;&quot;).s(TennisExample.lookup(l),
-													TennisExample.lookup(r))</div><!-- conclusion -->
-											</div><!-- result -->
-										</div><!--decision -->
-										<div class='else'>
-											<div class='indent'>&#160;&#160;&#160;&#160;</div>
-											<span class='keyword'>else&#160;</span>
-										</div>
-										<div class='decision'>
-											<div class='because'>
-												<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
-												<span class='keyword'>if&#160;</span>
-												<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(l.==(r.+(1))))
-												</div><!-- because -->
-											</div><!-- because -->
-											<div class='result'>
-												<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-												<span class='keyword'>then&#160;</span>
-												<div class='conclusion'>2 advantage left</div><!-- conclusion -->
-											</div><!-- result -->
-											<div class='else'>
-												<div class='indent'>&#160;&#160;&#160;&#160;&#160;</div>
-												<span class='keyword'>else&#160;</span>
-											</div>
-											<div class='decision'>
-												<div class='because'>
-													<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-													<span class='keyword'>if&#160;</span>
-													<div class='because'>(l.>=(3).&amp;&amp;(r.>=(3)).&amp;&amp;(r.==(l.+(1))))
-													</div><!-- because -->
-												</div><!-- because -->
-												<div class='result'>
-													<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;&#160;
-													</div>
-													<span class='keyword'>then&#160;</span>
-													<div class='conclusion'>2 advantage right</div><!-- conclusion -->
-												</div><!-- result -->
-												<div class='else'>
-													<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;</div>
-													<span class='keyword'>else&#160;</span>
-												</div>
-												<div class='result'>
-													<div class='indent'>&#160;&#160;&#160;&#160;&#160;&#160;&#160;
-													</div>
-													<span class='keyword'>then&#160;</span>
-													<div class='conclusion'>0 org.cddcore.engine.UndecidedException,
-														Nothing]((() => new UndecidedException()))</div><!-- conclusion -->
-												</div><!-- result -->
-											</div><!--decision -->
-										</div><!--decision -->
-									</div><!--decision -->
-								</div><!--decision -->
-							</div><!--decision -->
+							<div class='result'>
+								<div class='indent'>&#160;&#160;&#160;</div>
+								<span class='keyword'>then&#160;</span>
+								<a class='scenarioLink'
+									href='/ReportTitle/ProjName/EngTitle/uc1/ten.Scenario.html'>
+									<img height='15' width='15'
+										src='http://img201.imageshack.us/img201/1442/a9t.png' title='ten'
+										alt='Test' />
+								</a>
+								<div class='conclusion'>10-></div><!-- conclusion -->
+							</div><!-- result -->
 						</div><!--decision -->
-					</div><!-- decisionTree -->
-				</div><!-- engine -->
-			</div><!-- report -->
+					</div><!--decision -->
+				</div><!-- decisionTree -->
+			</div><!-- engine -->
+		</div><!-- report -->
 	</body>
 </html>

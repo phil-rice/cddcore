@@ -119,12 +119,8 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   class EngineResultException(msg: String) extends EngineException(msg)
   class NoBecauseException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
   class ScenarioBecauseException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
-  object ScenarioResultException {
-    def adding(existing: Scenario, s: Scenario, actual: R) =
-      new ScenarioResultException(s"\nActual Result: ${actual}\nExpected ${s.expected.getOrElse("<N/A>")}\n Scenario ${ExceptionScenarioPrinter(s)}\nExisting Scenario${ExceptionScenarioPrinter(s)}", s)
-  }
 
-  class ScenarioResultException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
+  class ScenarioResultException(msg: String, scenario: Test, actual: ROrException[R]) extends ScenarioException(msg, scenario, actual.exception.getOrElse(null))
   class AssertionException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
 
   object CannotDefineTitleTwiceException {
@@ -251,6 +247,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     def optCode: Option[Code]
   }
 
+
   case class Scenario(
     title: Option[String],
     description: Option[String],
@@ -262,8 +259,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     assertions: List[Assertion[A]] = List(),
     configuration: Option[CfgFn] = None,
     priority: Option[Int] = None,
-    references: Set[Reference] = Set()) extends BuilderNode with Requirement with Test {
-
+    references: Set[Reference] = Set()) extends BuilderNode with Requirement with Test  {
     def configure = if (configuration.isDefined) makeClosureForCfg(params)(configuration.get)
     lazy val actualCode: CodeFn[B, RFn, R] = optCode.getOrElse({
       //    println("Expected: " + expected)
@@ -778,6 +774,14 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
     }
 
+    def throwExceptionOrScenarioResultException(s: Scenario, actual: ROrException[R]) {
+      val msg = "Wrong result for " + s.actualCode.description + " for " + ExceptionScenarioPrinter(s) + "\nActual: " + actual + "\nExpected: " + s.expected.getOrElse("<N/A>") + "\nRoot:\n" + toString("", root);
+      (s.expected.get.exception, actual.exception) match {
+        case (None, Some(actualException)) => throw actualException
+        case _ => throw new ScenarioResultException(msg, s, actual);
+      }
+
+    }
     protected def checkExpectedMatchesAction(root: RorN, s: Scenario) {
       s.configure
       val bec = makeClosureForBecause(s.params)
@@ -786,7 +790,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       if (s.expected.isEmpty)
         throw NoExpectedException(loggerDisplayProcessor, s)
       if (actualFromScenario != s.expected)
-        throw new ScenarioResultException("Wrong result for " + s.actualCode.description + " for " + ExceptionScenarioPrinter(s) + "\nActual: " + actualFromScenario + "\nExpected: " + s.expected.getOrElse("<N/A>") + "\nRoot:\n" + toString("", root), s);
+        throwExceptionOrScenarioResultException(s, actualFromScenario)
     }
 
     protected def validateScenario(root: RorN, t: Test) = t match {
@@ -798,7 +802,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         if (s.expected.isEmpty)
           throw NoExpectedException(loggerDisplayProcessor, s)
         if (Some(actualFromScenario) != s.expected)
-          throw new ScenarioResultException("Wrong result for " + s.actualCode.description + " for " + ExceptionScenarioPrinter(s) + "\nActual: " + actualFromScenario + "\nExpected: " + s.expected.getOrElse("<N/A>") + "\nRoot:\n" + toString("", root), s);
+          throwExceptionOrScenarioResultException(s, actualFromScenario)
         val assertionClosure = makeClosureForAssertion(s.params, actualFromScenario);
         for (a <- s.assertions) {
           val result = assertionClosure(a.assertion)
