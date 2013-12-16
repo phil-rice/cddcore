@@ -228,9 +228,10 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
     addEngine(name, engine)
 
   val rootEngines = rootEnginesAndNames.map(_._2)
-  val project = Project("Junit test run for " + clazz.getPackage().getName + "/" + clazz.getSimpleName, rootEngines: _*)
-  if (rootEngines.size > 0)
+  if (rootEngines.size > 0) {
+    val project = Project("Junit test run for " + clazz.getPackage().getName + "/" + clazz.getSimpleName, rootEngines: _*)
     ReportCreator.fileSystem(rootEngines.head.logger, project).create
+  }
 
   def instantiate(clazz: Class[_]): Any = {
     val rm = ru.runtimeMirror(clazz.getClassLoader())

@@ -21,17 +21,17 @@ class Legacy[ID, R](val idGen: Iterable[ID],
   reporter: LegacyReporter[ID, R],
   idToDescription: (ID) => Option[String] = (id: ID) => None) {
   val replacementProper = replacement.asInstanceOf[EngineBuiltFromTests[R]]
-  val categoriseProper = replacement.asInstanceOf[EngineBuiltFromTests[String]]
+  val categoriseProper = categorise.asInstanceOf[EngineBuiltFromTests[String]]
 
   for (id <- idGen) {
     val params = idToParams(id)
     val expected = idToExpected(id)
     val replacementNode = replacementProper.findConclusionFor(params)
     val actual = replacementProper.evaluateConclusionNoException(params, replacementNode)
-    val description = idToDescription(id)
+    val description = idToDescription(id) 
     val legacyData = LegacyData(id, params, description, actual, expected)
 
-    val categoriseParams = List(legacyData)
+    val categoriseParams = List( legacyData)
     val categoriseNode = categoriseProper.findConclusionFor(categoriseParams)
     val categoriseActual = categoriseProper.evaluateConclusionNoException(categoriseParams, categoriseNode)
     val item = new LegacyItem[ID, R](legacyData, categoriseNode, replacementNode)

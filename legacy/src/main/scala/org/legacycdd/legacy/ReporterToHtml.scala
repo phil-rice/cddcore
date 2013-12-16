@@ -86,7 +86,7 @@ class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyDat
 
   }
 
-  def legacyDecisionTreeConfig(rep: Rep, conclusionNode: Set[Conclusion]) = RenderAttributeConfigurer[EngineBuiltFromTests[_]](Set("Engine"),
+  def legacyDecisionTreeConfig(rep: Rep, conclusionNode: Set[Conclusion]) = RenderAttributeConfigurer[EngineBuiltFromTests[_]](Set(Renderer.engineFromTestsKey),
     (rc) => { import rc._; stringTemplate.setAttribute("decisionTree", r.toStringWith(new LegacyIfThenHtmlPrinter(r, conclusionNode, reportableToUrl, urlMap))) })
 
   def legacyConclusionConfig = RenderAttributeConfigurer[Conclusion](Set("CodeAndScenarios"), (rc) => {
