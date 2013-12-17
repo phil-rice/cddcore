@@ -1,12 +1,12 @@
 package org.corecdd.website
 
 import org.cddcore.engine.AbstractTest
-
 import org.cddcore.engine._
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.selenium.WebBrowser
+import org.cddcore.engine.Reportable.ReportableList
 
 abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with BeforeAndAfterAll {
   import Reportable._

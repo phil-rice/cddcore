@@ -2,7 +2,9 @@
 */target/*
 */bin/*
 target/
+report/
 */neo4j/*
 *.zip
 *.jar
 .cache
+*.swp

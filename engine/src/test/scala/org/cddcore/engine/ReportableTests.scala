@@ -1,7 +1,6 @@
 package org.cddcore.engine
 
 import org.junit.runner.RunWith
-
 import org.scalatest.junit.JUnitRunner
 import scala.language.implicitConversions
 

@@ -1,12 +1,10 @@
 package org.cddcore.engine
-
-import scala.language.implicitConversions
-
-import junit.framework.AssertionFailedError
-import org.scalatest.FlatSpec
 import org.scalatest.FlatSpecLike
 import scala.xml.Node
 import org.scalatest.Matchers
+import scala.runtime.ZippedTraversable2.zippedTraversable2ToTraversable
+import org.scalatest.Finders
+import scala.language.implicitConversions
 
 trait AssertEquals {
   def assertEquals[T1, T2](expected: T1, actual: T2) {

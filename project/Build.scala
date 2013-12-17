@@ -5,6 +5,7 @@ import com.typesafe.sbteclipse.plugin.EclipsePlugin.EclipseKeys
 object BuildSettings {
  
   val buildSettings = Defaults.defaultSettings ++  Seq(
+   (testOptions in Test) += Tests.Argument(TestFrameworks.ScalaTest, "-h", "report"),
     publishMavenStyle := true,
 
     publishTo <<= version { (v: String) =>
@@ -60,7 +61,7 @@ object BuildSettings {
       "org.scala-stm" %% "scala-stm" % "0.7",
       "org.scala-lang" % "scala-reflect" % "2.10.1",
       "org.scala-lang" % "scala-compiler" % "2.10.1",
-      "org.scalatest" % "scalatest_2.10" % "2.0" % "test",
+      "org.scalatest" % "scalatest_2.10" %  "2.0.M6" % "test->*",
       "log4j" % "log4j" % "1.2.17",
       "junit" % "junit" % "4.8.2"))
 
@@ -102,9 +103,9 @@ object HelloBuild extends Build {
 
   lazy val constraint = Project(id = "constraint", settings = buildSettings, base = file("constraint"))
   lazy val engine = Project(id = "engine", settings = buildSettings, base = file("engine")) dependsOn (constraint)
-  lazy val website = Project(id = "website", settings = websiteSettings, base = file("website")) dependsOn (constraint, engine)
-  lazy val legacy = Project(id = "legacy", settings = buildSettings, base = file("legacy")) dependsOn (constraint, engine)
-  lazy val examples = Project(id = "examples", settings = exampleSettings, base = file("examples")) dependsOn (constraint, engine, website, legacy)
+  lazy val website = Project(id = "website", settings = websiteSettings, base = file("website")) dependsOn (constraint, engine % "compile->compile;test->test")
+  lazy val legacy = Project(id = "legacy", settings = buildSettings, base = file("legacy")) dependsOn (constraint, engine % "compile->compile;test->test")
+  lazy val examples = Project(id = "examples", settings = exampleSettings, base = file("examples")) dependsOn (constraint, engine % "compile->compile;test->test", website % "compile->compile;test->test", legacy)
   lazy val root = Project(id = "root", settings = buildSettings ++ Seq(copyTask, copyDepTask), base = file(".")) aggregate (constraint, engine, examples, website, legacy)
 
   import java.io.File

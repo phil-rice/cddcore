@@ -29,8 +29,10 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
   import org.cddcore.engine.Engine._
   implicit def toBuildEngine[R](e: Engine) = e.asInstanceOf[BuildEngine]
 
-  class CddRunnerForTests extends CddRunner {
-    val getDescription = Description.createSuiteDescription("Test")
+  class CddRunnerForTests( engine: Engine) extends CddRunner {
+    def title = "Test"
+    def clazz = getClass
+    def enginesToNameMap = Map(engine -> "engineName")
   }
 
   "An engine" should "notify started and finished for root, engine, usecase and scenario when one scenario" in {
@@ -40,12 +42,12 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
     assertEquals(Map(), engine1.scenarioExceptionMap.map)
     assertEquals(List(
       "testStarted: Test",
-      "testStarted: Engine",
+      "testStarted: engineName",
       "testStarted: uc1",
       "testStarted: d1 => exp",
       "testFinished: d1 => exp",
       "testFinished: uc1",
-      "testFinished: Engine",
+      "testFinished: engineName",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
 
@@ -57,14 +59,14 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
     assertEquals(Map(), engine1.scenarioExceptionMap.map)
     assertEquals(List(
       "testStarted: Test",
-      "testStarted: Engine",
+      "testStarted: engineName",
       "testStarted: uc1",
       "testStarted: d1 => exp",
       "testFinished: d1 => exp",
       "testStarted: two => exp2",
       "testFinished: two => exp2",
       "testFinished: uc1",
-      "testFinished: Engine",
+      "testFinished: engineName",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
 
@@ -78,12 +80,12 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
     val exception: ScenarioBecauseException = engine1.scenarioExceptionMap.map.values.head.asInstanceOf[ScenarioBecauseException]
     assertEquals(List(
       "testStarted: Test",
-      "testStarted: Engine",
+      "testStarted: engineName",
       "testStarted: uc1",
       "testStarted: d1 => exp",
       "testFailure: d1 => exp: ((p: String) => p.==(\"two\")) is not true for Scenario(d1, one, because=((p: String) => p.==(\"two\")), expected=exp)\nDetailed:\n  List(one)\n",
       "testFinished: uc1",
-      "testFinished: Engine",
+      "testFinished: engineName",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
 
@@ -101,14 +103,14 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
     val actual =  runAndGetListOfNotifications(engine1)
     assertEquals(List(
       "testStarted: Test",
-      "testStarted: Engine",
+      "testStarted: engineName",
       "testStarted: uc1",
       "testStarted: d1 => exp",
       "testFailure: d1 => exp: ((p: String) => p.==(\"two\")) is not true for Scenario(d1, one, because=((p: String) => p.==(\"two\")), expected=exp)\nDetailed:\n  List(one)\n",
       "testStarted: d3 => three",
       "testFinished: d3 => three",
       "testFinished: uc1",
-      "testFinished: Engine",
+      "testFinished: engineName",
       "testFinished: Test"),actual)
   }
   
@@ -119,10 +121,10 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       build
     assertEquals(List(
       "testStarted: Test",
-      "testStarted: Engine",
+      "testStarted: engineName",
       "testStarted: d1 => throws RuntimeException",
       "testFinished: d1 => throws RuntimeException",
-      "testFinished: Engine",
+      "testFinished: engineName",
       "testFinished: Test"), runAndGetListOfNotifications(e))
   }
   "An engine with child engines" should "report an exception while building to junit" in {
@@ -137,12 +139,12 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
     val exception: ScenarioBecauseException = map.values.head.asInstanceOf[ScenarioBecauseException]
     assertEquals(List(
       "testStarted: Test",
-      "testStarted: Engine",
+      "testStarted: engineName",
       "testStarted: ce1",
       "testStarted: d1 => exp",
       "testFailure: d1 => exp: ((p: String) => p.==(\"two\")) is not true for Scenario(d1, one, because=((p: String) => p.==(\"two\")), expected=exp)\nDetailed:\n  List(one)\n",
       "testFinished: ce1",
-      "testFinished: Engine",
+      "testFinished: engineName",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
 
@@ -163,14 +165,14 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
     val exception: ScenarioBecauseException = map.values.head.asInstanceOf[ScenarioBecauseException]
     assertEquals(List(
       "testStarted: Test",
-      "testStarted: Engine",
+      "testStarted: engineName",
       "testStarted: ce1",
       "testStarted: sname => exp",
       "testFailure: sname => exp: ((p: String) => p.==(\"two\")) is not true for Scenario(sname, one, because=((p: String) => p.==(\"two\")), expected=exp)\nDetailed:\n  List(one)\n",
       "testStarted: sname => exp",
       "testFinished: sname => exp",
       "testFinished: ce1",
-      "testFinished: Engine",
+      "testFinished: engineName",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
 
@@ -179,8 +181,7 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
   
   
   def runAndGetListOfNotifications(engine: Engine) = {
-    val runner = new CddRunnerForTests
-    runner.addEngineForTest("Engine", engine)
+    val runner = new CddRunnerForTests(engine)
     val listener = new RunListenerForTests
     val notifier = new RunNotifier()
     notifier.addFirstListener(listener)

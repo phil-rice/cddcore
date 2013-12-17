@@ -18,7 +18,7 @@ object Reportable {
 /** Reportables are things that appear in reports. This includes Engines, Use cases and tests*/
 trait Reportable
 
-object ReportableWithTemplate{
+object ReportableWithTemplate {
   implicit def toReportableWithTemplate(r: Reportable) = r.asInstanceOf[ReportableWithTemplate]
 }
 
@@ -292,14 +292,16 @@ object Engine {
       _traceBuilder.set(None);
   }
 
-  def testing = _testing
-  private var _testing = false
-  def test[X](x:  => X) = {
-    _testing = true;
+  def testing = _testing.get
+  private var _testing = new ThreadLocal[Boolean] {
+    override def initialValue = false;
+  }
+  def test[X](x: => X) = {
+    _testing.set(true)
     try {
       x
     } finally
-      _testing = false
+      _testing.set(false)
   }
 
 }
@@ -334,7 +336,7 @@ case class ScenarioExceptionMap(map: Map[Test, Throwable] = Map(), first: Option
   def size = map.size
   def values = map.values
   def +(x: (Test, Throwable)) = ScenarioExceptionMap(map + x, Some(first.getOrElse(x._2)))
-  def +(s: ScenarioExceptionMap) = ScenarioExceptionMap(map ++ s.map, first match {case Some(f) => first; case _=> s.first})
+  def +(s: ScenarioExceptionMap) = ScenarioExceptionMap(map ++ s.map, first match { case Some(f) => first; case _ => s.first })
   def apply(s: Test) = map(s)
   def contains(s: Test) = map.contains(s)
 }

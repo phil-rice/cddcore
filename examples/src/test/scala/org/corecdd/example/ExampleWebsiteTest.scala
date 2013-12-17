@@ -4,6 +4,7 @@ package org.corecdd.example
 
 import org.cddcore.engine._
 
+
 import org.cddcore.engine.Test
 import org.cddcore.example.customerCategorisation.CategorisePerson
 import org.cddcore.example.processCheque_DM_Xml.ProcessChequeXml
