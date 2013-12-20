@@ -112,7 +112,8 @@ class HtmlWithTestIfThenPrinter(params: List[Any], optConclusion: Option[Conclus
       ifPrint(path, decision, className)
     } catch {
       case t: Throwable =>
-        t.printStackTrace()
+        if (!Engine.testing)
+          t.printStackTrace()
         ifPrint(path, decision, "if")
     }
 

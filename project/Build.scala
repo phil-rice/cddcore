@@ -61,7 +61,7 @@ object BuildSettings {
       "org.scala-stm" %% "scala-stm" % "0.7",
       "org.scala-lang" % "scala-reflect" % "2.10.1",
       "org.scala-lang" % "scala-compiler" % "2.10.1",
-      "org.scalatest" % "scalatest_2.10" %  "2.0.M6" % "test->*",
+      "org.scalatest" % "scalatest_2.10" %  "2.0.M6" % "test->*" excludeAll( ExclusionRule(organization = "org.eclipse.jetty") ),
       "log4j" % "log4j" % "1.2.17",
       "junit" % "junit" % "4.8.2"))
 
@@ -83,9 +83,9 @@ object BuildSettings {
     libraryDependencies ++= Seq(
       "org.eclipse.jetty" % "jetty-server" % "8.0.0.M0",
       "org.eclipse.jetty" % "jetty-servlet" % "8.0.0.M0",
-      "org.seleniumhq.selenium" % "selenium-java" % "2.28.0" % "test",
-      "org.seleniumhq.selenium" % "selenium-chrome-driver" % "2.35.0" % "test",
-      "org.seleniumhq.selenium" % "selenium-htmlunit-driver" % "2.35.0" % "test"))
+      "org.seleniumhq.selenium" % "selenium-java" % "2.28.0" % "test" excludeAll( ExclusionRule(organization = "org.eclipse.jetty") ),
+      "org.seleniumhq.selenium" % "selenium-chrome-driver" % "2.35.0" % "test" excludeAll( ExclusionRule(organization = "org.eclipse.jetty") ),
+      "org.seleniumhq.selenium" % "selenium-htmlunit-driver" % "2.35.0" % "test" excludeAll( ExclusionRule(organization = "org.eclipse.jetty") )))
 
   val exampleSettings = websiteSettings ++ Seq(
     libraryDependencies ++= Seq(

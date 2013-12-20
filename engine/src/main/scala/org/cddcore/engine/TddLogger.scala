@@ -130,7 +130,7 @@ class TestLogger(override val displayMap: ClassFunctionList[String] = ClassFunct
 class ConsoleLogger(override val displayMap: ClassFunctionList[String] = ClassFunctionList()) extends SimpleTddLogger {
   import TddLogger._
   protected def message(priority: Level, msgType: TddMessageType, message: => String) =
-    println(String.format("%-5s %-6s %s", priority, msgType, message))
+    if (Engine.logging) println(String.format("%-5s %-6s %s", priority, msgType, message))
 
 }
 

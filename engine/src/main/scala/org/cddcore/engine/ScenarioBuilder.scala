@@ -247,7 +247,6 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     def optCode: Option[Code]
   }
 
-
   case class Scenario(
     title: Option[String],
     description: Option[String],
@@ -259,7 +258,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     assertions: List[Assertion[A]] = List(),
     configuration: Option[CfgFn] = None,
     priority: Option[Int] = None,
-    references: Set[Reference] = Set()) extends BuilderNode with Requirement with Test  {
+    references: Set[Reference] = Set()) extends BuilderNode with Requirement with Test {
     def configure = if (configuration.isDefined) makeClosureForCfg(params)(configuration.get)
     lazy val actualCode: CodeFn[B, RFn, R] = optCode.getOrElse({
       //    println("Expected: " + expected)
@@ -829,7 +828,8 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
             case e: ThreadDeath =>
               throw e
             case e: Throwable =>
-              e.printStackTrace()
+              if (!Engine.testing && Engine.logging) 
+                e.printStackTrace()
               buildFromScenarios(root, tail, seMap + (c -> e))
           }
 

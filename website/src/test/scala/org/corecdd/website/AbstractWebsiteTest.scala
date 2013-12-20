@@ -7,10 +7,14 @@ import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.selenium.WebBrowser
 import org.cddcore.engine.Reportable.ReportableList
+import java.util.concurrent.locks.ReentrantLock
 
+object AbstractWebsiteTest {
+  val lock = new ReentrantLock();
+}
 abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with BeforeAndAfterAll {
   import Reportable._
-  val host = "http://localhost:8080"
+  val host = "http://localhost:8088"
   def server: WebServer
   def reportableToUrl: ReportableToUrl
 
@@ -18,18 +22,20 @@ abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with Bef
 
   override def beforeAll {
     super.beforeAll
+    AbstractWebsiteTest.lock.lock()
     server.start
   }
 
   override def afterAll {
     super.afterAll
     server.stop
+    AbstractWebsiteTest.lock.unlock()
   }
 
   trait AbstractPage {
     def path: ReportableList
-    def clickLogo = { click on  id("cddLogo"); new ProjectPage(path.reverse.take(2).reverse) }
-//    println(currentUrl)
+    def clickLogo = { click on id("cddLogo"); new ProjectPage(path.reverse.take(2).reverse) }
+    //    println(currentUrl)
   }
 
   class ProjectPage(val path: ReportableList) extends AbstractPage {
@@ -40,13 +46,13 @@ abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with Bef
       click on id(urlId)
       new EnginePage(path)
     }
-    
+
     def clickUseCase(path: ReportableList) = {
       val urlId = reportableToUrl.urlId(path.head)
       click on id(urlId)
       new UseCasePage(path)
     }
-    
+
     def clickScenario(path: ReportableList) = {
       val urlId = reportableToUrl.urlId(path.head)
       click on id(urlId)

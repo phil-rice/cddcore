@@ -1,7 +1,6 @@
 package org.corecdd.website
 
 import org.cddcore.engine._
-
 import scala.language.implicitConversions
 import org.cddcore.engine.RequirementAndHolder
 import org.eclipse.jetty.server._
@@ -9,8 +8,9 @@ import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.nio.SelectChannelConnector
 import org.eclipse.jetty.servlet._
-import javax.servlet.http._
 import scala.xml.Elem
+import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.HttpServletRequest
 
 class HandlerContext(val loggerDisplayProcessor: LoggerDisplayProcessor, val root: RequirementAndHolder, val reportCreator: ReportCreator[SimpleReportableToUrl], val method: String, val fullUri: String, val uriPath: String) {
   import PathUtils._
@@ -49,7 +49,12 @@ class CddHandler(loggerDisplayProcessor: LoggerDisplayProcessor, p: RequirementA
           val paramsNameAndValue = paramsINeed.map((name) => (name, baseRequest.getParameter(name)))
           val html = ph.html(context, paramsNameAndValue)
           response.getWriter().println(html)
-        } catch { case e: Throwable => println(ph); e.printStackTrace(); throw e }
+        } catch {
+          case e: Throwable =>
+            println(ph);
+//            e.printStackTrace();
+            throw e
+        }
       case _ => ;
     }
   }

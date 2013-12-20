@@ -4,7 +4,6 @@ package org.corecdd.example
 
 import org.cddcore.engine._
 
-
 import org.cddcore.engine.Test
 import org.cddcore.example.customerCategorisation.CategorisePerson
 import org.cddcore.example.processCheque_DM_Xml.ProcessChequeXml
@@ -27,8 +26,8 @@ class ExampleWebsiteTest extends AbstractWebsiteTest with BeforeAndAfterAll {
     ProcessChequeXml.processCheque,
     TennisScorer.scorer)
 
-  val server = WebServer(project);
   val cddHandler: CddHandler = WebServer.defaultCddHandler(project);
+  val server = new WebServer(8088, cddHandler)
   val report = cddHandler.reportCreator.report
   val reportableToUrl = cddHandler.reportCreator.reportableToUrl
   val urlMap = cddHandler.urlMap
@@ -133,7 +132,7 @@ class ExampleWebsiteTest extends AbstractWebsiteTest with BeforeAndAfterAll {
             import ParamDetails._
             val params = e.paramDetails.foldLeft(List[Any]())((acc, pd) => pd match { case ParamDetail(_, parser, Some(tv)) => acc :+ parser(tv); case _ => Nil })
             if (params != Nil)
-              assertTextEquals( e.asInstanceOf[EngineWithResult[_]].applyParams(params).toString, newLivePage.resultTd)
+              assertTextEquals(e.asInstanceOf[EngineWithResult[_]].applyParams(params).toString, newLivePage.resultTd)
           case _ => ;
         }
 

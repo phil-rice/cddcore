@@ -172,7 +172,6 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
         case t: Throwable =>
           log(msg(depth, "failed", reportable, description))
           notifier.fireTestFailure(new Failure(description, t))
-          t.printStackTrace()
       }
     }
   }
@@ -219,13 +218,9 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
   }
 }
 
-object CddJunitRunner {
-  var logging = ("true" == System.getenv("cdd.junit.log")) || true
-}
 
 class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
   import org.cddcore.engine.Engine._
-  import CddJunitRunner._
   import EngineWithLogger._
 
   def title = "CDD: " + clazz.getName
