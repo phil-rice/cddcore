@@ -42,8 +42,8 @@ object HtmlForIfThenPrinter {
   import Strings._
   def nbsp(i: String) = "<div class='indent'>" + i.replace(" ", "&#160;") + "</div>"
 
-  def highlightedScenarioIcon = "http://img407.imageshack.us/img407/3948/o96r.png"
-  def normalScenarioIcon = "http://img201.imageshack.us/img201/1442/a9t.png"
+  def highlightedScenarioIcon = "http://www.constraintdrivendevelopment.org/mediawiki/images/1/1d/ScenarioHighlighted.png"
+  def normalScenarioIcon = "http://www.constraintdrivendevelopment.org/mediawiki/images/7/73/Scenario.png"
 
   def scenarioLink(urlMap: UrlMap, s: Test, selected: Boolean) = {
     val imgSrc = if (selected) highlightedScenarioIcon else normalScenarioIcon
