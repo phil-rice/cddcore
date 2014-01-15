@@ -7,7 +7,6 @@ import org.scalatest.junit.JUnitRunner
 class EngineSecondScenarioTests extends EngineStringStringTests {
 
   override val logger = new ConsoleLogger
-
   "An  engine" should "Add assertions to the no if scenario comes to correct value" in {
     val bldr = builderWithDefault.
       scenario("A").because("A").expected("X").
@@ -21,6 +20,15 @@ class EngineSecondScenarioTests extends EngineStringStringTests {
     assertEngineMatches(e, Right(EngineNode(because = List("A"), scenarioThatCausedNode = a, inputs = List("A"),
       yes = Left(CodeAndScenarios("X", List(a))),
       no = Left(CodeAndScenarios("Z", List(b, w))))))
+  }
+  it should "throw an ExpectedValueGotException exception if the default code is being used and second scenario has no because and doesn't throw an exception" in {
+	  val bldr = builder.
+			  scenario("A").because("A").expected("X").
+			  scenario("B").expected("Z");
+	  val e = evaluating { bldr.build } should produce[ExpectedValueGotException]
+			  assertEquals("Z", e.expected);
+	  assertEquals(classOf[UndecidedException], e.actual.getClass)
+	  
   }
 
   it should "Add assertions to the yes if scenario comes to correct value" in {
@@ -56,7 +64,6 @@ class EngineSecondScenarioTests extends EngineStringStringTests {
           no = Left(CodeAndScenarios("X", List(a))))),
         no = Left(CodeAndScenarios("Z", List(w))))))
   }
-
 
   it should "throw ScenarioConflictException if it cannot decide between two scenarios" in {
     val bldr = builderWithDefault.

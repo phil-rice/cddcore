@@ -126,7 +126,8 @@ class ReportCreator[RtoUrl <: ReportableToUrl](loggerDisplayProcessor: LoggerDis
     case r: Report => r
     case r: Requirement =>
       Report(if (title == null) r.titleOrDescription("Unnamed") else title, r)
-    case _ => throw new IllegalArgumentException
+    case null => throw new NullPointerException("Is this because your item is a val and not a lazy val?")
+    case _ => throw new IllegalArgumentException(r.toString)
   }
   val urlMap = optUrlMap.getOrElse(reportableToUrl.makeUrlMap(report))
   val rootUrl = reportableToUrl.url(List(r, report).distinct)

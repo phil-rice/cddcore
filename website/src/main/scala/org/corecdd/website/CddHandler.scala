@@ -97,7 +97,7 @@ class LivePathHandler extends CddPathHandler {
       val paramNameAndValues = params.zip(engine.paramDetails).map { case ((paramName, paramString), details) => Param(paramName, paramString, details.parser(paramString)) }.toList
       val engineParams = paramNameAndValues.map(_.value)
       val conclusion = engine.findConclusionFor(engineParams)
-      val result = engine.evaluateConclusion(engineParams, conclusion)
+      val result = engine.evaluateConclusionNoException(engineParams, conclusion)
       (formHtml(context, paramNameAndValues, result.toString), Some(engineParams), Some(conclusion))
     } catch { case t: Throwable => t.printStackTrace(); (formHtml(context, params.map((n) => Param(n._1, n._2, "")), t.getClass + ": " + t.getMessage()), None, None) }
     HtmlRenderer(loggerDisplayProcessor, true).liveEngineHtml(reportCreator.rootUrl, paramNameAndValues, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + engine.titleOrDescription(""), engine))

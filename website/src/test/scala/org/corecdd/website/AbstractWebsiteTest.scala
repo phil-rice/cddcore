@@ -1,13 +1,28 @@
 package org.corecdd.website
 
+import java.util.concurrent.locks.ReentrantLock
+import scala.xml.NodeSeq.seqToNodeSeq
 import org.cddcore.engine.AbstractTest
-import org.cddcore.engine._
+import org.cddcore.engine.Engine
+import org.cddcore.engine.EnginePageChecker
+import org.cddcore.engine.ParamDetail
+import org.cddcore.engine.ParamDetails.toParamDetails
+import org.cddcore.engine.PathUtils
+import org.cddcore.engine.Project
+import org.cddcore.engine.ProjectPageChecker
+import org.cddcore.engine.Report
+import org.cddcore.engine.Reportable.ReportableList
+import org.cddcore.engine.ReportableToUrl
+import org.cddcore.engine.ScenarioPageChecker
+import org.cddcore.engine.Strings
+import org.cddcore.engine.UseCasePageChecker
+import org.cddcore.engine.WebPageChecker
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.selenium.WebBrowser
-import org.cddcore.engine.Reportable.ReportableList
-import java.util.concurrent.locks.ReentrantLock
+import org.cddcore.engine.Reportable
+import org.cddcore.engine.ParamDetails
 
 object AbstractWebsiteTest {
   val lock = new ReentrantLock();
@@ -15,11 +30,58 @@ object AbstractWebsiteTest {
 abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with BeforeAndAfterAll {
   import Reportable._
   val host = "http://localhost:8088"
-  def server: WebServer
-  def reportableToUrl: ReportableToUrl
+  def project: Project
 
+  val cddHandler: CddHandler = WebServer.defaultCddHandler(project);
+  val server = new WebServer(8088, cddHandler)
+  val report = cddHandler.reportCreator.report
+  val reportableToUrl = cddHandler.reportCreator.reportableToUrl
+  val urlMap = cddHandler.urlMap
   implicit val webDriver: WebDriver = new HtmlUnitDriver
 
+  def projectPageAtIndex = { go to (host); new ProjectPage(List(project, report)) }
+  class LivePageChecker(path: ReportableList, val html: String, val reportableToUrl: ReportableToUrl) extends WebPageChecker {
+    import ParamDetails._
+    val report = path(2).asInstanceOf[Report]
+    val engine = PathUtils.findEngine(path)
+    new TopLineChecker("Try: " + engine.titleOrDescription(""))
+    val engineDivs = divsWith("engine", reportDiv.child)
+    assertEquals(1, engineDivs.size)
+    def resultTd = only((xml \\ "td").filter(attributeEquals("class", "result")))
+
+    val engineSummaryChecker = new EngineSummaryChecker(path, engineDivs.head, true)
+    val hasForm = engine.paramDetails.size == engine.arity
+    if (hasForm)
+      only((xml \\ "form") filter attributeEquals("class", "paramsForm"))
+    else
+      assertTextEquals("This engine isn't configured for live operations. Add 'param' details", only((xml \\ "p") filter attributeEquals("class", "notConfigured")))
+  }
+
+  class LivePage(val engine: Engine) extends AbstractPage {
+    import ParamDetails._
+    val path = List(engine, project, report)
+    type PageType = LivePage
+    val pageChecker = new LivePageChecker(path, pageSource, reportableToUrl)
+    def hasForm = pageChecker.hasForm
+    def resultTd = pageChecker.resultTd
+    def submit = {
+      val paramDetails = engine.paramDetails
+      val count = paramDetails.foldLeft(0) { (acc, pd) =>
+        pd match {
+          case ParamDetail(name, _, Some(tv)) =>
+            textField(Strings.clean(name)).value = tv
+            acc + 1
+          case _ => acc
+        }
+      }
+      if (count == paramDetails.size) {
+        click on id("submitForm")
+        val result = new LivePage(engine)
+        val x = result.pageChecker.xml
+        Some(result)
+      } else None
+    }
+  }
   override def beforeAll {
     super.beforeAll
     AbstractWebsiteTest.lock.lock()

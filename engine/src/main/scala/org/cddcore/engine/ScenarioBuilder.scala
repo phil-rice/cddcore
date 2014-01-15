@@ -183,6 +183,11 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     def apply(scenario: Scenario, expected: Class[_ <: Throwable], actual: Throwable) = new WrongExceptionThrownException(s"Expected ${expected.getClass.getSimpleName}", scenario, expected, actual)
   }
   class WrongExceptionThrownException(msg: String, scenario: Scenario, val expected: Class[_ <: Throwable], actual: Throwable) extends ScenarioException(msg, scenario, actual)
+  object ExpectedValueGotException {
+	  def apply(scenario: Scenario, expected: Any, actual: Throwable) = new ExpectedValueGotException(s"Expected ${expected}\nActual${actual}", scenario, expected, actual)
+  }
+  class ExpectedValueGotException(msg: String, scenario: Scenario, val expected: Any, val actual: Throwable) extends ScenarioException(msg, scenario, actual)
+  
   object NoExceptionThrownException {
     def apply(scenario: Scenario, expected: Class[_ <: Throwable], actual: Any) = new NoExceptionThrownException(s"Expected ${expected.getClass.getSimpleName}", scenario, expected, actual)
   }
@@ -944,7 +949,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case (Some(ROrException(Some(v1), None)), ROrException(Some(v2), None)) if (v1 == v2) => { logger.addScenarioFor(s.titleString, codeAndScenarios.code); Left(codeAndScenarios.copy(scenarios = s :: codeAndScenarios.scenarios)) }
         case (Some(ROrException(Some(_), None)), ROrException(Some(_), None)) if (fullPath.isEmpty) => throw ScenarioConflictingWithDefaultException(loggerDisplayProcessor, actualResultIfUseThisScenariosCode, s)
         case (Some(ROrException(Some(_), None)), ROrException(Some(_), None)) => throw ScenarioConflictingWithoutBecauseException(loggerDisplayProcessor, s.expected.get, actualResultIfUseThisScenariosCode, fullPath, s)
-        case (Some(ROrException(Some(_), None)), ROrException(None, Some(e2))) => throw e2
+        case (Some(ROrException(Some(v1), None)), ROrException(None, Some(e2))) => throw ExpectedValueGotException(s, v1, e2)
 
         case (Some(ROrException(None, Some(e1))), ROrException(None, Some(e2))) if (e1.getClass == e2.getClass) => { logger.addScenarioFor(s.titleString, codeAndScenarios.code); Left(codeAndScenarios.copy(scenarios = s :: codeAndScenarios.scenarios)) }
         case (Some(ROrException(None, Some(e1))), ROrException(None, Some(e2))) => throw WrongExceptionThrownException(s, e1.getClass, e2)

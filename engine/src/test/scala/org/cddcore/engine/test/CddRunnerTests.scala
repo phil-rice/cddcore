@@ -29,7 +29,7 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
   import org.cddcore.engine.Engine._
   implicit def toBuildEngine[R](e: Engine) = e.asInstanceOf[BuildEngine]
 
-  class CddRunnerForTests( engine: Engine) extends CddRunner {
+  class CddRunnerForTests(engine: Engine) extends CddRunner {
     def title = "Test"
     def clazz = getClass
     def enginesToNameMap = Map(engine -> "engineName")
@@ -100,7 +100,7 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       build)
     assertEquals(1, engine1.scenarioExceptionMap.map.size)
     val exception: ScenarioBecauseException = engine1.scenarioExceptionMap.map.values.head.asInstanceOf[ScenarioBecauseException]
-    val actual =  runAndGetListOfNotifications(engine1)
+    val actual = runAndGetListOfNotifications(engine1)
     assertEquals(List(
       "testStarted: Test",
       "testStarted: engineName",
@@ -111,9 +111,9 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testFinished: d3 => three",
       "testFinished: uc1",
       "testFinished: engineName",
-      "testFinished: Test"),actual)
+      "testFinished: Test"), actual)
   }
-  
+
   it should "pass if the expected exception is thrown" in {
     val e = builder.
       scenario("one", "d1").expectException(new RuntimeException()).code((x: String) =>
@@ -148,7 +148,6 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
 
-  
   //This test exists because an earlier implementation of CddRunner used description as a key in a critical data structure. Two things with the "equals" description cause an unpleasant bug 
   it should "report exceptions even if the scenario name is identical" in {
     val engine1 = test(new Builder1(ScenarioBuilderData(logger, arity = 1, folder = (Some(_ + _)), initialFoldValue = () => "")).
@@ -176,10 +175,6 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
 
-
-
-  
-  
   def runAndGetListOfNotifications(engine: Engine) = {
     val runner = new CddRunnerForTests(engine)
     val listener = new RunListenerForTests

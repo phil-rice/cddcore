@@ -353,6 +353,9 @@ trait EngineWithScenarioExceptionMap extends Engine {
 trait EngineWithResult[R] extends Engine {
   /** This is used when you don't know at compile time the types and arity of the parameters. For example by the live website. Normally the apply method would be used, which is type safe */
   def applyParams(params: List[Any]): R
+  def safeApplyParams(params: List[Any]) = try {
+    ROrException(applyParams(params))
+  } catch { case e: Throwable => ROrException(e) }
 }
 
 /** This is the 'normal' engine. It */

@@ -19,20 +19,17 @@ import org.cddcore.engine.EngineWithResult
 import org.corecdd.website.WebServer
 
 @RunWith(classOf[JUnitRunner])
-class ExampleWebsiteTest extends AbstractWebsiteTest with BeforeAndAfterAll {
+class ExampleWebsiteTest extends AbstractWebsiteTest {
   import Reportable._
-  val project = Project("Example",
+  lazy val blankEngine = Engine[Int, String]().build
+  lazy val project = Project("Example",
     CategorisePerson.categorise,
     ProcessChequeXml.processCheque,
-    TennisScorer.scorer)
+    blankEngine,
+    TennisScorer.scorer 
+    )
 
-  val cddHandler: CddHandler = WebServer.defaultCddHandler(project);
-  val server = new WebServer(8088, cddHandler)
-  val report = cddHandler.reportCreator.report
-  val reportableToUrl = cddHandler.reportCreator.reportableToUrl
-  val urlMap = cddHandler.urlMap
-
-  def projectPageAtIndex = { go to (host); new ProjectPage(List(project, report)) }
+ 
 
   "The example website" should "display the project page if no page specified" in {
     projectPageAtIndex
@@ -78,48 +75,7 @@ class ExampleWebsiteTest extends AbstractWebsiteTest with BeforeAndAfterAll {
       recover = _.clickLogo)
   }
 
-  class LivePageChecker(path: ReportableList, val html: String, val reportableToUrl: ReportableToUrl) extends WebPageChecker {
-    import ParamDetails._
-    val report = path(2).asInstanceOf[Report]
-    val engine = PathUtils.findEngine(path)
-    new TopLineChecker("Try: " + engine.titleOrDescription(""))
-    val engineDivs = divsWith("engine", reportDiv.child)
-    assertEquals(1, engineDivs.size)
-    def resultTd = only((xml \\ "td").filter(attributeEquals("class", "result")))
-
-    val engineSummaryChecker = new EngineSummaryChecker(path, engineDivs.head, true)
-    val hasForm = engine.paramDetails.size == engine.arity
-    if (hasForm)
-      only((xml \\ "form") filter attributeEquals("class", "paramsForm"))
-    else
-      assertTextEquals("This engine isn't configured for live operations. Add 'param' details", only((xml \\ "p") filter attributeEquals("class", "notConfigured")))
-  }
-
-  class LivePage(val engine: Engine) extends AbstractPage {
-    import ParamDetails._
-    val path = List(engine, project, report)
-    type PageType = LivePage
-    val pageChecker = new LivePageChecker(path, pageSource, reportableToUrl)
-    def hasForm = pageChecker.hasForm
-    def resultTd = pageChecker.resultTd
-    def submit = {
-      val paramDetails = engine.paramDetails
-      val count = paramDetails.foldLeft(0) { (acc, pd) =>
-        pd match {
-          case ParamDetail(name, _, Some(tv)) =>
-            textField(Strings.clean(name)).value = tv
-            acc + 1
-          case _ => acc
-        }
-      }
-      if (count == paramDetails.size) {
-        click on id("submitForm")
-        val result = new LivePage(engine)
-        val x = result.pageChecker.xml
-        Some(result)
-      } else None
-    }
-  }
+  
 
   it should "allow the live button to be displayed" in {
     for (e: Engine <- project.collect { case e: Engine => e }) {

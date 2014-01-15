@@ -110,7 +110,7 @@ trait WebPageChecker extends AssertEquals {
   }
 
   class ScenarioDetailSectionChecker(path: ReportableList, scenarioNode: Node) extends EmbeddedSection(path, scenarioNode) {
-     import EngineWithLogger._
+    import EngineWithLogger._
     val test: Test = path.head.asInstanceOf[Test]
     val engine = PathUtils.findEngine(path)
     val loggerDisplayProcessor = engine.logger
@@ -169,8 +169,12 @@ trait WebPageChecker extends AssertEquals {
     implicit def toEngine[R](e: Engine) = e.asInstanceOf[EngineBuiltFromTests[R]]
     val engine = findEngine(path)
     val root = engine.root
-    val decisionDiv = onlyDivWith("decision", decisionTreeNode.child)
-    val checker = DecisionTreeSectionChecker(root, path, decisionDiv, 1)
+    val decisionDivs = divsWith("decision", decisionTreeNode.child)
+    val checker = decisionDivs.size match {
+      case 0 => None;
+      case 1 => Some(DecisionTreeSectionChecker(root, path, decisionDivs head, 1))
+      case x => throw new IllegalStateException(x.toString)
+    }
   }
 
   class DecisionSectionChecker(val decision: Decision, path: ReportableList, node: Node, depth: Int) extends EmbeddedSection(path, node) {
@@ -178,7 +182,7 @@ trait WebPageChecker extends AssertEquals {
     assertEquals(4, nodesWithoutBlankText.size)
     val becauseNode = nthNodeWith(nodesWithoutBlankText, 0, "because")
     val yesNode = nodesWithoutBlankText(1)
-    val elseNode = nthNodeWith(nodesWithoutBlankText, 2, "else")
+    val elseNode = nthNodeWith(nodesWithoutBlankText, 2, "else") 
     val noNode = nodesWithoutBlankText(3)
 
     val because = new BecauseSectionChecker(decision, path, becauseNode, depth + 1)
