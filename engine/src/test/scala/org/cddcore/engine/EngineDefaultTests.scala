@@ -76,7 +76,7 @@ class EngineDefaultTests extends EngineStringStringTests {
   it should "Allow throw exception if second default value is specified" in {
     val bldr = builder.code((s: String) => "default")
     val e = evaluating { bldr.code((s: String) => "default2") } should produce[CannotDefineCodeTwiceException]
-    assertEquals("Original Code:\nCodeFn(((s: String) => \"default\"))\nBeingAdded\nCodeFn(((s: String) => \"default2\"))", e.getMessage())
+    assertEquals("Original Code:\nCodeHolder(((s: String) => \"default\"))\nBeingAdded\nCodeHolder(((s: String) => \"default2\"))", e.getMessage())
   }
 
   "An engine with child engines" should "use the engine default code, if the child engine code isn't specified" in {

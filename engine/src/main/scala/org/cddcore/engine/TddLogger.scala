@@ -53,7 +53,7 @@ trait TddLogger extends LoggerDisplayProcessor {
   def addingUnder(description: String, parentWasTrue: Boolean, parentDescription: String)
   def addScenarioForRoot(description: String)
   def addFirstIfThenElse(description: String)
-  def addScenarioFor[B, RFn, R](description: String, code: CodeFn[B, RFn, R])
+  def addScenarioFor[X](description: String, code: CodeHolder[X])
 
   def merge(parentDescription: String, childDescription: String, yesNo: Boolean)
   def mergeRoot(description: String)
@@ -70,7 +70,7 @@ class DelegatingLogger(val delegate: TddLogger) extends TddLogger {
   def addingUnder(description: String, parentWasTrue: Boolean, parentDescription: String) = delegate.addingUnder(description, parentWasTrue, parentDescription)
   def addScenarioForRoot(description: String) = delegate.addScenarioForRoot(description)
   def addFirstIfThenElse(description: String) = delegate.addFirstIfThenElse(description)
-  def addScenarioFor[B, RFn, R](description: String, code: CodeFn[B, RFn, R]) = delegate.addScenarioFor(description, code)
+  def addScenarioFor[X](description: String, code: CodeHolder[X]) = delegate.addScenarioFor(description, code)
 
   def merge(parentDescription: String, childDescription: String, yesNo: Boolean) = delegate.merge(parentDescription, childDescription, yesNo)
   def mergeRoot(description: String) = delegate.mergeRoot(description)
@@ -89,7 +89,8 @@ trait SimpleTddLogger extends TddLogger {
   def addingUnder(description: String, parentWasTrue: Boolean, parentDescription: String) = message(Level.DEBUG, TddLogger.compile, "Adding " + description + " under " + (if (parentWasTrue) "yes" else "no") + " of node " + parentDescription)
   def addScenarioForRoot(description: String) = message(Level.DEBUG, TddLogger.compile, "Adding " + description + " as extra scenario for root")
   def addFirstIfThenElse(description: String) = message(Level.DEBUG, TddLogger.compile, "Adding " + description + " as first if then else")
-  def addScenarioFor[B, RFn, R](description: String, code: CodeFn[B, RFn, R]) = message(Level.DEBUG, TddLogger.compile, "Adding " + description + " as extra scenario for " + code.description)
+  def addScenarioFor[X](description: String, code: CodeHolder[X]) = 
+    message(Level.DEBUG, TddLogger.compile, "Adding " + description + " as extra scenario for " + code.description)
 
   def merge(parentDescription: String, childDescription: String, yesNo: Boolean) =
     message(Level.DEBUG, TddLogger.compile, "Merging " + childDescription + " under " + yesNoLookup(yesNo) + " of " + parentDescription)
@@ -119,7 +120,8 @@ class TestLogger(override val displayMap: ClassFunctionList[String] = ClassFunct
   import TddLogger._
   private var list = List[String]()
   protected def message(priority: Level, msgType: TddMessageType, message: => String) {
-    list = String.format("%-5s %-6s %s", priority, msgType, message) :: list
+    val s = String.format("%-5s %-6s %s", priority, msgType, message)
+    list = s :: list
   }
 
   def messages = list.reverse

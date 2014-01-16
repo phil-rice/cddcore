@@ -299,8 +299,10 @@ object Renderer {
   val refRenderer = new ReferenceRenderer
   private val dateFormat: String = "HH:mm EEE MMM d yyyy"
   val dateFormatter = DateTimeFormat.forPattern(dateFormat);
-  def base(loggerDisplayProcessor: LoggerDisplayProcessor, restrict: ReportableSet, walker: ReportWalker = ReportWalker.childWalker): ReportableRenderer = new ReportableRenderer(loggerDisplayProcessor, restrict, walker = walker)
-  def apply(loggerDisplayProcessor: LoggerDisplayProcessor, rootUrl: Option[String], restrict: ReportableSet, live: Boolean, walker: ReportWalker = ReportWalker.childWalker) = base(loggerDisplayProcessor, restrict, walker).configureAttribute(basic(rootUrl, live), engineConfig, reportConfig, testConfig)
+  def base(loggerDisplayProcessor: LoggerDisplayProcessor, restrict: ReportableSet, walker: ReportWalker = ReportWalker.childWalker): ReportableRenderer =
+    new ReportableRenderer(loggerDisplayProcessor, restrict, walker = walker)
+  def apply(loggerDisplayProcessor: LoggerDisplayProcessor, rootUrl: Option[String], restrict: ReportableSet, live: Boolean, walker: ReportWalker = ReportWalker.childWalker) =
+    base(loggerDisplayProcessor, restrict, walker).configureAttribute(basic(rootUrl, live), engineConfig, reportConfig, testConfig)
 
   protected def basic(rootUrl: Option[String], live: Boolean) = RenderAttributeConfigurer((rendererContext) => {
     import rendererContext._
@@ -540,7 +542,7 @@ object HtmlRenderer {
 
   val useCaseWithScenariosSummarisedTemplate: StringRendererRenderer =
     ("UseCase",
-      s"<div class='usecaseSummary'><h4>${a(usecaseIcon +title)}\n",
+      s"<div class='usecaseSummary'><h4>${a(usecaseIcon + title)}\n",
       "</h4>$if(description)$<p>$description$</p>$endif$" + "</div><!-- usecaseSummary -->\n")
 
   val scenarioTemplate: StringRenderer = ("Scenario", "<div class='scenario'>" + titleAndDescription("scenarioText", "Scenario: {0}") +
@@ -561,31 +563,38 @@ object HtmlRenderer {
 
 class HtmlRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, live: Boolean) {
   import HtmlRenderer._
-  def projectHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) = Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
-    configureAttribute(Renderer.decisionTreeConfig(None, None, None)).
-    configureReportableHolder(reportTemplate, engineWithTestsTemplate, engineWithChildEngineTemplate, childEngineTemplate, useCaseWithScenariosSummarisedTemplate).
-    configureReportable(scenarioSummaryTemplate)
+  def projectHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) =
+    Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
+      configureAttribute(Renderer.decisionTreeConfig(None, None, None)).
+      configureReportableHolder(reportTemplate, engineWithTestsTemplate, engineWithChildEngineTemplate, childEngineTemplate, useCaseWithScenariosSummarisedTemplate).
+      configureReportable(scenarioSummaryTemplate)
 
   def engineHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) = Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
     configureAttribute(Renderer.decisionTreeConfig(None, None, None)).
     configureReportableHolder(reportTemplate, projectTemplate, engineWithTestsTemplate, engineWithChildEngineTemplate, childEngineTemplate, useCaseWithScenariosSummarisedTemplate).
     configureReportable(scenarioSummaryTemplate)
 
-  def liveEngineHtml(rootUrl: Option[String], params: Option[List[Any]], conclusion: Option[Conclusion], restrict: ReportableSet = Set(), engineForm: String) = Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
-    configureAttribute(Renderer.decisionTreeConfig(params, conclusion, None), Renderer.setAttribute(Renderer.engineFromTestsKey, "engineForm", engineForm), Renderer.setAttribute("Engine", "live", true)).
-    configureReportableHolder(reportTemplate, projectTemplate, liveEngineTemplate)
+  def liveEngineHtml(rootUrl: Option[String], params: Option[List[Any]], conclusion: Option[Conclusion], restrict: ReportableSet = Set(), engineForm: String) =
+    Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
+      configureAttribute(Renderer.decisionTreeConfig(params, conclusion, None), Renderer.setAttribute(Renderer.engineFromTestsKey, "engineForm", engineForm), Renderer.setAttribute("Engine", "live", true)).
+      configureReportableHolder(reportTemplate, projectTemplate, liveEngineTemplate)
 
-  def usecaseHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set()) = Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
-    configureAttribute(Renderer.decisionTreeConfig(None, None, test)).
+  def usecaseHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set()) =
+    Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
+      configureAttribute(Renderer.decisionTreeConfig(None, None, test)).
+      configureReportableHolder(reportTemplate, projectTemplate, engineWithTestsTemplate, engineWithChildEngineTemplate, childEngineTemplate, useCaseTemplate).
+      configureReportable(scenarioTemplate)
+
+  def scenarioHtml(rootUrl: Option[String], conclusion: Conclusion, test: Test, restrict: ReportableSet = Set()) =
+    Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
+      configureAttribute(Renderer.decisionTreeConfig(Some(test.params), Some(conclusion), Some(test))).
+      configureReportableHolder(reportTemplate, projectTemplate, engineWithTestsTemplate, engineWithChildEngineTemplate, childEngineTemplate, useCaseTemplate).
+      configureReportable(scenarioTemplate)
+
+  def documentsHtml(rootUrl: Option[String]) = Renderer(loggerDisplayProcessor, rootUrl, Set(), live).
     configureReportableHolder(reportTemplate, projectTemplate, engineWithTestsTemplate, engineWithChildEngineTemplate, childEngineTemplate, useCaseTemplate).
     configureReportable(scenarioTemplate)
-
-  def scenarioHtml(rootUrl: Option[String], conclusion: Conclusion, test: Test, restrict: ReportableSet = Set()) = Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
-    configureAttribute(Renderer.decisionTreeConfig(Some(test.params), Some(conclusion), Some(test))).
-    configureReportableHolder(reportTemplate, projectTemplate, engineWithTestsTemplate, engineWithChildEngineTemplate, childEngineTemplate, useCaseTemplate).
-    configureReportable(scenarioTemplate)
-}
- 
+} 
 
 
 

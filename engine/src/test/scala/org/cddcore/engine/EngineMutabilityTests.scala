@@ -9,9 +9,9 @@ case class Holder(var value: String);
 @RunWith(classOf[JUnitRunner])
 class EngineMutabilityTests extends EngineString1Tests[Holder] {
   val mutable = Holder("A");
-  val becauseA = new Because[B]((h => h.value contains "A"), "hA");
-  val becauseB = new Because[B]((h => h.value contains "B"), "hB");
-  val becauseAB = new Because[B]((h => (h.value contains "A") & (h.value contains "B")), "hAB");
+  val becauseA = new CodeHolder[B]((h => h.value contains "A"), "hA");
+  val becauseB = new CodeHolder[B]((h => h.value contains "B"), "hB");
+  val becauseAB = new CodeHolder[B]((h => (h.value contains "A") & (h.value contains "B")), "hAB");
 
   val builderWithScenario = builderWithUseCase.scenario(mutable).configuration((h: Holder) => h.value = "W")
   val builderWithDefault = builderWithScenario.expected("Z");

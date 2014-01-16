@@ -170,7 +170,7 @@ trait RequirementAndHolder extends ReportableHolder with Requirement
 /** Usecases are at the moment mostly 'just text'. They are effectively a grouping mechanism, to group tests */
 trait UseCase extends RequirementAndHolder {
   /** The default 'code' for scenario's underneath it. It is very common for all things implementing a use case to use the same code block, and using this makes that clear */
-  def optCode: Option[CodeHolder]
+  def optCode: Option[AbstractCodeHolder]
   /** The default expected for scenario's underneath it. It is very common for all things implementing a use case to come to the same conclusion, and using this avoids duplication and makes it clear */
   def expected: Option[ROrException[_]]
 }
@@ -182,11 +182,11 @@ trait Test extends Requirement {
   /** The expected output for the test. The test is mostly saying 'if I pass the engine these parameters, then I expect this result*/
   def expected: Option[ROrException[_]]
   /** The because is a tool that the engine uses to come to the correct conclusions. A good because function should have no sideeffects and execute quickly*/
-  def because: Option[CodeHolder]
+  def because: Option[AbstractCodeHolder]
   /** If you want to display the because, this returns the description or an empty string if none is defined */
   def becauseString = because match { case Some(b) => b.description; case _ => "" }
   /** The code for the scenario. This is optional as if the result is 'the expected' then the code is redundant */
-  def optCode: Option[CodeHolder]
+  def optCode: Option[AbstractCodeHolder]
 }
 
 object Report {
@@ -486,7 +486,7 @@ trait ConclusionOrDecision extends Reportable {
 /** This represents a decision in the decision tree*/
 trait Decision extends ConclusionOrDecision {
   /** The condition that be evaluated. Usually there will be only one item in the list. Because of the idea of 'node merging': see EngineOrTests, this is a list. Effectively the condition is true if any of the becauses are true */
-  def because: List[CodeHolder]
+  def because: List[AbstractCodeHolder]
   /** If the because is true, then go this way*/
   def yes: Either[Conclusion, Decision]
   /** If the because is false, then go this way*/
@@ -503,14 +503,14 @@ trait Decision extends ConclusionOrDecision {
 /** This represents a conclusion in the decision tree*/
 trait Conclusion extends ConclusionOrDecision {
   /** The code that will be executed, should this node be reached. This will return the 'result' */
-  def code: CodeHolder
+  def code: AbstractCodeHolder
   /** All the scenarios that 'end up' coming to the conclusion this node represents */
   def scenarios: List[Test]
   val allConclusion = Set(this)
 }
 
 /** Documents are external documents such as requirements specifications, emails and so on. The are linked to scenarios, usecases and engines by references */
-case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, url: Option[String] = None) {
+case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, url: Option[String] = None) extends Reportable {
   def titleString = name.getOrElse(title.getOrElse(url.getOrElse(description.getOrElse(""))))
 }
 

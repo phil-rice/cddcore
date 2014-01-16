@@ -107,14 +107,14 @@ trait EngineStringTests extends AbstractEngineTest[String] {
 }
 
 trait EngineString1Tests[P] extends AbstractEngine1Test[P, String] with EngineStringTests {
-  implicit def string_to_result(s: String) = new CodeFn[B, RFn, String]((p: P) => s, s.toString())
+  implicit def string_to_result(s: String) = new CodeHolder[RFn]((p: P) => s, s.toString())
 
 }
 
 trait DefaultBecauseForStrings1[R] extends AbstractEngine1Test[String, R] {
-  val becauseA = new Because[B]((h => h contains "A"), "hA");
-  val becauseB = new Because[B]((h => h contains "B"), "hB");
-  val becauseAB = new Because[B]((h => (h contains "A") & (h contains "B")), "hAB");
+  val becauseA = new CodeHolder[B]((h => h contains "A"), "hA");
+  val becauseB = new CodeHolder[B]((h => h contains "B"), "hB");
+  val becauseAB = new CodeHolder[B]((h => (h contains "A") & (h contains "B")), "hAB");
 }
 trait DefaultScenarioAndBecauseForStrings1 extends AbstractEngine1Test[String, String] {
   lazy val builderWithScenario = builderWithUseCase.scenario("W")
@@ -124,6 +124,6 @@ trait DefaultScenarioAndBecauseForStrings1 extends AbstractEngine1Test[String, S
 }
 
 trait EngineStringStringTests extends AbstractEngine1Test[String, String] with EngineString1Tests[String] with DefaultScenarioAndBecauseForStrings1 with DefaultBecauseForStrings1[String] {
-  implicit def string_to_because(s: String) = new Because[B]((x) => x contains s, s.toString())
+  implicit def string_to_because(s: String) = new CodeHolder[B]((x) => x contains s, s.toString())
 
 }

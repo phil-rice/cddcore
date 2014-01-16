@@ -12,7 +12,7 @@ case class DisplayTest(val x: String) extends LoggerDisplay {
 class EngineLoggerRunnerDisplayTests extends AbstractEngine1Test[DisplayTest, DisplayTest] {
 
   override val logger = new TestLogger()
-  implicit def string_to_because(s: String) = new Because[B]((x) => x.x contains s, s.toString())
+  implicit def string_to_because(s: String) = new CodeHolder[B]((x) => x.x contains s, s.toString())
   implicit def string_to_rfn2(s: String): (DisplayTest) => DisplayTest = (x: DisplayTest) => DisplayTest(s)
   implicit def string_to_display_test(s: String) = DisplayTest(s)
 
@@ -61,10 +61,10 @@ class EngineLoggerRunnerDisplayTests extends AbstractEngine1Test[DisplayTest, Di
     e("B")
     checkLastMessages(
       "DEBUG Run()  Executing {A}",
-      "INFO  Run()   Condition Because(A) was true",
+      "INFO  Run()   Condition CodeHolder(A) was true",
       "DEBUG Run()   Result {X}",
       "DEBUG Run()  Executing {B}",
-      "INFO  Run()   Condition Because(A) was false",
+      "INFO  Run()   Condition CodeHolder(A) was false",
       "DEBUG Run()   Result {Z}")
   }
 

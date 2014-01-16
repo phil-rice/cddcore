@@ -46,7 +46,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
   it should "add code when byCalling is called" in {
     val c = firstScenario(builderWithScenario.expected(firstResult).code(codeFn))
     assert(c.params == firstParams)
-    val expectedCode = Some(new CodeFn(codeFn, "AbstractScenarioTests.this.codeFn"))
+    val expectedCode = Some(new CodeHolder(codeFn, "AbstractScenarioTests.this.codeFn"))
     assertEquals(expectedCode, c.optCode)
     assert(c.because == None)
     assert(c.expected == Some(ROrException[R](firstResult)))
@@ -57,7 +57,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
     val c = firstScenario(builderWithScenario.expected(firstResult).because(because))
     assert(c.params == firstParams)
     assert(c.optCode == None)
-    val expected = Some(new Because(because, "AbstractScenarioTests.this.because"))
+    val expected = Some(new CodeHolder(because, "AbstractScenarioTests.this.because"))
     assert(c.because == expected, c.because)
     assert(c.expected == Some(ROrException[R](firstResult)))
     assert(c.configuration == None)
@@ -94,12 +94,12 @@ class Scenario1Tests extends FirstScenario1Test[Int, Int] with AbstractScenarioT
   def build(b: RealScenarioBuilder) = b.build
 
   def checkRfn(c: Scenario) = {
-    assert(2 == c.actualCode.rfn(1))
-    assert(0 == c.actualCode.rfn(-1))
+    assert(2 == c.actualCode.fn(1))
+    assert(0 == c.actualCode.fn(-1))
   }
   def checkExpected(c: Scenario) = {
-    assert(firstResult == c.actualCode.rfn(1))
-    assert(firstResult == c.actualCode.rfn(-1))
+    assert(firstResult == c.actualCode.fn(1))
+    assert(firstResult == c.actualCode.fn(-1))
   }
 
   it should "manipulate the second scenario when a new one is added" in {
@@ -127,12 +127,12 @@ class Scenario2Tests extends FirstScenario2Test[Int, Int, Int] with AbstractScen
   def build(b: RealScenarioBuilder) = b.build
 
   def checkRfn(c: Scenario) = {
-    assert(2 == c.actualCode.rfn(1, 1))
-    assert(0 == c.actualCode.rfn(-1, 1))
+    assert(2 == c.actualCode.fn(1, 1))
+    assert(0 == c.actualCode.fn(-1, 1))
   }
   def checkExpected(c: Scenario) = {
-    assert(firstResult == c.actualCode.rfn(1, 1))
-    assert(firstResult == c.actualCode.rfn(-1, 1))
+    assert(firstResult == c.actualCode.fn(1, 1))
+    assert(firstResult == c.actualCode.fn(-1, 1))
   }
 
 }

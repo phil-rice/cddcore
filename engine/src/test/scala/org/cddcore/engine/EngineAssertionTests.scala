@@ -21,7 +21,7 @@ import org.cddcore.engine.Engine._
       count += 1;
       true
     }
-    val assertion = new Assertion[A](assertion = a, description = "descr")
+    val assertion = new CodeHolder[A](fn = a, description = "descr")
 
     val bldr = builderWithDefault.scenario("AB").because(becauseA).expected("X").assertion(assertion);
 
@@ -31,7 +31,7 @@ import org.cddcore.engine.Engine._
   }
 
   "Assertions" should "cause the build to fail with an AssertionException if they return false " in {
-    val assertion = new Assertion[A](assertion = (p, r) => false, description = "descr")
+    val assertion = new CodeHolder[A](fn = (p, r) => false, description = "descr")
     val bldr = builderWithDefault.scenario("AB").because(becauseA).expected("X").assertion(assertion);
     val e = evaluating { val e = bldr.build } should produce[AssertionException]
 

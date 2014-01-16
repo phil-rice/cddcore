@@ -8,7 +8,7 @@ import scala.language.implicitConversions
 @RunWith(classOf[JUnitRunner])
 class BuilderNodeTests extends EngineStringStringTests {
   val c: Code = (s: String) => "x"
-  val b: Because[B] = (s: String) => true
+  val b: CodeHolder[B] = (s: String) => true
 
   val doc1 = Document(name = Some("x"))
 

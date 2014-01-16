@@ -4,6 +4,7 @@ trait Engine1Types[P, R, FullR] extends EngineTypes[R, FullR] {
   type A = (P, ROrException[R]) => Boolean
   type B = (P) => Boolean
   type RFn = (P) => R
+  type PF = PartialFunction[P, R]
   type CfgFn = (P) => Unit
   def rfnMaker = RfnMaker.rfn1ConstantMaker[P, R]
   def makeClosureForBecause(params: List[Any]) = (b: B) => b(params(0).asInstanceOf[P])
@@ -16,6 +17,7 @@ trait Engine2Types[P1, P2, R, FullR] extends EngineTypes[R, FullR] {
   type A = (P1, P2, ROrException[R]) => Boolean
   type B = (P1, P2) => Boolean
   type RFn = (P1, P2) => R
+  type PF = PartialFunction[(P1, P2), R]
   type CfgFn = (P1, P2) => Unit
   def rfnMaker = RfnMaker.rfn2ConstantMaker[P1, P2, R]
   def makeClosureForBecause(params: List[Any]) = (b: B) => b(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2])
@@ -28,6 +30,7 @@ trait Engine3Types[P1, P2, P3, R, FullR] extends EngineTypes[R, FullR] {
   type A = (P1, P2, P3, ROrException[R]) => Boolean
   type B = (P1, P2, P3) => Boolean
   type RFn = (P1, P2, P3) => R
+  type PF = PartialFunction[(P1, P2, P3), R]
   type CfgFn = (P1, P2, P3) => Unit
   def rfnMaker = RfnMaker.rfn3ConstantMaker[P1, P2, P3, R]
   def makeClosureForBecause(params: List[Any]) = (b: B) => b(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2], params(2).asInstanceOf[P3])
