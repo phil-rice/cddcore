@@ -1,7 +1,6 @@
 package org.cddcore.engine
 
 import java.text.MessageFormat
-
 import scala.language.implicitConversions
 import org.antlr.stringtemplate.AttributeRenderer
 import org.antlr.stringtemplate.StringTemplate
@@ -10,6 +9,7 @@ import Reportable.ReportableList
 import Reportable.ReportableSet
 import org.cddcore.engine.tests.CddRunner
 import java.io.File
+import javax.rmi.CORBA.GetORBPropertiesFileAction
 
 /** When reporting, this keeps track of what url a reportable is associated with.  */
 case class UrlMap(val toUrl: Map[Reportable, String], val fromUrl: Map[String, List[Reportable]]) {
@@ -184,7 +184,7 @@ trait ReportableToUrl {
   /** Will return a human readable name for the reportable. Will allways return the same name for the reportable */
   def apply(r: Reportable): String = {
     r match {
-      case r: ReportableWrapper => findAndAddToCacheIfNeed(r.delegate)
+      case r: ReportableWrapper => findAndAddToCacheIfNeed(r.delegate.getOrElse(r))
       case _ => findAndAddToCacheIfNeed(r)
     }
   }
@@ -357,7 +357,6 @@ object Renderer {
   protected def reportConfig = RenderAttributeConfigurer[Report](Set("Report"), (rc) => {
     import rc._
     stringTemplate.setAttribute("reportDate", dateFormatter.print(System.currentTimeMillis()))
-//    stringTemplate.setAttribute("title", r.reportTitle)
   })
 
   def addParams(st: StringTemplate, attributeName: String, paramPrinter: LoggerDisplayProcessor, params: List[Any]) {
@@ -612,23 +611,91 @@ class SimpleDocumentPrinterStrategy extends DocumentPrinterStrategy {
   def makeReportOfJustDocuments(report: Report) = SimpleRequirementAndHolder(report)
 }
 
+class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy: KeyStrategy) extends DocumentPrinterStrategy {
+  type ReportableToPath = Map[Reportable, List[Reportable]]
+  type ReportableToKey = Map[Reportable, String]
+  def findReportableToPathFor(r: ReportableHolder) = r.foldWithPath[ReportableToPath](Map(), (acc, path) => acc + (path.head -> path))
+
+  def findReferenceFor(document: Option[Document], r: Reportable) = r match {
+    case r: Requirement => r.references.find((ref) => ref.document == document)
+    case _ => None
+  }
+  def addToFor(document: Option[Document], reportableToPath: ReportableToPath, mapToKey: ReportableToKey, r: Reportable): ReportableToKey = {
+    if (mapToKey.contains(r))
+      mapToKey
+    else
+      findReferenceFor(document, r) match {
+        case Some(ref) => mapToKey + (r -> ref.ref)
+        case _ => {
+          val result = reportableToPath(r) match {
+            case me :: (parent: ReportableHolder) :: tail =>
+              val withParent = addToFor(document, reportableToPath, mapToKey, parent);
+              val parentRef = withParent(parent)
+              val myRef = keyStrategy.findKeyFor(parentRef, parent.children.reverse, me)
+              withParent + (me -> myRef)
+            case me :: Nil => mapToKey + (me -> keyStrategy.rootKey)
+            case _ => throw new IllegalStateException
+          }
+          result
+        }
+      }
+  }
+
+  def findReportableToRef(report: Report) = {
+    val reportableToPath = findReportableToPathFor(report)
+    val reportableToRef = report.foldLeft[ReportableToKey](Map())((acc, r) => addToFor(document, reportableToPath, acc, r))
+    reportableToRef
+  }
+
+  def findStructuredMap(report: Report) = {
+    val reportableToRef = findReportableToRef(report)
+    val structuredMap = reportableToRef.foldLeft(StructuredMap[Reportable]())((acc, kv) =>
+      acc.put(kv._2, kv._1))
+    structuredMap
+  }
+
+  def makeReportOfJustDocuments(report: Report) = {
+    val transformFn: (String, Option[Reportable], List[Requirement]) => Requirement = (key, optValue, children) => optValue match {
+      case Some(r: Requirement) =>
+        SimpleRequirementAndHolder(r, children)
+      case _ =>
+        new SimpleRequirementAndHolder(None, None, None, None, Set(), children)
+    };
+    val structuredMap = findStructuredMap(report)
+    structuredMap.map[Requirement](transformFn)
+  }
+
+}
+
 object SimpleRequirementAndHolder {
   def apply(r: Reportable): Requirement = r match {
     case r: SimpleRequirementAndHolder => r
     case rh: RequirementAndHolder => apply(rh, rh.children.map(apply(_)))
     case r: Requirement => r
-    case _: ReportableHolder => throw new IllegalStateException(r.getClass + "\n" + r);
+    case _ => throw new IllegalStateException(r.getClass + "\n" + r);
   }
 
-  def apply(r: RequirementAndHolder, replacementChildren: ReportableList): SimpleRequirementAndHolder =
-    new SimpleRequirementAndHolder(r, r.title, r.description, r.priority, r.references, replacementChildren)
+  def apply(r: Requirement, replacementChildren: ReportableList): Requirement =
+    (r, replacementChildren) match {
+      case (s: Test, List()) => s
+      case _ => new SimpleRequirementAndHolder(Some(r), r.title, r.description, r.priority, r.references, replacementChildren)
+    }
 
 }
 
-case class SimpleRequirementAndHolder(delegate: Reportable, title: Option[String], description: Option[String], priority: Option[Int], references: Set[Reference], children: ReportableList) extends RequirementAndHolder with ReportableWrapper
+case class SimpleRequirementAndHolder(delegate: Option[Reportable], title: Option[String], description: Option[String], priority: Option[Int], references: Set[Reference], children: ReportableList) extends RequirementAndHolder with ReportableWrapper {
+  protected def shortToString(r: Any): String = r match {
+    case r: SimpleRequirementAndHolder => Reportable.templateName(r) + "(" + Reportable.templateName(r.delegate.getOrElse(None)) + "/" + r.delegate.collect { case r: Requirement => r.titleString } + ", children=" + r.children.map(shortToString(_)).mkString(",") + ")"
+    case t: Test => Reportable.templateName(r) + "(" + t.params.mkString(",") + ")"
+    case r: RequirementAndHolder => Reportable.templateName(r) + "(" + r.titleString + ", children=" + r.children.map(shortToString(_)).mkString(",") + ")"
+    case r: Requirement => Reportable.templateName(r) + "(" + r.titleString + ")"
+  }
+  override def toString = shortToString(this)
+}
 
 class DocumentPrinter(report: Report, strategy: DocumentPrinterStrategy = new SimpleDocumentPrinterStrategy) {
   val actualReport = strategy.makeReportOfJustDocuments(report)
+
 }
 
 

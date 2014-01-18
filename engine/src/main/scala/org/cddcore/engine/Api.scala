@@ -20,7 +20,7 @@ trait Reportable
 
 /** A reportable with a wrapper is used in the reports when making a projection of an original report. This allows the correct urls to be determined */
 trait ReportableWrapper extends Reportable{
-  def delegate: Reportable
+  def delegate:Option[ Reportable]
   
 }
 object ReportableWithTemplate {
