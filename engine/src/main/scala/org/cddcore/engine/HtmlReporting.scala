@@ -46,6 +46,16 @@ trait ReportWalker {
     childFn: (Acc, ReportableList) => Acc,
     endFn: (Acc, ReportableList) => Acc): Acc
 
+  protected def walkChildren[Acc](holder: ReportableHolder, path: ReportableList, initial: Acc,
+    startFn: (Acc, ReportableList) => Acc,
+    childFn: (Acc, ReportableList) => Acc,
+    endFn: (Acc, ReportableList) => Acc) = {
+    var acc = startFn(initial, path)
+    for (c <- holder.children)
+      acc = foldWithPath(c :: path, acc, startFn, childFn, endFn)
+    acc = endFn(acc, path)
+    acc
+  }
 }
 
 class ChildReportWalker extends ReportWalker {
@@ -56,12 +66,7 @@ class ChildReportWalker extends ReportWalker {
     endFn: (Acc, ReportableList) => Acc): Acc = {
     val head = path.head
     head match {
-      case holder: ReportableHolder =>
-        var acc = startFn(initial, path)
-        for (c <- holder.children)
-          acc = foldWithPath(c :: path, acc, startFn, childFn, endFn)
-        acc = endFn(acc, path)
-        acc
+      case holder: ReportableHolder => walkChildren(holder, path, initial, startFn, childFn, endFn)
       case _ => childFn(initial, path)
     }
   }
@@ -83,12 +88,7 @@ class EngineConclusionWalker extends ReportWalker {
         })
         acc = endFn(acc, path)
         acc
-      case holder: ReportableHolder =>
-        var acc = startFn(initial, path)
-        for (c <- holder.children)
-          acc = foldWithPath(c :: path, acc, startFn, childFn, endFn)
-        acc = endFn(acc, path)
-        acc
+      case holder: ReportableHolder => walkChildren(holder, path, initial, startFn, childFn, endFn)
       case _ => childFn(initial, path)
     }
   }
@@ -140,7 +140,7 @@ class ReportCreator[RtoUrl <: ReportableToUrl](loggerDisplayProcessor: LoggerDis
       case p: Project =>
         Some(HtmlRenderer(loggerDisplayProcessor, live).projectHtml(rootUrl).render(reportableToUrl, urlMap, Report("Project: " + p.titleOrDescription(ReportCreator.unnamed), p)))
       case e: Engine => Some(HtmlRenderer(loggerDisplayProcessor, live).engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
-      case u: RequirementAndHolder => Some(HtmlRenderer(loggerDisplayProcessor, live).usecaseHtml(rootUrl, restrict = path.toSet ++ u.children).render(reportableToUrl, urlMap, Report("Usecase: " + u.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
+      case u: UseCase => Some(HtmlRenderer(loggerDisplayProcessor, live).usecaseHtml(rootUrl, restrict = path.toSet ++ u.children).render(reportableToUrl, urlMap, Report("Usecase: " + u.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
       case t: Test =>
         val conclusion = PathUtils.findEngineWithTests(path).findConclusionFor(t.params)
         Some(HtmlRenderer(loggerDisplayProcessor, live).scenarioHtml(rootUrl, conclusion, t, path.toSet).render(reportableToUrl, urlMap, Report("Scenario: " + t.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
@@ -156,8 +156,7 @@ trait ReportableToUrl {
   protected var cache = Map[Reportable, String]()
   protected var seen = Set[String]()
 
-  /** Will return a human readable name for the reportable. Will allways return the same name for the reportable */
-  def apply(r: Reportable): String = {
+  protected def findAndAddToCacheIfNeed(r: Reportable): String = {
     val existing = cache.get(r)
     existing match {
       case Some(s) => s;
@@ -165,8 +164,8 @@ trait ReportableToUrl {
         def makeNewName: String = {
           reqId += 1; val default = templateName(r) + reqId;
           val result = Strings.urlClean(r match {
-            case req: Requirement => { val result = req.titleOrDescription(default); if (result.length > 20) default else result }
             case report: Report => { val result = report.title.getOrElse(default); if (result.length > 20) default else result }
+            case req: Requirement => { val result = req.titleOrDescription(default); if (result.length > 20) default else result }
             case _ => default;
           }).replace(" ", "_")
           if (seen.contains(result)) default else result
@@ -179,6 +178,14 @@ trait ReportableToUrl {
         seen += result
         result
       }
+    }
+  }
+
+  /** Will return a human readable name for the reportable. Will allways return the same name for the reportable */
+  def apply(r: Reportable): String = {
+    r match {
+      case r: ReportableWrapper => findAndAddToCacheIfNeed(r.delegate)
+      case _ => findAndAddToCacheIfNeed(r)
     }
   }
 
@@ -350,7 +357,7 @@ object Renderer {
   protected def reportConfig = RenderAttributeConfigurer[Report](Set("Report"), (rc) => {
     import rc._
     stringTemplate.setAttribute("reportDate", dateFormatter.print(System.currentTimeMillis()))
-    stringTemplate.setAttribute("title", r.reportTitle)
+//    stringTemplate.setAttribute("title", r.reportTitle)
   })
 
   def addParams(st: StringTemplate, attributeName: String, paramPrinter: LoggerDisplayProcessor, params: List[Any]) {
@@ -594,8 +601,34 @@ class HtmlRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, live: Boolean
   def documentsHtml(rootUrl: Option[String]) = Renderer(loggerDisplayProcessor, rootUrl, Set(), live).
     configureReportableHolder(reportTemplate, projectTemplate, engineWithTestsTemplate, engineWithChildEngineTemplate, childEngineTemplate, useCaseTemplate).
     configureReportable(scenarioTemplate)
-} 
+}
 
+trait DocumentPrinterStrategy {
+  /** The report passed in probably holds engines. The report coming out holds the structure to be printed */
+  def makeReportOfJustDocuments(report: Report): Requirement
+}
 
+class SimpleDocumentPrinterStrategy extends DocumentPrinterStrategy {
+  def makeReportOfJustDocuments(report: Report) = SimpleRequirementAndHolder(report)
+}
+
+object SimpleRequirementAndHolder {
+  def apply(r: Reportable): Requirement = r match {
+    case r: SimpleRequirementAndHolder => r
+    case rh: RequirementAndHolder => apply(rh, rh.children.map(apply(_)))
+    case r: Requirement => r
+    case _: ReportableHolder => throw new IllegalStateException(r.getClass + "\n" + r);
+  }
+
+  def apply(r: RequirementAndHolder, replacementChildren: ReportableList): SimpleRequirementAndHolder =
+    new SimpleRequirementAndHolder(r, r.title, r.description, r.priority, r.references, replacementChildren)
+
+}
+
+case class SimpleRequirementAndHolder(delegate: Reportable, title: Option[String], description: Option[String], priority: Option[Int], references: Set[Reference], children: ReportableList) extends RequirementAndHolder with ReportableWrapper
+
+class DocumentPrinter(report: Report, strategy: DocumentPrinterStrategy = new SimpleDocumentPrinterStrategy) {
+  val actualReport = strategy.makeReportOfJustDocuments(report)
+}
 
 

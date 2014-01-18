@@ -23,10 +23,14 @@ object Strings {
   def htmlEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&quot;").replace("<", "&lt;").replace("&gt;", ">").replace("\n", "<br />")
   def htmlTooltipEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&quot;").replace("<", "&lt;").replace("&gt;", ">")
   def url(s: String*) = s.mkString("/")
+  def safeToInt(s: String) =
+    try {
+      Some(s.toInt)
+    } catch { case e: NumberFormatException => None }
 
   def blanks(n: Int) = n match {
     case 0 => ""
-    case 1 => " "
+    case 1 => " " 
     case 2 => "  "
     case 3 => "   "
     case 4 => "    "

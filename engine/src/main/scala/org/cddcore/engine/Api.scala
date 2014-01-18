@@ -18,6 +18,11 @@ object Reportable {
 /** Reportables are things that appear in reports. This includes Engines, Use cases and tests*/
 trait Reportable
 
+/** A reportable with a wrapper is used in the reports when making a projection of an original report. This allows the correct urls to be determined */
+trait ReportableWrapper extends Reportable{
+  def delegate: Reportable
+  
+}
 object ReportableWithTemplate {
   implicit def toReportableWithTemplate(r: Reportable) = r.asInstanceOf[ReportableWithTemplate]
 }
@@ -194,12 +199,12 @@ object Report {
 }
 
 /** A report is what it says: the object representation of a (usually) html report */
-case class Report(reportTitle: String, rootUrl: Option[String], reportables: Reportable*) extends ReportableHolder {
+case class Report(reportTitle: String, rootUrl: Option[String], reportables: Reportable*) extends RequirementAndHolder {
   val title = Some(reportTitle)
   val children = reportables.toList
   val description = None
-  val priority = 0
-  val references = List[Reference]()
+  val priority = None
+  val references = Set[Reference]()
 }
 
 /** A project is basically a list of the engines that are used on a software project */
