@@ -133,4 +133,6 @@ class ByReferenceDocumentPrinterStrategyTest extends AbstractTest {
     assertEquals(scenarios(5), structuredMap("1.3.1"))
     assertEquals(scenarios(6), structuredMap("1.3.2"))
   }
+  
 }
+

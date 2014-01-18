@@ -8,8 +8,13 @@ object Reportable {
 
   def allTests(list: List[Reportable]): List[Test] = list.flatMap(_ match { case t: Test => List(t); case rh: ReportableHolder => allTests(rh.children) })
 
+  def unwrap[R <: Reportable](r: R): R = r match {
+    case w: ReportableWrapper => w.delegate.getOrElse(r).asInstanceOf[R]
+    case _ => r
+  }
   def templateName(a: Any): String = a match {
     case l: List[_] => Reportable.templateName(l.head);
+    case r: ReportableWrapper => templateName(r.delegate.getOrElse(r));
     case r: ReportableWithTemplate => r.templateName;
     case _ => a.getClass.getSimpleName()
   }
@@ -19,9 +24,9 @@ object Reportable {
 trait Reportable
 
 /** A reportable with a wrapper is used in the reports when making a projection of an original report. This allows the correct urls to be determined */
-trait ReportableWrapper extends Reportable{
-  def delegate:Option[ Reportable]
-  
+trait ReportableWrapper extends Reportable {
+  def delegate: Option[Reportable]
+
 }
 object ReportableWithTemplate {
   implicit def toReportableWithTemplate(r: Reportable) = r.asInstanceOf[ReportableWithTemplate]

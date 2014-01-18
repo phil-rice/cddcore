@@ -401,7 +401,7 @@ object RenderAttributeConfigurer {
   case class TypedRenderAttributeConfigurer[R <: Reportable](val templateNames: Set[String], setAttributes: (RendererContext[R]) => Unit) extends RenderAttributeConfigurer {
     import Reportable._
     def update(reportableToUrl: ReportableToUrl, loggerDisplayProcessor: LoggerDisplayProcessor, urlMap: UrlMap, path: ReportableList, template: StringTemplate) {
-      val r = path.head
+      val r =Reportable.unwrap(path.head)
       if (templateNames.contains(Reportable.templateName(r)))
         setAttributes(RendererContext[R](reportableToUrl, loggerDisplayProcessor, urlMap, path, r.asInstanceOf[R], template))
     }
