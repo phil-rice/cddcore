@@ -131,6 +131,15 @@ object PathUtils {
     case h :: tail => enginePath(tail)
     case _ => throw new IllegalArgumentException
   }
+  /** Walks up the path until it finds the first engine*/
+  def findEnginePathIfExists(path: ReportableList) = enginePathIfExists(path).headOption.collect { case e: Engine => e }
+  /** Walks up the path until it finds the first engine, return a truncated path with the engine as the head */
+  def enginePathIfExists(path: ReportableList): ReportableList = path match {
+    case (engine: Engine) :: tail => path
+    case h :: tail => enginePathIfExists(tail)
+    case _ => List()
+  }
+
   /** Walks up the path until it finds the first project */
   def findProject(path: ReportableList) = projectPath(path).head.asInstanceOf[Project]
   /** Walks up the path until it finds the first project, return a truncated path with the project as the head */

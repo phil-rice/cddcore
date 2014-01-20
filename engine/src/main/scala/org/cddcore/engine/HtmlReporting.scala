@@ -611,6 +611,8 @@ class SimpleDocumentPrinterStrategy extends DocumentPrinterStrategy {
   def makeReportOfJustDocuments(report: Report) = SimpleRequirementAndHolder(report)
 }
 
+case class RequirementAndEngine(reportable: Requirement, engine: Option[Engine])
+
 class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy: KeyStrategy) extends DocumentPrinterStrategy {
   type ReportableToPath = Map[Reportable, List[Reportable]]
   type ReportableToKey = Map[Reportable, String]
@@ -641,24 +643,27 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
       }
   }
 
-  def findReportableToRef(report: Report) = {
-    val reportableToPath = findReportableToPathFor(report)
+  def findReportableToRef(report: Report, reportableToPath: ReportableToPath) = {
     val reportableToRef = report.foldLeft[ReportableToKey](Map())((acc, r) => addToFor(document, reportableToPath, acc, r))
     reportableToRef
   }
 
   def findStructuredMap(report: Report) = {
-    val reportableToRef = findReportableToRef(report)
-    val structuredMap = reportableToRef.foldLeft(StructuredMapOfList[Reportable]())((acc, kv) => acc + kv.swap)
+    val reportableToPath = findReportableToPathFor(report)
+    val reportableToRef = findReportableToRef(report, reportableToPath)
+    val structuredMap = reportableToRef.foldLeft(StructuredMapOfList[RequirementAndEngine]())((acc, kv) =>
+      {
+        val (r: Requirement, key) = kv;
+        val engine = PathUtils.findEnginePathIfExists(reportableToPath(r))
+        acc + (key -> RequirementAndEngine(r, engine))
+      })
     structuredMap
   }
 
   def makeReportOfJustDocuments(report: Report) = {
-    val transformFn: (String, List[Reportable], List[Requirement]) => Requirement = (key, optValue, children) => optValue match {
-      case (r: Requirement) :: tail =>
-        SimpleRequirementAndHolder(r, children)
-      case Nil =>
-        new SimpleRequirementAndHolder(None, None, None, None, Set(), children)
+    val transformFn: (String, List[RequirementAndEngine], List[Requirement]) => Requirement = (key, optValue, children) => optValue match {
+      case (RequirementAndEngine(r, optE)) :: tail => SimpleRequirementAndHolder(r, children)
+      case Nil => new SimpleRequirementAndHolder(None, None, None, None, Set(), children)
     };
     val structuredMap = findStructuredMap(report)
     structuredMap.map[Requirement](transformFn)
