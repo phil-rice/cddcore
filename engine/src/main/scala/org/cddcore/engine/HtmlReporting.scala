@@ -613,7 +613,7 @@ class SimpleDocumentPrinterStrategy extends DocumentPrinterStrategy {
 
 case class RequirementAndEngine(reportable: Requirement, engine: Option[Engine])
 
-class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy: KeyStrategy) extends DocumentPrinterStrategy {
+class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy: KeyStrategy, debug: Boolean = false) extends DocumentPrinterStrategy {
   type ReportableToPath = Map[Reportable, List[Reportable]]
   type ReportableToKey = Map[Reportable, String]
   def findReportableToPathFor(r: ReportableHolder) = r.foldWithPath[ReportableToPath](Map(), (acc, path) => acc + (path.head -> path))
@@ -627,13 +627,18 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
       mapToKey
     else
       findReferenceFor(document, r) match {
-        case Some(ref) => mapToKey + (r -> ref.ref)
+        case Some(ref) =>
+          if (debug)
+            println("adding " + ref.ref + "<--" + Reportable.templateNameAndTitle(r))
+          mapToKey + (r -> ref.ref)
         case _ => {
           val result = reportableToPath(r) match {
             case me :: (parent: ReportableHolder) :: tail =>
               val withParent = addToFor(document, reportableToPath, mapToKey, parent);
               val parentRef = withParent(parent)
               val myRef = keyStrategy.findKeyFor(parentRef, parent.children.reverse, me)
+              if (debug)
+                println("adding " + myRef + "<--" + Reportable.templateNameAndTitle(me))
               withParent + (me -> myRef)
             case me :: Nil => mapToKey + (me -> keyStrategy.rootKey)
             case _ => throw new IllegalStateException
@@ -651,12 +656,15 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
   def findStructuredMap(report: Report) = {
     val reportableToPath = findReportableToPathFor(report)
     val reportableToRef = findReportableToRef(report, reportableToPath)
-    val structuredMap = reportableToRef.foldLeft(StructuredMapOfList[RequirementAndEngine]())((acc, kv) =>
-      {
-        val (r: Requirement, key) = kv;
-        val engine = PathUtils.findEnginePathIfExists(reportableToPath(r))
-        acc + (key -> RequirementAndEngine(r, engine))
-      })
+    val structuredMap = report.foldLeft(StructuredMapOfList[RequirementAndEngine]())((acc, r) => r match {
+      case r: Requirement =>
+        {
+          val key = reportableToRef(r)
+          val path = reportableToPath(r)
+          val engine = PathUtils.findEnginePathIfExists(path)
+          acc + (key -> RequirementAndEngine(r, engine))
+        }
+    })
     structuredMap
   }
 

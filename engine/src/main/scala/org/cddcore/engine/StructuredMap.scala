@@ -41,10 +41,10 @@ abstract class AbstractStructuredMap[V, I](keyStrategy: KeyStrategy, root: DataA
               put(depth + 2, key, DataAndChildren(keyStrategy.newKeyAtDepth(key, depth + 2), blankI, List()), value)))
           }
 
-          node.copy(children = (newNode :: node.children).sorted(KeyOrder[V, I](depth)))
+          node.copy(children = ( node.children :+ newNode).sorted(KeyOrder[V, I](depth)))
         }
         case _ =>
-          node.copy(children = node.children.updated(index, put(depth + 1, key, node.children(index), value)))
+          node.copy(children = node.children.updated(index, put(depth + 1, key, node.children(index), value))) 
       }
     }
   }

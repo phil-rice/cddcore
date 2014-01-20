@@ -84,19 +84,3 @@ class ByReferenceDocumentPrinterStrategyTest extends AbstractTest {
   }
 }
 
-class ByReferenceDocumentPrinterStrategyWithMultipleEnginesAndOverlappingUseCasesTest extends AbstractTest {
-  val carers = Engine[Int, String]().title("Main Carers").
-    useCase("UC 1", "The body of the first use case").priority(3).
-    scenario(11).expected("one-one").because((x: Int) => x == 11).
-    scenario(12).expected("one-two").because((x: Int) => x == 12).reference("7.3", None).
-    scenario(13).expected("one-three").because((x: Int) => x == 13).
-
-    useCase("UC 2", "The body of the second use case").
-    scenario(21).expected("two-one").because((x: Int) => x == 21).
-    scenario(22).expected("two-two").because((x: Int) => x == 22).
-
-    useCase("UC 3", "The body of the third use case").
-    scenario(31).expected("three-one").because((x: Int) => x == 31).
-    scenario(32).expected("three-two").because((x: Int) => x == 32).
-    build
-}

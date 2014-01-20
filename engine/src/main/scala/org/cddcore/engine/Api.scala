@@ -18,6 +18,11 @@ object Reportable {
     case r: ReportableWithTemplate => r.templateName;
     case _ => a.getClass.getSimpleName()
   }
+  def templateNameAndTitle(a: Any): String = templateName(a) + "(" + (a match {
+    case r: Requirement => r.titleString
+    case _ => a.toString
+  }) + ")"
+
 }
 
 /** Reportables are things that appear in reports. This includes Engines, Use cases and tests*/

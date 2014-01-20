@@ -76,6 +76,20 @@ class StructuredMapTest extends AbstractTest {
     assertEquals(List("one.two.eleven"), mapOfLists.get("1.2.11"))
   }
 
+  it should "allow things to be added and retreived no matter the order" in {
+    val mapOfLists = StructuredMapOfList(
+      "1" -> "onea", "1" -> "oneb", "1.2" -> "one.two", "1.2.2" -> "one.two.two", "1.3" -> "one.three", "2.2" -> "two.two", "1.2.11" -> "one.two.eleven")
+    assertEquals(List(), mapOfLists.get(""))
+    assertEquals(List("onea", "oneb"), mapOfLists.get("1"))
+    assertEquals(List(), mapOfLists.get("1.1"))
+    assertEquals(List("one.two"), mapOfLists.get("1.2"))
+    assertEquals(List("one.three"), mapOfLists.get("1.3"))
+    assertEquals(List("one.two.two"), mapOfLists.get("1.2.2"))
+    assertEquals(List("two.two"), mapOfLists.get("2.2"))
+    assertEquals(List("one.two.eleven"), mapOfLists.get("1.2.11"))
+
+  }
+
   "The default Key strategy" should "split keys based on dot" in {
     assertEquals(List(), split("").path)
     assertEquals(List("1"), split("1").path)
