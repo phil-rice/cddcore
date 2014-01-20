@@ -401,7 +401,7 @@ object RenderAttributeConfigurer {
   case class TypedRenderAttributeConfigurer[R <: Reportable](val templateNames: Set[String], setAttributes: (RendererContext[R]) => Unit) extends RenderAttributeConfigurer {
     import Reportable._
     def update(reportableToUrl: ReportableToUrl, loggerDisplayProcessor: LoggerDisplayProcessor, urlMap: UrlMap, path: ReportableList, template: StringTemplate) {
-      val r =Reportable.unwrap(path.head)
+      val r = Reportable.unwrap(path.head)
       if (templateNames.contains(Reportable.templateName(r)))
         setAttributes(RendererContext[R](reportableToUrl, loggerDisplayProcessor, urlMap, path, r.asInstanceOf[R], template))
     }
@@ -649,15 +649,15 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
 
   def findStructuredMap(report: Report) = {
     val reportableToRef = findReportableToRef(report)
-    val structuredMap = reportableToRef.foldLeft(StructuredMap[Reportable]())((acc, kv) =>acc + kv.swap)
+    val structuredMap = reportableToRef.foldLeft(StructuredMapOfList[Reportable]())((acc, kv) => acc + kv.swap)
     structuredMap
   }
 
   def makeReportOfJustDocuments(report: Report) = {
-    val transformFn: (String, Option[Reportable], List[Requirement]) => Requirement = (key, optValue, children) => optValue match {
-      case Some(r: Requirement) =>
+    val transformFn: (String, List[Reportable], List[Requirement]) => Requirement = (key, optValue, children) => optValue match {
+      case (r: Requirement) :: tail =>
         SimpleRequirementAndHolder(r, children)
-      case _ =>
+      case Nil =>
         new SimpleRequirementAndHolder(None, None, None, None, Set(), children)
     };
     val structuredMap = findStructuredMap(report)

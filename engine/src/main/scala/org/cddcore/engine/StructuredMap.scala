@@ -12,6 +12,7 @@ abstract class AbstractStructuredMap[V, I](keyStrategy: KeyStrategy, root: DataA
 
   def walk(fn: (String, I) => Unit): Unit = walk(root, fn)
   def fold[Acc](initial: Acc)(fn: (Acc, String, I) => Acc): Acc = fold(root, initial, fn)
+  def map[NewV](itemFn: (String, I, List[NewV]) => NewV): NewV = map(root, itemFn)
 
   protected def map[NewV](node: DataAndChildren[V, I], itemFn: (String, I, List[NewV]) => NewV): NewV = {
     val children = node.children
@@ -80,13 +81,12 @@ class StructuredMap[V](keyStrategy: KeyStrategy, root: DataAndChildren[V, Option
   def +(keyValue: (String, V)): StructuredMap[V] = new StructuredMap(keyStrategy, put(0, keyValue._1, root, keyValue._2))
   def get(key: String): Option[V] = get(0, key, root)
   def apply(key: String) = get(key) match { case Some(v) => v; case _ => throw new NoSuchElementException(key) }
-  def map[NewV](itemFn: (String, Option[V], List[NewV]) => NewV): NewV = map(root, itemFn)
   protected def blankI: Option[V] = None
   protected def makeNewV(key: Key, oldI: Option[V], v: V): Option[V] =
-    if (oldI.isDefined)  
-      throw new DuplicateKeyException(key.toString) 
+    if (oldI.isDefined)
+      throw new DuplicateKeyException(key.toString)
     else Some(v)
-     
+
 }
 
 object StructuredMapOfList {
@@ -94,6 +94,7 @@ object StructuredMapOfList {
 }
 class StructuredMapOfList[V](keyStrategy: KeyStrategy, root: DataAndChildren[V, List[V]]) extends AbstractStructuredMap[V, List[V]](keyStrategy, root) {
   def get(key: String): List[V] = get(0, key, root)
+  def apply(key: String) = get(key)
   def +(kv: (String, V)): StructuredMapOfList[V] = {
     val (key, value) = kv
     new StructuredMapOfList(keyStrategy, put(0, key, root, value))

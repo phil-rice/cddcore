@@ -120,18 +120,18 @@ class ByReferenceDocumentPrinterStrategyTest extends AbstractTest {
 
   it should "add each reportable to the structured map" in {
     val structuredMap = strategy.findStructuredMap(report)
-    assertEquals(report, structuredMap(""))
-    assertEquals(eMain, structuredMap("1"))
-    assertEquals(uc0, structuredMap("1.1"))
-    assertEquals(scenarios(0), structuredMap("1.1.1"))
-    assertEquals(scenarios(1), structuredMap("7.3"))
-    assertEquals(scenarios(2), structuredMap("1.1.3"))
-    assertEquals(uc1, structuredMap("1.2"))
-    assertEquals(scenarios(3), structuredMap("1.2.1"))
-    assertEquals(scenarios(4), structuredMap("1.2.2"))
-    assertEquals(uc2, structuredMap("1.3"))
-    assertEquals(scenarios(5), structuredMap("1.3.1"))
-    assertEquals(scenarios(6), structuredMap("1.3.2"))
+    assertEquals(List(report), structuredMap(""))
+    assertEquals(List(eMain), structuredMap("1"))
+    assertEquals(List(uc0), structuredMap("1.1"))
+    assertEquals(List(scenarios(0)), structuredMap("1.1.1"))
+    assertEquals(List(scenarios(1)), structuredMap("7.3"))
+    assertEquals(List(scenarios(2)), structuredMap("1.1.3"))
+    assertEquals(List(uc1), structuredMap("1.2"))
+    assertEquals(List(scenarios(3)), structuredMap("1.2.1"))
+    assertEquals(List(scenarios(4)), structuredMap("1.2.2"))
+    assertEquals(List(uc2), structuredMap("1.3"))
+    assertEquals(List(scenarios(5)), structuredMap("1.3.1"))
+    assertEquals(List(scenarios(6)), structuredMap("1.3.2"))
   }
   
 }
