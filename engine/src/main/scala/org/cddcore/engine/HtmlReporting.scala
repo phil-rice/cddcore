@@ -649,8 +649,7 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
 
   def findStructuredMap(report: Report) = {
     val reportableToRef = findReportableToRef(report)
-    val structuredMap = reportableToRef.foldLeft(StructuredMap[Reportable]())((acc, kv) =>
-      acc.put(kv._2, kv._1))
+    val structuredMap = reportableToRef.foldLeft(StructuredMap[Reportable]())((acc, kv) =>acc + kv.swap)
     structuredMap
   }
 

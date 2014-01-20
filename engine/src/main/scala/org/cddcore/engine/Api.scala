@@ -14,7 +14,7 @@ object Reportable {
   }
   def templateName(a: Any): String = a match {
     case l: List[_] => Reportable.templateName(l.head);
-    case r: ReportableWrapper => templateName(r.delegate.getOrElse(r));
+    case r: ReportableWrapper => if (r.delegate.isDefined) templateName(r.delegate.get) else r.getClass().getSimpleName();
     case r: ReportableWithTemplate => r.templateName;
     case _ => a.getClass.getSimpleName()
   }

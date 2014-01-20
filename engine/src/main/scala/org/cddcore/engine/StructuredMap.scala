@@ -1,52 +1,46 @@
 package org.cddcore.engine
 
+import scala.language.higherKinds
+import scala.language.implicitConversions
+
 class DuplicateKeyException(key: Key) extends Exception(key.toString)
 
-object StructuredMap {
-  def apply[V](kvs: (String, V)*) = kvs.foldLeft(new StructuredMap[V](new SimpleKeyStrategy))((acc, kv) => {
-    val result = acc.put(kv._1, kv._2)
-    result
-  })
-}
-
 /** This class is designed to support the production of documents with keys like 1.1, 1.2.a... etc. The data (V) for the keys (String) can be added in any order.*/
-class StructuredMap[V](keyStrategy: KeyStrategy, root: DataAndChildren[V] = DataAndChildren[V](Key("", List()), None, List())) {
+abstract class AbstractStructuredMap[V, I](keyStrategy: KeyStrategy, root: DataAndChildren[V, I])(implicit toIterable: (I) => Iterable[V]) {
   import scala.language.implicitConversions
   implicit def stringToKey(key: String) = keyStrategy.newKey(key)
 
-  def put(key: String, value: V): StructuredMap[V] = new StructuredMap(keyStrategy, put(0, key, root, value))
-  def get(key: String): Option[V] = get(0, key, root)
-  def apply(key: String) = get(key) match { case Some(v) => v; case _ => throw new NoSuchElementException(key) }
-  def walk(fn: (String, Option[V]) => Unit): Unit = walk(root, fn)
-  def fold[Acc](initial: Acc)(fn: (Acc, String, Option[V]) => Acc): Acc = fold(root, initial, fn)
-  def map[NewV](itemFn: (String, Option[V], List[NewV]) => NewV): NewV = map(root, itemFn)
+  def walk(fn: (String, I) => Unit): Unit = walk(root, fn)
+  def fold[Acc](initial: Acc)(fn: (Acc, String, I) => Acc): Acc = fold(root, initial, fn)
 
-  protected def map[NewV](node: DataAndChildren[V], itemFn: (String, Option[V], List[NewV]) => NewV): NewV = {
+  protected def map[NewV](node: DataAndChildren[V, I], itemFn: (String, I, List[NewV]) => NewV): NewV = {
     val children = node.children
-    val newChildren = children.map((c) => 
+    val newChildren = children.map((c) =>
       map(c, itemFn))
     val result = itemFn(node.key.key, node.data, newChildren)
     result
   }
 
-  protected def put(depth: Int, key: Key, node: DataAndChildren[V], value: V): DataAndChildren[V] = {
+  protected def blankI: I
+  protected def makeNewV(key: Key, oldI: I, v: V): I
+
+  protected def put(depth: Int, key: Key, node: DataAndChildren[V, I], value: V): DataAndChildren[V, I] = {
     if (node.key.path.length != depth)
       throw new IllegalStateException("Key: " + node.key + " depth: " + depth)
     if (node.key == key)
-      if (node.data == None) node.copy(data = Some(value)) else
-        throw new DuplicateKeyException(key)
+      node.copy(data = makeNewV(key, node.data, value))
     else {
       val index = node.children.indexWhere((dac) => dac.key.path(depth) == key.path(depth))
       index match {
         case -1 => {
           val newNode = if (key.path.length == depth + 1)
-            DataAndChildren(key, Some(value), List())
+            DataAndChildren[V, I](key, makeNewV(key, blankI, value), List())
           else {
-            DataAndChildren(keyStrategy.newKeyAtDepth(key, depth + 1), None, List(
-              put(depth + 2, key, DataAndChildren(keyStrategy.newKeyAtDepth(key, depth + 2), None, List()), value)))
+            DataAndChildren(keyStrategy.newKeyAtDepth(key, depth + 1), blankI, List(
+              put(depth + 2, key, DataAndChildren(keyStrategy.newKeyAtDepth(key, depth + 2), blankI, List()), value)))
           }
 
-          node.copy(children = (newNode :: node.children).sorted(KeyOrder[V](depth)))
+          node.copy(children = (newNode :: node.children).sorted(KeyOrder[V, I](depth)))
         }
         case _ =>
           node.copy(children = node.children.updated(index, put(depth + 1, key, node.children(index), value)))
@@ -54,32 +48,64 @@ class StructuredMap[V](keyStrategy: KeyStrategy, root: DataAndChildren[V] = Data
     }
   }
 
-  protected def get(depth: Int, key: Key, node: DataAndChildren[V]): Option[V] = {
+  protected def get(depth: Int, key: Key, node: DataAndChildren[V, I]): I = {
     if (node.key.path.length != depth) throw new IllegalStateException("Key: " + node.key + " depth: " + depth)
     if (node.key == key) return node.data
     val optChild = node.children.find((dac) => dac.key.path(depth) == key.path(depth))
     optChild match {
       case Some(child) =>
         get(depth + 1, key, child)
-      case _ => None
+      case _ => blankI
     }
   }
 
-  protected def walk(node: DataAndChildren[V], fn: (String, Option[V]) => Unit) {
+  protected def walk(node: DataAndChildren[V, I], fn: (String, I) => Unit) {
     fn(node.key.key, node.data)
     for (c <- node.children)
       walk(c, fn)
   }
-  protected def fold[Acc](node: DataAndChildren[V], initial: Acc, fn: (Acc, String, Option[V]) => Acc): Acc = {
+  protected def fold[Acc](node: DataAndChildren[V, I], initial: Acc, fn: (Acc, String, I) => Acc): Acc = {
     val acc = fn(initial, node.key.key, node.data)
     val result = node.children.foldLeft(acc)((acc, dac) => fold(dac, acc, fn))
     result
   }
 }
 
+object StructuredMap {
+  protected implicit def optionToImplicit[V](i: Option[V]): Iterable[V] = i
+  def apply[V](kvs: (String, V)*) = kvs.foldLeft(new StructuredMap[V](new SimpleKeyStrategy, new DataAndChildren(Key("", List()), None, List())))((acc, kv) => acc + kv)
+}
+
+class StructuredMap[V](keyStrategy: KeyStrategy, root: DataAndChildren[V, Option[V]]) extends AbstractStructuredMap[V, Option[V]](keyStrategy, root) {
+  def +(keyValue: (String, V)): StructuredMap[V] = new StructuredMap(keyStrategy, put(0, keyValue._1, root, keyValue._2))
+  def get(key: String): Option[V] = get(0, key, root)
+  def apply(key: String) = get(key) match { case Some(v) => v; case _ => throw new NoSuchElementException(key) }
+  def map[NewV](itemFn: (String, Option[V], List[NewV]) => NewV): NewV = map(root, itemFn)
+  protected def blankI: Option[V] = None
+  protected def makeNewV(key: Key, oldI: Option[V], v: V): Option[V] =
+    if (oldI.isDefined)  
+      throw new DuplicateKeyException(key.toString) 
+    else Some(v)
+     
+}
+
+object StructuredMapOfList {
+  def apply[V](kvs: (String, V)*) = kvs.foldLeft(new StructuredMapOfList[V](new SimpleKeyStrategy, new DataAndChildren[V, List[V]](Key("", List()), List(), List())))((acc, kv) => acc + kv)
+}
+class StructuredMapOfList[V](keyStrategy: KeyStrategy, root: DataAndChildren[V, List[V]]) extends AbstractStructuredMap[V, List[V]](keyStrategy, root) {
+  def get(key: String): List[V] = get(0, key, root)
+  def +(kv: (String, V)): StructuredMapOfList[V] = {
+    val (key, value) = kv
+    new StructuredMapOfList(keyStrategy, put(0, key, root, value))
+  }
+  protected def blankI = List()
+  protected def makeNewV(key: Key, oldI: List[V], v: V): List[V] = oldI :+ v
+
+}
+
 case class Key(key: String, path: List[String])
 
-case class DataAndChildren[V](key: Key, data: Option[V], children: List[DataAndChildren[V]])
+case class DataAndChildren[V, I](key: Key, data: I, children: List[DataAndChildren[V, I]])(implicit toIterable: (I) => Iterable[V])
 
 trait KeyStrategy {
   def rootKey: String
@@ -96,7 +122,7 @@ class SimpleKeyStrategy extends KeyStrategy {
     case ("", i) => i.toString
     case (root, i) => root + "." + i
   }
-  def apply(key: String): List[String] = key.split("\\.").map(_.trim).filter(_.length >0).toList
+  def apply(key: String): List[String] = key.split("\\.").map(_.trim).filter(_.length > 0).toList
   def newKey(key: String): Key = {
     val newPath = apply(key)
     Key(newPath.mkString("."), newPath);
@@ -107,8 +133,8 @@ class SimpleKeyStrategy extends KeyStrategy {
   }
 }
 
-case class KeyOrder[V](depth: Int) extends Ordering[DataAndChildren[V]] {
-  def compare(x: DataAndChildren[V], y: DataAndChildren[V]): Int = {
+case class KeyOrder[V, I](depth: Int) extends Ordering[DataAndChildren[V, I]] {
+  def compare(x: DataAndChildren[V, I], y: DataAndChildren[V, I]): Int = {
     val xVal = x.key.path(depth)
     val yVal = y.key.path(depth)
     (Strings.safeToInt(xVal), Strings.safeToInt(yVal)) match {

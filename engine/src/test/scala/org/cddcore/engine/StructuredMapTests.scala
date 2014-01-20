@@ -10,6 +10,7 @@ class StructuredMapTest extends AbstractTest {
   val keyStrategy = new SimpleKeyStrategy()
   implicit def split(key: String) = keyStrategy.newKey(key)
   val map = StructuredMap("1.2.2" -> "one.two.two", "1" -> "one", "1.2" -> "one.two", "1.3" -> "one.three", "2.2" -> "two.two", "1.2.11" -> "one.two.eleven")
+  val mapOfLists = StructuredMapOfList("1.2.2" -> "one.two.two", "1" -> "onea", "1" -> "oneb", "1.2" -> "one.two", "1.3" -> "one.three", "2.2" -> "two.two", "1.2.11" -> "one.two.eleven")
 
   "A structured map" should "allow values to be added and retreived" in {
     assertEquals(None, map.get(""))
@@ -23,7 +24,7 @@ class StructuredMapTest extends AbstractTest {
   }
 
   it should "allow the empty key to be used to get values" in {
-    val newMap = map.put("", "Root")
+    val newMap = map + ("" -> "Root")
     assertEquals(Some("Root"), newMap.get(""))
     assertEquals(Some("one"), newMap.get("1"))
     assertEquals(None, newMap.get("1.1"))
@@ -58,6 +59,23 @@ class StructuredMapTest extends AbstractTest {
       "2.2" -> Some("two.two")), actual.reverse)
   }
 
+  it should "throw DuplicateKeyException if the same key is added" in {
+    evaluating { map + ("1" -> "any") } should produce[DuplicateKeyException]
+    val newMap = map + ("" -> "Root")
+    evaluating { newMap + ("" -> "Root") } should produce[DuplicateKeyException]
+  }
+
+  "A structured map of list" should "allow values to be added and retreived" in {
+    assertEquals(List(), mapOfLists.get(""))
+    assertEquals(List("onea", "oneb"), mapOfLists.get("1"))
+    assertEquals(List(), mapOfLists.get("1.1"))
+    assertEquals(List("one.two"), mapOfLists.get("1.2"))
+    assertEquals(List("one.three"), mapOfLists.get("1.3"))
+    assertEquals(List("one.two.two"), mapOfLists.get("1.2.2"))
+    assertEquals(List("two.two"), mapOfLists.get("2.2"))
+    assertEquals(List("one.two.eleven"), mapOfLists.get("1.2.11"))
+  }
+
   "The default Key strategy" should "split keys based on dot" in {
     assertEquals(List(), split("").path)
     assertEquals(List("1"), split("1").path)
@@ -84,8 +102,9 @@ class StructuredMapTest extends AbstractTest {
   }
 
   "The Key Orderer" should "try and use the integer representation of keys if it can, before using the string representation" in {
-    implicit def keyToDataAndChildren(key: String) = DataAndChildren(key, None, List())
-    val order = new KeyOrder(1)
+    implicit def keyToDataAndChildren(key: String) =
+      new DataAndChildren[String, Option[String]](key, None, List())
+    val order = new KeyOrder[String, Option[String]](1)
     assertEquals(-1, order.compare("1.1", "1.2"))
     assertEquals(-9, order.compare("1.2", "1.11"))
     assertEquals(48, order.compare("1.a", "1.11"))
