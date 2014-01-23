@@ -20,6 +20,7 @@ object Reportable {
   }
   def templateNameAndTitle(a: Any): String = templateName(a) + "(" + (a match {
     case r: Requirement => r.titleString
+    case m: MergedShortDescription => m.name
     case _ => a.toString
   }) + ")"
 

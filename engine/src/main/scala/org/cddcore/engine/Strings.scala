@@ -30,13 +30,15 @@ object Strings {
 
   def blanks(n: Int) = n match {
     case 0 => ""
-    case 1 => " " 
+    case 1 => " "
     case 2 => "  "
     case 3 => "   "
     case 4 => "    "
     case 5 => "     "
     case _ => List.fill(n)(' ').mkString("")
   }
+
+  def firstCharacters(raw: String) = raw.split("\\s").filter(_.length > 0).map(_(0)).mkString("")
 }
 
 class StringCleaner(map: Map[Char, Char] = Map()) {

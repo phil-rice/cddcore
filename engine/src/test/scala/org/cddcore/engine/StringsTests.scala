@@ -29,4 +29,11 @@ class StringsTests extends AbstractTest {
     assertEquals("    ", Strings.blanks(4))
     assertEquals("      ", Strings.blanks(6))
   }
+  
+  "The firstCharacters method" should "return the first characters of each word" in {
+    assertEquals("", Strings.firstCharacters(""));
+    assertEquals("A", Strings.firstCharacters("A"));
+    assertEquals("a", Strings.firstCharacters("a"));
+    assertEquals("apoc", Strings.firstCharacters("a piece of cake"));
+  } 
 }

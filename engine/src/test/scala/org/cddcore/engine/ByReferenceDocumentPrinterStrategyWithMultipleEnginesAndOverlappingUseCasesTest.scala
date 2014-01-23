@@ -43,7 +43,7 @@ class ByReferenceDocumentPrinterStrategyWithMultipleEnginesAndOverlappingUseCase
 
   val project = Project("Carers", mainCarers, nettIncome, income, otherEngine, privatePension)
   val rawReport = Report("Document View", project);
-  val strategy = new ByReferenceDocumentPrinterStrategy(Some(document), new SimpleKeyStrategy(), debug=true)
+  val strategy = new ByReferenceDocumentPrinterStrategy(Some(document), new SimpleKeyStrategy(), debug = true)
   val report = strategy.makeReportOfJustDocuments(rawReport).asInstanceOf[SimpleRequirementAndHolder]
 
   def findUseCase(e: Engine, i: Int) = e.all(classOf[UseCase])(i)
@@ -52,14 +52,12 @@ class ByReferenceDocumentPrinterStrategyWithMultipleEnginesAndOverlappingUseCase
   val incomeUseCase = findUseCase(income, 0)
   val privatePensionUseCase = findUseCase(privatePension, 0)
 
-  "A ByReferenceDocumentPrinterStrategy" should "restructure a usecase that occurs in many engines so that the result is human readable" in {
-  }
 
-  it should "build up a structured map that just has the reportables referenced" in {
+ "A ByReferenceDocumentPrinterStrategy"  should "build up a structured map that just has the reportables referenced" in {
     import scala.language.implicitConversions
     val structuredMap = strategy.findStructuredMap(rawReport)
-    implicit def reqToRequirementAndNone(r: Requirement) = new RequirementAndEngine(r, None)
-    implicit def tupleToRequirementAndSomeEngine(t: (Requirement, Engine)) = new RequirementAndEngine(t._1, Some(t._2))
+    implicit def reqToRequirementAndNone(r: RequirementAndHolder) = new RequirementAndEngine(r, None)
+    implicit def tupleToRequirementAndSomeEngine(t: (RequirementAndHolder, Engine)) = new RequirementAndEngine(t._1, Some(t._2))
     def check(key: String, re: RequirementAndEngine*) {
       assertEquals(re.toList, structuredMap(key))
     }

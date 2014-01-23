@@ -12,18 +12,24 @@ abstract class AbstractStructuredMap[V, I](keyStrategy: KeyStrategy, root: DataA
 
   def walk(fn: (String, I) => Unit): Unit = walk(root, fn)
   def fold[Acc](initial: Acc)(fn: (Acc, String, I) => Acc): Acc = fold(root, initial, fn)
-  def map[NewV](itemFn: (String, I, List[NewV]) => NewV): NewV = map(root, itemFn)
-
-  protected def map[NewV](node: DataAndChildren[V, I], itemFn: (String, I, List[NewV]) => NewV): NewV = {
-    val children = node.children
-    val newChildren = children.map((c) =>
-      map(c, itemFn))
-    val result = itemFn(node.key.key, node.data, newChildren)
-    result
-  }
+  def kidsOf(key: Key): List[Key] = getNodeWithKey(0, key, root).collect { case n => n.children.map(_.key) }.getOrElse(List())
 
   protected def blankI: I
   protected def makeNewV(key: Key, oldI: I, v: V): I
+
+  protected def getNodeWithKey(depth: Int, key: Key, node: DataAndChildren[V, I]): Option[DataAndChildren[V, I]] = {
+    if (node.key.path.length != depth)
+      throw new IllegalStateException("Key: " + node.key + " depth: " + depth)
+    if (node.key == key)
+      Some(node)
+    else {
+      val index = node.children.indexWhere((dac) => dac.key.path(depth) == key.path(depth))
+      index match {
+        case -1 => None
+        case _ => getNodeWithKey(depth + 1, key, node.children(index))
+      }
+    }
+  }
 
   protected def put(depth: Int, key: Key, node: DataAndChildren[V, I], value: V): DataAndChildren[V, I] = {
     if (node.key.path.length != depth)
@@ -41,10 +47,10 @@ abstract class AbstractStructuredMap[V, I](keyStrategy: KeyStrategy, root: DataA
               put(depth + 2, key, DataAndChildren(keyStrategy.newKeyAtDepth(key, depth + 2), blankI, List()), value)))
           }
 
-          node.copy(children = ( node.children :+ newNode).sorted(KeyOrder[V, I](depth)))
+          node.copy(children = (node.children :+ newNode).sorted(KeyOrder[V, I](depth)))
         }
         case _ =>
-          node.copy(children = node.children.updated(index, put(depth + 1, key, node.children(index), value))) 
+          node.copy(children = node.children.updated(index, put(depth + 1, key, node.children(index), value)))
       }
     }
   }
@@ -90,7 +96,8 @@ class StructuredMap[V](keyStrategy: KeyStrategy, root: DataAndChildren[V, Option
 }
 
 object StructuredMapOfList {
-  def apply[V](kvs: (String, V)*) = kvs.foldLeft(new StructuredMapOfList[V](new SimpleKeyStrategy, new DataAndChildren[V, List[V]](Key("", List()), List(), List())))((acc, kv) => acc + kv)
+  def emptyRoot[V] = new DataAndChildren[V, List[V]](Key("", List()), List(), List())
+  def apply[V](kvs: (String, V)*) = kvs.foldLeft(new StructuredMapOfList[V](new SimpleKeyStrategy, emptyRoot))((acc, kv) => acc + kv)
 }
 class StructuredMapOfList[V](keyStrategy: KeyStrategy, root: DataAndChildren[V, List[V]]) extends AbstractStructuredMap[V, List[V]](keyStrategy, root) {
   def get(key: String): List[V] = get(0, key, root)
@@ -104,6 +111,12 @@ class StructuredMapOfList[V](keyStrategy: KeyStrategy, root: DataAndChildren[V, 
 
 }
 
+object Key {
+  import scala.language.implicitConversions
+  val defaultKeyStrategy = new SimpleKeyStrategy()
+  implicit def defaultStringToKey(key: String) = defaultKeyStrategy.newKey(key)
+
+}
 case class Key(key: String, path: List[String])
 
 case class DataAndChildren[V, I](key: Key, data: I, children: List[DataAndChildren[V, I]])(implicit toIterable: (I) => Iterable[V])

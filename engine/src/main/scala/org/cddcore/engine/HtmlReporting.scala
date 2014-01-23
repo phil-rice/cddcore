@@ -237,7 +237,7 @@ class NoReportableToUrl extends ReportableToUrl {
   override def hashCode = 0
   override def equals(other: Any) = other != null && other.isInstanceOf[NoReportableToUrl]
 }
-case class ReportableRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, restrict: Set[Reportable], configurers: List[RenderAttributeConfigurer] = List(), templates: Map[String, Renderer] = Map(), walker: ReportWalker) {
+case class ReportableRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, restrict: Set[Reportable], configurers: List[RenderAttributeConfigurer] = List(), templates: Map[String, Renderer] = Map(), walker: ReportWalker, rootUrl: Option[String]) {
   import Reportable._
   import Renderer._
 
@@ -279,7 +279,7 @@ case class ReportableRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, re
       case Some(renderer: StringTemplateRenderer) =>
         renderer.clear
         for (c <- configurers)
-          c.update(reportableToUrl, loggerDisplayProcessor, urlMap, path, renderer.stringTemplate)
+          c.update(reportableToUrl, loggerDisplayProcessor, urlMap, path, renderer.stringTemplate, rootUrl)
         renderer.render(reportableToUrl, urlMap, path)
       case Some(renderer: Renderer) =>
         renderer.clear
@@ -290,7 +290,7 @@ case class ReportableRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, re
   }
 }
 
-case class RendererContext[R <: Reportable](reportableToUrl: ReportableToUrl, loggerDisplayProcessor: LoggerDisplayProcessor, urlMap: UrlMap, path: List[Reportable], r: R, stringTemplate: StringTemplate)
+case class RendererContext[R <: Reportable](reportableToUrl: ReportableToUrl, loggerDisplayProcessor: LoggerDisplayProcessor, urlMap: UrlMap, path: List[Reportable], r: R, stringTemplate: StringTemplate, rootUrl: Option[String])
 
 object Renderer {
   import Reportable._
@@ -301,29 +301,50 @@ object Renderer {
   val engineFromTestsKey = "EngineFromTests"
   val engineChildKey = "EngineChild"
   val engineWithChildrenKey = "EngineWithChildren"
+  val mergedReportableKey = "Merged"
 
   val renderer = new ValueForRenderer
   val refRenderer = new ReferenceRenderer
   private val dateFormat: String = "HH:mm EEE MMM d yyyy"
   val dateFormatter = DateTimeFormat.forPattern(dateFormat);
-  def base(loggerDisplayProcessor: LoggerDisplayProcessor, restrict: ReportableSet, walker: ReportWalker = ReportWalker.childWalker): ReportableRenderer =
-    new ReportableRenderer(loggerDisplayProcessor, restrict, walker = walker)
+  def base(loggerDisplayProcessor: LoggerDisplayProcessor, rootUrl: Option[String], restrict: ReportableSet, walker: ReportWalker = ReportWalker.childWalker): ReportableRenderer =
+    new ReportableRenderer(loggerDisplayProcessor, restrict, walker = walker, rootUrl = rootUrl)
   def apply(loggerDisplayProcessor: LoggerDisplayProcessor, rootUrl: Option[String], restrict: ReportableSet, live: Boolean, walker: ReportWalker = ReportWalker.childWalker) =
-    base(loggerDisplayProcessor, restrict, walker).configureAttribute(basic(rootUrl, live), engineConfig, reportConfig, testConfig)
+    base(loggerDisplayProcessor, rootUrl, restrict, walker).configureAttribute(basic(live), engineConfig, reportConfig, testConfig)
 
-  protected def basic(rootUrl: Option[String], live: Boolean) = RenderAttributeConfigurer((rendererContext) => {
+  protected def basic(live: Boolean) = RenderAttributeConfigurer((rendererContext) => {
     import rendererContext._
     val r = path.head
     stringTemplate.setAttribute("rootUrl", rootUrl.getOrElse(null))
     stringTemplate.setAttribute("indent", Integer.toString(path.size))
     if (live)
       stringTemplate.setAttribute("live", Integer.toString(path.size))
+    def addFromRequirement(r: Requirement) {
+      stringTemplate.setAttribute("description", r.description.collect { case d => ValueForRender(d) }.getOrElse(null))
+      stringTemplate.setAttribute("title", ValueForRender(r.titleString))
+      for (ref <- r.references)
+        stringTemplate.setAttribute("references", ref)
+      if (urlMap.contains(r)) {
+        val url = urlMap(r)
+        stringTemplate.setAttribute("url", url)
+        stringTemplate.setAttribute("urlId", reportableToUrl.urlId(path.head))
+      }
+    }
     r match {
-      case req: Requirement =>
-        stringTemplate.setAttribute("description", req.description.collect { case d => ValueForRender(d) }.getOrElse(null))
-        stringTemplate.setAttribute("title", ValueForRender(req.titleString))
-        for (ref <- req.references)
-          stringTemplate.setAttribute("references", ref)
+      case r: MergedReportable =>
+        stringTemplate.setAttribute("key", ValueForRender(r.key))
+      case t: MergedTitle =>
+        stringTemplate.setAttribute("title", ValueForRender(t.title.getOrElse("")))
+      case d: MergedDescription =>
+        stringTemplate.setAttribute("description", ValueForRender(d.description.getOrElse("")))
+      case m: MergedShortDescription =>
+        stringTemplate.setAttribute("title", ValueForRender(m.name))
+      case re: RequirementAndEngine =>
+        addFromRequirement(re.reportable)
+        val summary = re.engine.collect { case e: Engine => e.titleOrDescription("") }.getOrElse("")
+        stringTemplate.setAttribute("engineSummary", ValueForRender(Strings.firstCharacters(summary)))
+      case req: Requirement => addFromRequirement(req)
+
       case _ =>
     }
     r match {
@@ -331,12 +352,8 @@ object Renderer {
         stringTemplate.setAttribute("childrenCount", holder.children.size)
       case _ => ;
     }
-    if (urlMap.contains(r)) {
-      val url = urlMap(r)
-      stringTemplate.setAttribute("url", url)
-      stringTemplate.setAttribute("urlId", reportableToUrl.urlId(path.head))
-    }
   })
+
   protected def engineConfig = RenderAttributeConfigurer[Engine](Set(engineFromTestsKey), (rc) => { import rc._; stringTemplate.setAttribute("decisionTreeNodes", r.decisionTreeNodes) })
 
   def decisionTreeConfig(params: Option[List[Any]], conclusion: Option[Conclusion], test: Option[Test]) =
@@ -350,6 +367,17 @@ object Renderer {
       }
       RenderAttributeConfigurer[EngineBuiltFromTests[_]](Set(engineChildKey, engineFromTestsKey), fn)
     }
+
+  def setMergedReportable: RenderAttributeConfigurer = RenderAttributeConfigurer[MergedReportable](Set(mergedReportableKey), (rc) => {
+    import rc._
+    val htmlRenderer = new HtmlRenderer(rc.loggerDisplayProcessor, false)
+    val renderer = htmlRenderer.mergedReportableTitle(rootUrl)
+    val html = r.titles.foldLeft("")((acc, mt) =>
+      acc + renderer.render(reportableToUrl, urlMap, mt))
+    stringTemplate.setAttribute("mergedReportable", html)
+    if (r.titles.length != 1)
+      stringTemplate.setAttribute("multipleMergedValuesFlag", "true")
+  })
 
   def setAttribute(templateName: String, attributeName: String, value: Any) =
     RenderAttributeConfigurer[EngineBuiltFromTests[_]](Set(templateName), (rc) => { import rc._; stringTemplate.setAttribute(attributeName, value) })
@@ -393,24 +421,24 @@ object RenderAttributeConfigurer {
 
   case class BaseRenderAttributeConfigurer(val fn: (RendererContext[_]) => Unit) extends RenderAttributeConfigurer {
     import Reportable._
-    def update(reportableToUrl: ReportableToUrl, loggerDisplayProcessor: LoggerDisplayProcessor, urlMap: UrlMap, path: ReportableList, template: StringTemplate) {
-      fn(RendererContext[Reportable](reportableToUrl, loggerDisplayProcessor, urlMap, path, path.head, template))
+    def update(reportableToUrl: ReportableToUrl, loggerDisplayProcessor: LoggerDisplayProcessor, urlMap: UrlMap, path: ReportableList, template: StringTemplate, rootUrl: Option[String]) {
+      fn(RendererContext[Reportable](reportableToUrl, loggerDisplayProcessor, urlMap, path, path.head, template, rootUrl))
     }
   }
 
   case class TypedRenderAttributeConfigurer[R <: Reportable](val templateNames: Set[String], setAttributes: (RendererContext[R]) => Unit) extends RenderAttributeConfigurer {
     import Reportable._
-    def update(reportableToUrl: ReportableToUrl, loggerDisplayProcessor: LoggerDisplayProcessor, urlMap: UrlMap, path: ReportableList, template: StringTemplate) {
+    def update(reportableToUrl: ReportableToUrl, loggerDisplayProcessor: LoggerDisplayProcessor, urlMap: UrlMap, path: ReportableList, template: StringTemplate, rootUrl: Option[String]) {
       val r = Reportable.unwrap(path.head)
       if (templateNames.contains(Reportable.templateName(r)))
-        setAttributes(RendererContext[R](reportableToUrl, loggerDisplayProcessor, urlMap, path, r.asInstanceOf[R], template))
+        setAttributes(RendererContext[R](reportableToUrl, loggerDisplayProcessor, urlMap, path, r.asInstanceOf[R], template, rootUrl))
     }
   }
 }
 
 trait RenderAttributeConfigurer {
   import Reportable._
-  def update(reportableToUrl: ReportableToUrl, loggerDisplayProcessor: LoggerDisplayProcessor, urlMap: UrlMap, path: ReportableList, template: StringTemplate)
+  def update(reportableToUrl: ReportableToUrl, loggerDisplayProcessor: LoggerDisplayProcessor, urlMap: UrlMap, path: ReportableList, template: StringTemplate, rootUrl: Option[String])
 }
 case class StringTemplateRenderer(template: String) extends Renderer {
   import Renderer._
@@ -511,6 +539,22 @@ object HtmlRenderer {
   val projectTemplate: StringRendererRenderer =
     ("Project", "<div class='project'><div class='projectText'><b>Project: $title$</b> " + description + "</div>\n", "</div> <!-- Project -->\n")
 
+  val mergedTemplate: StringRendererRenderer =
+    ("Merged", "<div class='merged'><b>$key$</b> $if(multipleMergedValuesFlag)$<div class='multipleTitles'>$endif$$mergedReportable$", "$if(multipleMergedValuesFlag)$</div>$endif$</div><!-- merged -->\n")
+
+  val mergedTitleTemplate: StringRendererRenderer =
+    ("MergedTitle", "<b>$title$</b>", "\n")
+
+  val mergedDescriptionTemplate: StringRendererRenderer =
+    //  ("MergedDescription", "", "$description$")
+    ("MergedDescription", "", "<div class='mergedDescription'>$description$</div>\n")
+
+  // So why is this an engine with tests icon? Well it turns out that this is displayed as part of a use case anyway, and the engine with tests followed by a summary of the name of the engine 'looks better' 
+  val useCaseIconTemplate: StringRendererRenderer = ("UseCase", a(engineWithTestsIcon + "$engineSummary$"), "")
+
+  val requirementAndEngineTemplate: StringRendererRenderer =
+    ("RequirementAndEngine", "<div class='requirementAndEngine'> $title$ ", "</div><!-- requirementAndEngine -->\n")
+
   val engineWithTestsTemplate: StringRendererRenderer =
     (engineFromTestsKey, "<div class='engineWithTests'>" +
       "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}", engineWithTestsIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow, nodesCountRow),
@@ -598,20 +642,29 @@ class HtmlRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, live: Boolean
       configureReportable(scenarioTemplate)
 
   def documentsHtml(rootUrl: Option[String]) = Renderer(loggerDisplayProcessor, rootUrl, Set(), live).
-    configureReportableHolder(reportTemplate, projectTemplate, engineWithTestsTemplate, engineWithChildEngineTemplate, childEngineTemplate, useCaseTemplate).
-    configureReportable(scenarioTemplate)
+    configureAttribute(Renderer.setMergedReportable).
+    configureReportableHolder(reportTemplate, mergedTemplate)
+
+  def mergedReportableTitle(rootUrl: Option[String]) = Renderer(loggerDisplayProcessor, rootUrl, Set(), live).
+    configureReportableHolder(mergedTemplate, mergedTitleTemplate, mergedDescriptionTemplate,
+      requirementAndEngineTemplate, useCaseIconTemplate).
+      configureReportable(scenarioSummaryTemplate)
+
 }
 
 trait DocumentPrinterStrategy {
   /** The report passed in probably holds engines. The report coming out holds the structure to be printed */
-  def makeReportOfJustDocuments(report: Report): Requirement
+  def makeReportOfJustDocuments(report: ReportableHolder): Reportable
 }
 
 class SimpleDocumentPrinterStrategy extends DocumentPrinterStrategy {
-  def makeReportOfJustDocuments(report: Report) = SimpleRequirementAndHolder(report)
+  def makeReportOfJustDocuments(report: ReportableHolder) = SimpleRequirementAndHolder(report)
 }
 
-case class RequirementAndEngine(reportable: Requirement, engine: Option[Engine])
+case class RequirementAndEngine(reportable: RequirementAndHolder, engine: Option[Engine]) extends ReportableHolder with ReportableWrapper {
+  def delegate = Some(reportable)
+  def children = reportable.children
+}
 
 class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy: KeyStrategy, debug: Boolean = false) extends DocumentPrinterStrategy {
   type ReportableToPath = Map[Reportable, List[Reportable]]
@@ -622,6 +675,7 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
     case r: Requirement => r.references.find((ref) => ref.document == document)
     case _ => None
   }
+
   def addToFor(document: Option[Document], reportableToPath: ReportableToPath, mapToKey: ReportableToKey, r: Reportable): ReportableToKey = {
     if (mapToKey.contains(r))
       mapToKey
@@ -629,18 +683,23 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
       findReferenceFor(document, r) match {
         case Some(ref) =>
           if (debug)
-            println("adding " + ref.ref + "<--" + Reportable.templateNameAndTitle(r))
+            println("raw " + ref.ref + "<--" + Reportable.templateNameAndTitle(r))
           mapToKey + (r -> ref.ref)
         case _ => {
           val result = reportableToPath(r) match {
             case me :: (parent: ReportableHolder) :: tail =>
               val withParent = addToFor(document, reportableToPath, mapToKey, parent);
-              val parentRef = withParent(parent)
-              val myRef = keyStrategy.findKeyFor(parentRef, parent.children.reverse, me)
-              if (debug)
-                println("adding " + myRef + "<--" + Reportable.templateNameAndTitle(me))
-              withParent + (me -> myRef)
-            case me :: Nil => mapToKey + (me -> keyStrategy.rootKey)
+              withParent.get(parent) match {
+                case Some(parentRef) => {
+                  val myRef = keyStrategy.findKeyFor(parentRef, parent.children.reverse, me)
+                  if (debug)
+                    println("raw " + myRef + "<--" + Reportable.templateNameAndTitle(me))
+                  withParent + (me -> myRef)
+                }
+                case _ => if (document.isDefined) withParent else withParent + (me -> keyStrategy.rootKey) // i.e. we are part of the document 'None'
+              }
+            case me :: Nil =>
+              if (document.isDefined) mapToKey else mapToKey + (me -> keyStrategy.rootKey) // i.e. we are part of the document 'None'
             case _ => throw new IllegalStateException
           }
           result
@@ -648,38 +707,63 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
       }
   }
 
-  def findReportableToRef(report: Report, reportableToPath: ReportableToPath) = {
+  def findReportableToRef(report: ReportableHolder, reportableToPath: ReportableToPath) = {
     val reportableToRef = report.foldLeft[ReportableToKey](Map())((acc, r) => addToFor(document, reportableToPath, acc, r))
     reportableToRef
   }
 
-  def findStructuredMap(report: Report) = {
+  def findStructuredMap(report: ReportableHolder) = {
     val reportableToPath = findReportableToPathFor(report)
     val reportableToRef = findReportableToRef(report, reportableToPath)
     val structuredMap = report.foldLeft(StructuredMapOfList[RequirementAndEngine]())((acc, r) => r match {
-      case r: Requirement =>
+      case t: Test => acc
+      case r: RequirementAndHolder =>
         {
-          val key = reportableToRef(r)
-          val path = reportableToPath(r)
-          val engine = PathUtils.findEnginePathIfExists(path)
-          acc + (key -> RequirementAndEngine(r, engine))
+          reportableToRef.get(r) match {
+            case Some(key) => {
+              val path = reportableToPath(r)
+              val engine = PathUtils.findEnginePathIfExists(path)
+              acc + (key -> RequirementAndEngine(r, engine))
+            }
+            case _ => acc
+          }
         }
     })
     structuredMap
   }
 
-  def makeReportOfJustDocuments(report: Report) = {
-    val transformFn: (String, List[RequirementAndEngine], List[Requirement]) => Requirement = (key, optValue, children) => optValue match {
-      case (RequirementAndEngine(r, optE)) :: tail => SimpleRequirementAndHolder(r, children)
-      case Nil => new SimpleRequirementAndHolder(None, None, None, None, Set(), children)
-    };
-    val structuredMap = findStructuredMap(report)
-    structuredMap.map[Requirement](transformFn)
+  def findMergedStructuredMap(from: StructuredMapOfList[RequirementAndEngine]) = {
+    val modifiedMap = from.fold[StructuredMap[Reportable]](StructuredMap())((acc, key, list) => list match {
+      case Nil =>
+        if (debug)
+          println("placeholder: " + key)
+        acc + (key -> new SimpleRequirementAndHolder(None, None, None, None, Set(), List()))
+      case list =>
+        if (debug)
+          println("MergingX: " + key + ": " + list.map(Reportable.templateNameAndTitle(_)))
+        acc + (key -> MergedReportable.makeFrom(key, list, List()))
+    })
+    modifiedMap
   }
 
+  def mergedMapToReportable(from: StructuredMap[Reportable], key: Key): ReportableHolder = {
+    val children = from.kidsOf(key).map(mergedMapToReportable(from, _))
+    from(key.key) match {
+      case m: MergedReportable => m.copy(children = children)
+      case s: SimpleRequirementAndHolder => s.copy(children = children)
+    }
+  }
+
+  def makeReportOfJustDocuments(report: ReportableHolder) = {
+    val structuredMap = findStructuredMap(report)
+    val modifiedMap = findMergedStructuredMap(structuredMap)
+    val result = mergedMapToReportable(modifiedMap, "")
+    result
+  }
 }
 
 object SimpleRequirementAndHolder {
+  def withJustChildren(children: Reportable*) = new SimpleRequirementAndHolder(None, None, None, None, Set(), children.toList)
   def apply(r: Reportable): Requirement = r match {
     case r: SimpleRequirementAndHolder => r
     case rh: RequirementAndHolder => apply(rh, rh.children.map(apply(_)))
@@ -697,6 +781,7 @@ object SimpleRequirementAndHolder {
 
 case class SimpleRequirementAndHolder(delegate: Option[Reportable], title: Option[String], description: Option[String], priority: Option[Int], references: Set[Reference], children: ReportableList) extends RequirementAndHolder with ReportableWrapper {
   protected def shortToString(r: Any): String = r match {
+    case m: MergedShortDescription => Reportable.templateName(m) + "(" + m.name + ")"
     case r: SimpleRequirementAndHolder => Reportable.templateName(r) + "(" + Reportable.templateName(r.delegate.getOrElse(None)) + "/" + r.delegate.collect { case r: Requirement => r.titleString } + ", children=" + r.children.map(shortToString(_)).mkString(",") + ")"
     case t: Test => Reportable.templateName(r) + "(" + t.params.mkString(",") + ")"
     case r: RequirementAndHolder => Reportable.templateName(r) + "(" + r.titleString + ", children=" + r.children.map(shortToString(_)).mkString(",") + ")"
@@ -710,4 +795,29 @@ class DocumentPrinter(report: Report, strategy: DocumentPrinterStrategy = new Si
 
 }
 
+trait MergedShortDescription {
+  def name: String
+}
+object MergedReportable {
+  def makeFrom(key: String, res: List[RequirementAndEngine], children: ReportableList): MergedReportable = {
+    val titles = res.groupBy(_.reportable.title).collect {
+      case (title, list) =>
+        val descriptions = list.groupBy(_.reportable.description).collect { case (description, list) => MergedDescription(description, list) }.toList
+        MergedTitle(title, descriptions)
+    }.toList
+    new MergedReportable(key, titles, children)
+  }
+}
 
+/** A merged requirement is used to handle the fact that many reportables may implement a '2.1' of a document. */
+case class MergedReportable(val key: String, val titles: List[MergedTitle], val children: ReportableList) extends ReportableHolder with MergedShortDescription with ReportableWithTemplate {
+  def name = key + "/" + titles.map(_.title.getOrElse("None") + ",children=" + children.map(Reportable.templateNameAndTitle(_)).mkString(","))
+  override def toString = "Merged(" + name + ")"
+  def templateName = "Merged"
+}
+case class MergedTitle(title: Option[String], children: List[MergedDescription]) extends ReportableHolder with MergedShortDescription {
+  def name = title.getOrElse("None")
+}
+case class MergedDescription(description: Option[String], children: ReportableList) extends ReportableHolder with MergedShortDescription {
+  def name = description.getOrElse("None")
+}
