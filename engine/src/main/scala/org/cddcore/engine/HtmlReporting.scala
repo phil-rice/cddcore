@@ -108,13 +108,15 @@ class FileReportCreator(loggerDisplayProcessor: LoggerDisplayProcessor, r: Repor
     println(file)
     Files.printToFile(file)((p) => p.append(html))
   }
-  def create {
-    report.walkWithPath((path) => {
-      htmlFor(path) match {
-        case Some(html) => print(path, html)
-        case _ => ;
-      }
-    })
+  protected def makeReport = (path: List[Reportable]) =>
+    htmlFor(path) match {
+      case Some(html) => print(path, html)
+      case _ => ;
+    }
+  def create = {
+    report.walkWithPath(makeReport)
+    val documents = Reportable.documentsIn(report)
+    documents.map(List(_, report)).foreach(makeReport)
   }
 }
 
@@ -132,11 +134,19 @@ class ReportCreator[RtoUrl <: ReportableToUrl](loggerDisplayProcessor: LoggerDis
   val urlMap = optUrlMap.getOrElse(reportableToUrl.makeUrlMap(report))
   val rootUrl = reportableToUrl.url(List(r, report).distinct)
   def htmlFor(path: ReportableList) = {
-    val r = path.head
-    if (!urlMap.contains(r))
+    val pathHead = path.head
+    if (!urlMap.contains(pathHead))
       throw new IllegalStateException
-    val optHtml = r match {
+    val optHtml = pathHead match {
       //        case r: Report => Some(HtmlRenderer.reportHtml(rootUrl).render(reportableToUrl, urlMap, r))
+      case d: Document => {
+        val strategy = new ByReferenceDocumentPrinterStrategy(Some(d), new SimpleKeyStrategy)
+        val documentDetails = strategy.makeReportOfJustDocuments(r)
+        val report = Report(d.titleString, documentDetails)
+        val renderer = HtmlRenderer(loggerDisplayProcessor, true).documentsHtml(rootUrl)
+        val html = renderer.render(reportableToUrl, urlMap, report)
+        Some(html)
+      }
       case p: Project =>
         Some(HtmlRenderer(loggerDisplayProcessor, live).projectHtml(rootUrl).render(reportableToUrl, urlMap, Report("Project: " + p.titleOrDescription(ReportCreator.unnamed), p)))
       case e: Engine => Some(HtmlRenderer(loggerDisplayProcessor, live).engineHtml(rootUrl).render(reportableToUrl, urlMap, Report("Engine: " + e.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
@@ -197,11 +207,15 @@ trait ReportableToUrl {
 
   def url(path: ReportableList): Option[String]
 
-  def makeUrlMap(r: ReportableHolder): UrlMap =
-    r.foldWithPath(UrlMap(Map(), Map()), ((acc: UrlMap, path) => {
-      val u = url(path);
-      if (u.isDefined) acc + (path -> u.get) else acc
-    }))
+  protected def add = (urlMap: UrlMap, path: ReportableList) => {
+    val u = url(path);
+    if (u.isDefined) urlMap + (path -> u.get) else urlMap
+  }
+
+  def makeUrlMap(r: ReportableHolder): UrlMap = {
+    val fromBasicReportables = r.foldWithPath(UrlMap(Map(), Map()), add)
+    documentsIn(r).map(List(_, r)).foldLeft(fromBasicReportables)(add)
+  }
 
   def makeUrlMapWithDecisionsAndConclusions(r: ReportableHolder): UrlMap =
     r.foldWithPath(UrlMap(Map(), Map()), ((acc: UrlMap, path) => {
@@ -341,8 +355,9 @@ object Renderer {
         stringTemplate.setAttribute("title", ValueForRender(m.name))
       case re: RequirementAndEngine =>
         addFromRequirement(re.reportable)
-        val summary = re.engine.collect { case e: Engine => e.titleOrDescription("") }.getOrElse("")
-        stringTemplate.setAttribute("engineSummary", ValueForRender(Strings.firstCharacters(summary)))
+        val engineName = re.engine.collect { case e: Engine => e.titleOrDescription("") }.getOrElse("")
+        stringTemplate.setAttribute("engineName", ValueForRender(engineName))
+        stringTemplate.setAttribute("engineSummary", ValueForRender(Strings.firstCharacters(engineName)))
       case req: Requirement => addFromRequirement(req)
 
       case _ =>
@@ -502,6 +517,7 @@ object HtmlRenderer {
   def titleAndDescription(clazz: String, titlePattern: String, iconPrefix: String = "") =
     s"<div class='$clazz'>" + a(iconPrefix + MessageFormat.format(titlePattern, title)) + description + "</div>"
   def a(body: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$'>$endif$" + body + "$if(url)$</a>$endif$"
+  def a(body: String, title: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$' title='" + title + "'>$endif$" + body + "$if(url)$</a>$endif$"
   def aForLive = "$if(url)$<a id='$url$/live' href='$url$/live'>$endif$Live$if(url)$</a>$endif$"
 
   protected def cddLogo = "<img src='http://img32.imageshack.us/img32/8151/xy9u.png'  alt='Report Home Page'/>"
@@ -550,7 +566,7 @@ object HtmlRenderer {
     ("MergedDescription", "", "<div class='mergedDescription'>$description$</div>\n")
 
   // So why is this an engine with tests icon? Well it turns out that this is displayed as part of a use case anyway, and the engine with tests followed by a summary of the name of the engine 'looks better' 
-  val useCaseIconTemplate: StringRendererRenderer = ("UseCase", a(engineWithTestsIcon + "$engineSummary$"), "")
+  val useCaseIconTemplate: StringRendererRenderer = ("UseCase", a(engineWithTestsIcon + "$engineSummary$", "$engineName$"), "")
 
   val requirementAndEngineTemplate: StringRendererRenderer =
     ("RequirementAndEngine", "<div class='requirementAndEngine'> $title$ ", "</div><!-- requirementAndEngine -->\n")
@@ -603,7 +619,7 @@ object HtmlRenderer {
       codeRow,
       becauseRow) + "</div><!-- scenario -->\n")
 
-  val scenarioSummaryTemplate: StringRenderer = ("Scenario", a("<img src='" + HtmlForIfThenPrinter.normalScenarioIcon + "' />"))
+  val scenarioSummaryTemplate: StringRenderer = ("Scenario", a("<img src='" + HtmlForIfThenPrinter.normalScenarioIcon + "' $if(title)$title='$title$'$endif$ />"))
 
   def table(clazz: String, rows: String*) = {
     val result = s"<table class='$clazz'>${rows.mkString("")}</table>"

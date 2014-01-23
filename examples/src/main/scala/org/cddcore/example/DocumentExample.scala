@@ -17,12 +17,12 @@ object DocumentExample {
     val rawReport = Report("Tennis Document", engine)
     val strategy = new ByReferenceDocumentPrinterStrategy(None, new SimpleKeyStrategy)
     val documentDetails = strategy.makeReportOfJustDocuments(engine)
-    val report = Report("Some report", None, documentDetails)
+    val report = Report("Some report",  documentDetails)
     val reportableToUrl = new SimpleReportableToUrl
     val urlMap = reportableToUrl.makeUrlMap(rawReport)
     val html = new HtmlRenderer(engine.logger, false).documentsHtml(None).
       render(reportableToUrl, urlMap, report)
-    println(html)
+    println(html) 
   }
 
 }

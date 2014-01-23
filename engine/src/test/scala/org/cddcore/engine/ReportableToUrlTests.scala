@@ -28,6 +28,17 @@ class ReportableToUrlTests extends AbstractTest with ReportableTestFramework {
     assertEquals("Req7", reportableToUrl(rep1b))
   }
 
+  it should "amalgamate all the referenced documents" in {
+    val reportableToUrl = new SimpleReportableToUrl
+    val urlMap = reportableToUrl.makeUrlMap(holderD12)
+    assert(!urlMap.contains(doc0))
+    assert(urlMap.contains(doc1))
+    assert(urlMap.contains(doc2))
+    
+    assertEquals("/Document4.Document.html", urlMap.apply(doc1))
+    assertEquals("/Document5.Document.html", urlMap.apply(doc2))
+  }
+
   it should "combine the path from the human readable names with the apply method" in {
     val reportableToUrl = new SimpleReportableToUrl
     assertEquals("rep2/rep1", reportableToUrl(List(rep1, rep2)))
@@ -69,7 +80,7 @@ class ReportableToUrlTests extends AbstractTest with ReportableTestFramework {
     checkUrl(reportableToUrl, urlMap, s1, uc1, e)
 
   }
-  
+
   it should "make a urlMap from reportables and decision / conclusions " in {
     val e = Engine[Int, String]().
       useCase("").scenario(1).expected("x").

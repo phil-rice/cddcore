@@ -18,6 +18,21 @@ trait ReportableTestFramework {
   val holder12 = Holder("holder12", List(rep1, rep2))
   val holder345 = Holder("holder345", List(rep3, rep4, rep5))
   val holder_12_345 = Holder("holder_12_345", List(holder12, holder345))
+
+  val doc0 = Document(Some("name0"))
+  val doc1 = Document(Some("name1"))
+  val doc2 = Document(Some("name2"))
+
+  val ref0 = Reference("0", None)
+  val ref1 = Reference("1", Some(doc1))
+  val ref2 = Reference("2", Some(doc2))
+
+  val rd0 = Req("rd0", "d1", Set(ref0))
+  val rd1 = Req("rd1", "d1", Set(ref1))
+  val rd2 = Req("rd2", "d2", Set(ref2))
+  val rd12 = Req("rd12", "d12", Set(ref1, ref2))
+  val holderD12 = Holder("holder12", List(rd1, rd2))
+
 }
 
 @RunWith(classOf[JUnitRunner])
@@ -59,12 +74,12 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
 
     assertEquals(List(holder_12_345), map(holder_12_345))
     assertEquals(8, map.size)
-    val order = holder_12_345.foldWithPath( List[Reportable](), (acc: List[Reportable], list) => acc :+ list.head)
+    val order = holder_12_345.foldWithPath(List[Reportable](), (acc: List[Reportable], list) => acc :+ list.head)
     assertEquals(List(holder_12_345, holder12, rep1, rep2, holder345, rep3, rep4, rep5), order)
   }
 
   it should "fold with paths over itself and all it's descendants with reversed children" in {
-    val map = holder_12_345.foldWithPathReversingChildren( Map[Reportable, ReportableList](), (acc: Map[Reportable, ReportableList], list) => acc + (list.head -> list))
+    val map = holder_12_345.foldWithPathReversingChildren(Map[Reportable, ReportableList](), (acc: Map[Reportable, ReportableList], list) => acc + (list.head -> list))
     assertEquals(List(rep1, holder12, holder_12_345), map(rep1))
     assertEquals(List(rep2, holder12, holder_12_345), map(rep2))
     assertEquals(List(holder12, holder_12_345), map(holder12))
@@ -76,7 +91,7 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
 
     assertEquals(List(holder_12_345), map(holder_12_345))
     assertEquals(8, map.size)
-    val order = holder_12_345.foldWithPathReversingChildren( List[Reportable](), (acc: List[Reportable], list) => acc :+ list.head)
+    val order = holder_12_345.foldWithPathReversingChildren(List[Reportable](), (acc: List[Reportable], list) => acc :+ list.head)
     assertEquals(List(holder_12_345, holder345, rep5, rep4, rep3, holder12, rep2, rep1), order)
   }
 

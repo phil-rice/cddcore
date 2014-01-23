@@ -12,6 +12,17 @@ object Reportable {
     case w: ReportableWrapper => w.delegate.getOrElse(r).asInstanceOf[R]
     case _ => r
   }
+
+  def documentsIn(r: Reportable): Set[Document] = {
+    def fromRequirement(r: Requirement) = r.references.map(_.document).collect { case Some(d) => d }
+    def fromHolder(r: ReportableHolder) = r.children.foldLeft[Set[Document]](Set())(_ ++ documentsIn(_))
+    val result = r match {
+      case r: RequirementAndHolder => fromRequirement(r) ++ fromHolder(r)
+      case r: Requirement => fromRequirement(r)
+      case r: ReportableHolder => fromHolder(r)
+    }
+    result.toSet
+  }
   def templateName(a: Any): String = a match {
     case l: List[_] => Reportable.templateName(l.head);
     case r: ReportableWrapper => if (r.delegate.isDefined) templateName(r.delegate.get) else r.getClass().getSimpleName();
@@ -214,12 +225,8 @@ trait Test extends Requirement {
   def optCode: Option[AbstractCodeHolder]
 }
 
-object Report {
-  def apply(reportTitle: String, requirements: Requirement*): Report = Report(reportTitle, None, requirements: _*)
-}
-
 /** A report is what it says: the object representation of a (usually) html report */
-case class Report(reportTitle: String, rootUrl: Option[String], reportables: Reportable*) extends RequirementAndHolder {
+case class Report(reportTitle: String, reportables: Reportable*) extends RequirementAndHolder {
   val title = Some(reportTitle)
   val children = reportables.toList
   val description = None

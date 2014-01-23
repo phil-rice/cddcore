@@ -67,16 +67,8 @@ class ByReferenceDocumentPrinterStrategyTest extends AbstractTest {
     }
     check("1", (eMain, eMain))
     check("1.1", (uc0, eMain))
-    //    check("1.1.1", (scenarios(0), eMain))
-//    check("7.3", (scenarios(1), eMain))
-    //    check("1.1.3", (scenarios(2), eMain))
     check("1.2", (uc1, eMain))
-    //    check("1.2.1", (scenarios(3), eMain))
-    //    check("1.2.2", (scenarios(4), eMain))
     check("1.3", (uc2, eMain))
-    //    check("1.3.1", (scenarios(5), eMain))
-    //    check("1.3.2", (scenarios(6), eMain))
-    //    check("", project)
   }
 
   it should "'merge' the values " in {
@@ -87,34 +79,24 @@ class ByReferenceDocumentPrinterStrategyTest extends AbstractTest {
     }
     check("1", (eMain, eMain))
     check("1.1", (uc0, eMain))
-    //    check("1.1.1", (scenarios(0), eMain))
-    //    check("7.3", (scenarios(1), eMain))
-    //    check("1.1.3", (scenarios(2), eMain))
     check("1.2", (uc1, eMain))
-    //    check("1.2.1", (scenarios(3), eMain))
-    //    check("1.2.2", (scenarios(4), eMain))
     check("1.3", (uc2, eMain))
-    //    check("1.3.1", (scenarios(5), eMain))
-    //    check("1.3.2", (scenarios(6), eMain))
   }
 
   it should "turn the merged reportables into a reportable structure" in {
     assertEquals(SimpleRequirementAndHolder.withJustChildren(
       get("1",
-        get("1.1", get("1.1.1"), get("1.1.3")),
-        get("1.2", get("1.2.1"), get("1.2.2")),
-        get("1.3", get("1.3.1"), get("1.3.2"))),
-      get("7", get("7.3"))), report)
-
+        get("1.1"),
+        get("1.2"),
+        get("1.3"))), report)
   }
 
   it should "turn an engine into a projection indexed by number" in {
     assertEquals(SimpleRequirementAndHolder.withJustChildren(
       get("1",
-        get("1.1", get("1.1.1"), get("1.1.3")),
-        get("1.2", get("1.2.1"), get("1.2.2")),
-        get("1.3", get("1.3.1"), get("1.3.2"))),
-      get("7", get("7.3"))), strategy.makeReportOfJustDocuments(project))
+        get("1.1"),
+        get("1.2"),
+        get("1.3"))), strategy.makeReportOfJustDocuments(project))
   }
 
 }
