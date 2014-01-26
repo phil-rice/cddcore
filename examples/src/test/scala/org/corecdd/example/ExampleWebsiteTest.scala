@@ -1,9 +1,6 @@
-
-
 package org.corecdd.example
 
 import org.cddcore.engine._
-
 import org.cddcore.engine.Test
 import org.cddcore.example.customerCategorisation.CategorisePerson
 import org.cddcore.example.processCheque_DM_Xml.ProcessChequeXml
@@ -28,8 +25,6 @@ class ExampleWebsiteTest extends AbstractWebsiteTest {
     blankEngine,
     TennisScorer.scorer 
     )
-
- 
 
   "The example website" should "display the project page if no page specified" in {
     projectPageAtIndex

@@ -123,6 +123,11 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   class NoBecauseException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
   class ScenarioBecauseException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
 
+  object DuplicateScenarioException {
+    def apply(scenario: Test) = new DuplicateScenarioException(s"Duplicate scenario $scenario", scenario)
+  }
+  class DuplicateScenarioException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
+
   class ScenarioResultException(msg: String, scenario: Test, actual: ROrException[R]) extends ScenarioException(msg, scenario, actual.exception.getOrElse(null))
   class AssertionException(msg: String, scenario: Test) extends ScenarioException(msg, scenario)
 
@@ -278,8 +283,9 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       }
     })
 
-    override def titleString = title.getOrElse(paramString)
+    override def titleString = title.getOrElse(trimmedParamString)
     lazy val paramString = params.map(paramPrinter).mkString(",")
+    lazy val trimmedParamString = if (paramString.size < 30) paramString else "<Unnamed>"
     override def toString =
       s"Scenario(${title.getOrElse("")}, ${paramString}, because=${becauseString}, expected=${logger(expected.getOrElse("<N/A>"))})"
   }
@@ -818,19 +824,21 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         }
     }
 
-    def buildFromScenarios(root: RorN, cs: List[Scenario], seMap: ScenarioExceptionMap): (RorN, ScenarioExceptionMap) = {
-      val sorted = cs.sortBy(-_.priority.getOrElse(0))
+    def buildFromScenarios(root: RorN, ts: List[Scenario], seMap: ScenarioExceptionMap): (RorN, ScenarioExceptionMap) = {
+      val sorted = ts.sortBy(-_.priority.getOrElse(0))
       sorted match {
-        case c :: tail =>
+        case t :: tail =>
           try {
-            validateBecause(c);
-            c.expected match {
-              case Some(ROrException(None, Some(e))) => if (!c.optCode.isDefined) throw ExceptionWithoutCodeException(c)
+            if (scenarios.filter(_ == t).size > 1)
+              throw DuplicateScenarioException(t)
+            validateBecause(t);
+            t.expected match {
+              case Some(ROrException(None, Some(e))) => if (!t.optCode.isDefined) throw ExceptionWithoutCodeException(t)
               case _ => ;
             }
-            val newRoot = withScenario(root, c)
+            val newRoot = withScenario(root, t)
             //            val newRoot = withScenario(List(), root, c, true)
-            validateScenario(newRoot, c);
+            validateScenario(newRoot, t);
             buildFromScenarios(newRoot, tail, seMap)
           } catch {
             case e: ThreadDeath =>
@@ -838,7 +846,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
             case e: Throwable =>
               if (!Engine.testing && Engine.logging)
                 e.printStackTrace()
-              buildFromScenarios(root, tail, seMap + (c -> e))
+              buildFromScenarios(root, tail, seMap + (t -> e))
           }
 
         case _ => (root, seMap);
@@ -853,6 +861,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         else
           throw new NullPointerException("Cannot validate scenario as root doesn't exist")
       for (s <- scenarios) {
+
         s.configure
         val bc = makeClosureForBecause(s.params)
         val fnr = makeClosureForResult(s.params)

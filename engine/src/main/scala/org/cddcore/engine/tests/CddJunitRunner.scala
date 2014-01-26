@@ -97,7 +97,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
   }
 
   def add(path: List[Reportable], parentDescription: Description, biMap: BiMap): BiMap = {
-    def makeAndAddDescription(r: Requirement) = {
+    def makeAndAddDescription(r: Reportable) = {
       val d = descriptionfor(r)
       parentDescription.addChild(d)
       d
@@ -106,9 +106,10 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
       case ((from, to), (r: RequirementAndHolder) :: _) =>
         val d = makeAndAddDescription(r)
         r.children.foldLeft((from + (r -> d), to + (d -> r)))((acc, child) => add(child :: path, d, acc))
-      case ((from, to), (r: Requirement) :: _) if !from.contains(r) =>
+      case ((from, to), (r: Reportable) :: _) if !from.contains(r) =>
         val d = makeAndAddDescription(r)
         (from + (r -> d), to + (d -> r))
+      case (_, x :: _) => biMap //TODO this is awkward We have a duplicate scenario or duplicate 'something'. I need to think about to actually do here. The duplicate scenario exception is currently corrected recorded, so that's something
     }
 
   }
@@ -217,7 +218,6 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
     ReportCreator.fileSystem(logger, project).create
   }
 }
-
 
 class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
   import org.cddcore.engine.Engine._

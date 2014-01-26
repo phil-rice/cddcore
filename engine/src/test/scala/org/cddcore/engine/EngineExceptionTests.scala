@@ -5,6 +5,7 @@ import org.scalatest.junit.JUnitRunner
 import scala.language.implicitConversions
 @RunWith(classOf[JUnitRunner])
 class EngineExceptionTests extends EngineStringStringTests {
+  implicit def eToEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineFromTestsImpl]
 
   "An engine" should "throw a MultipleExceptionIf needed, recording all the exceptions in the scenarioExceptionMap" in {
     val bldr = builderWithUseCase.
@@ -34,7 +35,6 @@ class EngineExceptionTests extends EngineStringStringTests {
 
   }
   "An engine" should "record all the exceptions in the scenarioExceptionMap, if testing" in {
-    implicit def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineFromTestsImpl]
     val engine = org.cddcore.engine.Engine.test {
       builderWithUseCase.
         scenario("one").because((s: String) => false, "always false").
@@ -60,5 +60,13 @@ class EngineExceptionTests extends EngineStringStringTests {
     //    checkBecauseException(eTwo);
 
   }
-
+  it should "Remember DuplicateScenarioException when executing in test mode" in {
+    val b = org.cddcore.engine.Engine[Int, String]().
+      useCase("").scenario(1).expected("x").
+      scenario(1).expected("x")
+    val e = Engine.test { b.build }
+    val sOne = e.tests(0)
+    val eOne = e.scenarioExceptionMap(sOne).asInstanceOf[DuplicateScenarioException]
+    assertEquals(sOne, eOne.scenario)
+  }
 } 

@@ -291,7 +291,7 @@ class EnginePageChecker(val path: ReportableList, val html: String, val reportab
   val engine = path(0).asInstanceOf[Engine]
   val project = path(1).asInstanceOf[Project]
   val report = path(2).asInstanceOf[Report]
-  new TopLineChecker("Engine: " + engine.titleOrDescription(""))
+  new TopLineChecker("Engine: " + engine.titleOrDescription("<Unnamed>"))
 
   val engineDivs = divsWith("engineWithTests", reportDiv.child)
   assertEquals(1, engineDivs.size)
@@ -314,11 +314,11 @@ class UseCasePageChecker(path: ReportableList, val html: String, val reportableT
 class ScenarioPageChecker(path: ReportableList, val html: String, val reportableToUrl: ReportableToUrl) extends WebPageChecker {
   val scenario = path(0).asInstanceOf[Test];
   val useCase = path(1).asInstanceOf[RequirementAndHolder];
-  val engine = path(2).asInstanceOf[Engine]
+  val engine = path(2).asInstanceOf[EngineWithLogger]
   val project = path(3).asInstanceOf[Project]
   val report = path(4).asInstanceOf[Report]
 
-  new TopLineChecker("Scenario:" + scenario.title.collect { case t => " " + t }.getOrElse(""))
+  new TopLineChecker("Scenario: " + scenario.titleString)
   val engineDivs = divsWith("engineWithTests", reportDiv.child)
   assertEquals(1, engineDivs.size)
   val engineSummaryChecker = new EngineSummaryChecker(path.tail, engineDivs.head, true)

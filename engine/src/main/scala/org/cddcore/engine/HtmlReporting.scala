@@ -153,7 +153,7 @@ class ReportCreator[RtoUrl <: ReportableToUrl](loggerDisplayProcessor: LoggerDis
       case u: UseCase => Some(HtmlRenderer(loggerDisplayProcessor, live).usecaseHtml(rootUrl, restrict = path.toSet ++ u.children).render(reportableToUrl, urlMap, Report("Usecase: " + u.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
       case t: Test =>
         val conclusion = PathUtils.findEngineWithTests(path).findConclusionFor(t.params)
-        Some(HtmlRenderer(loggerDisplayProcessor, live).scenarioHtml(rootUrl, conclusion, t, path.toSet).render(reportableToUrl, urlMap, Report("Scenario: " + t.titleOrDescription(ReportCreator.unnamed), findEngine(path))))
+        Some(HtmlRenderer(loggerDisplayProcessor, live).scenarioHtml(rootUrl, conclusion, t, path.toSet).render(reportableToUrl, urlMap, Report("Scenario: " + t.titleString, findEngine(path))))
       case _ => None
     }
     optHtml
@@ -415,6 +415,7 @@ object Renderer {
   protected def testConfig = RenderAttributeConfigurer[Test](Set("Scenario"), (rendererContext) => {
     import rendererContext._
     import r._
+//    stringTemplate.setAttribute("title", ValueForRender(titleString))
     stringTemplate.setAttribute("code", ValueForRender(optCode.collect { case c => c.pretty } getOrElse (null)))
     stringTemplate.setAttribute("expected", ValueForRender(expected.getOrElse("")))
     stringTemplate.setAttribute("paramCount", params.size)

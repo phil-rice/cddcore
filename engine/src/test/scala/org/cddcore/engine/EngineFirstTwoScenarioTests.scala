@@ -23,7 +23,7 @@ class EngineFirstTwoScenarioTests extends EngineStringStringTests {
   it should "still throw an exception if a because clause is given by the first scenario when parameters don't match the because clause" in {
     val e = Engine[Int, String]().scenario(1).expected("x").because((x: Int) => x == 1).build
     assertEquals("x", e(1))
-    evaluating {e(2)} should produce[UndecidedException]
+    evaluating { e(2) } should produce[UndecidedException]
   }
 
   it should " allow the first use not to have a because, and become the default value when we add a second scenario in same used case" in {
@@ -32,6 +32,15 @@ class EngineFirstTwoScenarioTests extends EngineStringStringTests {
       scenario(2).expected("y").because((x: Int) => x == 2).
       build
   }
+
+  it should "throw a DuplicateScenarioException is the same scenario is added" in {
+    val b = org.cddcore.engine.Engine[Int, String]().
+      useCase("").scenario(1).expected("x").
+      scenario(1).expected("x")
+    evaluating { b.build } should produce[DuplicateScenarioException]
+  }
+
+
 
   it should "produce a simple if then with two scenarios" in {
     val b = builderWithDefault.scenario("B").because("B").expected("X");
