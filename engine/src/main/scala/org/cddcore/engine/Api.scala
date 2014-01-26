@@ -542,8 +542,35 @@ trait Conclusion extends ConclusionOrDecision {
 }
 
 /** Documents are external documents such as requirements specifications, emails and so on. The are linked to scenarios, usecases and engines by references */
-case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, url: Option[String] = None) extends Reportable {
+case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, url: Option[String] = None, mergeStrategy: DocumentMergeStrategy = DocumentMergeStrategy.default) extends Reportable {
   def titleString = name.getOrElse(title.getOrElse(url.getOrElse(description.getOrElse(""))))
+}
+
+trait DocumentMergeStrategy {
+  def merge(key: String, list: List[RequirementAndEngine]): Reportable
+}
+
+class DefaultDocumentMergeStrategy extends DocumentMergeStrategy {
+  def merge(key: String, list: List[RequirementAndEngine]) = {
+    list match {
+      case Nil =>
+        new SimpleRequirementAndHolder(None, None, None, None, Set(), List())
+      case list =>
+        makeFrom(key, list, List())
+    }
+  }  
+  def makeFrom(key: String, res: List[RequirementAndEngine], children: List[Reportable]): MergedReportable = {
+    val titles = res.groupBy(_.reportable.title).collect {
+      case (title, list) =>
+        val descriptions = list.groupBy(_.reportable.description).collect { case (description, list) => MergedDescription(description, list) }.toList
+        MergedTitle(title, descriptions)
+    }.toList
+    new MergedReportable(key, titles, children)
+  }
+}
+
+object DocumentMergeStrategy {
+  def default = new DefaultDocumentMergeStrategy
 }
 
 /** A reference is usually a link to a document. The 'ref' is a string of the form a.b.c..., where the fragments are string not containing a dot. The sort order is based on each fragment*/

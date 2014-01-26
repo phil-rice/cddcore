@@ -415,7 +415,7 @@ object Renderer {
   protected def testConfig = RenderAttributeConfigurer[Test](Set("Scenario"), (rendererContext) => {
     import rendererContext._
     import r._
-//    stringTemplate.setAttribute("title", ValueForRender(titleString))
+    //    stringTemplate.setAttribute("title", ValueForRender(titleString))
     stringTemplate.setAttribute("code", ValueForRender(optCode.collect { case c => c.pretty } getOrElse (null)))
     stringTemplate.setAttribute("expected", ValueForRender(expected.getOrElse("")))
     stringTemplate.setAttribute("paramCount", params.size)
@@ -750,16 +750,9 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
   }
 
   def findMergedStructuredMap(from: StructuredMapOfList[RequirementAndEngine]) = {
-    val modifiedMap = from.fold[StructuredMap[Reportable]](StructuredMap())((acc, key, list) => list match {
-      case Nil =>
-        if (debug)
-          println("placeholder: " + key)
-        acc + (key -> new SimpleRequirementAndHolder(None, None, None, None, Set(), List()))
-      case list =>
-        if (debug)
-          println("MergingX: " + key + ": " + list.map(Reportable.templateNameAndTitle(_)))
-        acc + (key -> MergedReportable.makeFrom(key, list, List()))
-    })
+    val strategy = document.collect { case (d) => d.mergeStrategy }.getOrElse(DocumentMergeStrategy.default)
+    val modifiedMap = from.fold[StructuredMap[Reportable]](StructuredMap())((acc, key, list) =>
+      acc + (key -> strategy.merge(key, list)))
     modifiedMap
   }
 
@@ -814,16 +807,6 @@ class DocumentPrinter(report: Report, strategy: DocumentPrinterStrategy = new Si
 
 trait MergedShortDescription {
   def name: String
-}
-object MergedReportable {
-  def makeFrom(key: String, res: List[RequirementAndEngine], children: ReportableList): MergedReportable = {
-    val titles = res.groupBy(_.reportable.title).collect {
-      case (title, list) =>
-        val descriptions = list.groupBy(_.reportable.description).collect { case (description, list) => MergedDescription(description, list) }.toList
-        MergedTitle(title, descriptions)
-    }.toList
-    new MergedReportable(key, titles, children)
-  }
 }
 
 /** A merged requirement is used to handle the fact that many reportables may implement a '2.1' of a document. */

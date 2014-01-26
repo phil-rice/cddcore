@@ -73,7 +73,7 @@ class ByReferenceDocumentPrinterStrategyTest extends AbstractTest {
 
   it should "'merge' the values " in {
     def check(key: String, re: RequirementAndEngine*) {
-      val expected = MergedReportable.makeFrom(key, re.toList, List())
+      val expected = DocumentMergeStrategy.default.makeFrom(key, re.toList, List())
       val actual = mergedMap(key)
       assertEquals(expected, actual)
     }
