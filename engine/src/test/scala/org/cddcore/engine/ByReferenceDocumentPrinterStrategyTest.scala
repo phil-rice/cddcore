@@ -4,9 +4,7 @@ import scala.language.implicitConversions
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class ByReferenceDocumentPrinterStrategyTest extends AbstractTest {
-  import Key._
+trait DocumentPrinterTestFramework {
   implicit def reqToRequirementAndNone(r: RequirementAndHolder) = new RequirementAndEngine(r, None)
   implicit def tupleToRequirementAndSomeEngine(t: (RequirementAndHolder, Engine)) = new RequirementAndEngine(t._1, Some(t._2))
 
@@ -40,7 +38,28 @@ class ByReferenceDocumentPrinterStrategyTest extends AbstractTest {
     case m: MergedReportable => m.copy(children = children.toList)
     case s: SimpleRequirementAndHolder => s.copy(children = children.toList)
   }
-  assertEquals(Some("UC 1"), uc0.title)
+
+}
+
+@RunWith(classOf[JUnitRunner])
+class DefaultMergeStrategyTest extends AbstractTest with DocumentPrinterTestFramework {
+  import Key._
+  
+  "The default merge strategy" should "" in {
+    
+  }
+
+}
+
+@RunWith(classOf[JUnitRunner])
+class ChangedMergeStrategyTest extends AbstractTest with DocumentPrinterTestFramework {
+	import Key._
+	
+}
+
+@RunWith(classOf[JUnitRunner])
+class ByReferenceDocumentPrinterStrategyTest extends AbstractTest with DocumentPrinterTestFramework {
+  import Key._
 
   "A ByReferenceDocumentPrinterStrategy" should "provide a nice number for each reportable" in {
     val reportableToPath = strategy.findReportableToPathFor(project)

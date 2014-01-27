@@ -686,6 +686,7 @@ case class RequirementAndEngine(reportable: RequirementAndHolder, engine: Option
 class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy: KeyStrategy, debug: Boolean = false) extends DocumentPrinterStrategy {
   type ReportableToPath = Map[Reportable, List[Reportable]]
   type ReportableToKey = Map[Reportable, String]
+  val documentMergeStrategy = document.collect { case (d) => d.mergeStrategy }.getOrElse(DocumentMergeStrategy.default)
   def findReportableToPathFor(r: ReportableHolder) = r.foldWithPath[ReportableToPath](Map(), (acc, path) => acc + (path.head -> path))
 
   def findReferenceFor(document: Option[Document], r: Reportable) = r match {
@@ -732,27 +733,27 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
   def findStructuredMap(report: ReportableHolder) = {
     val reportableToPath = findReportableToPathFor(report)
     val reportableToRef = findReportableToRef(report, reportableToPath)
-    val structuredMap = report.foldLeft(StructuredMapOfList[RequirementAndEngine]())((acc, r) => r match {
-      case t: Test => acc
-      case r: RequirementAndHolder =>
-        {
-          reportableToRef.get(r) match {
-            case Some(key) => {
-              val path = reportableToPath(r)
-              val engine = PathUtils.findEnginePathIfExists(path)
-              acc + (key -> RequirementAndEngine(r, engine))
+    val structuredMap =
+      report.foldLeft(StructuredMapOfList[RequirementAndEngine]())((acc, r) => {
+        val path = reportableToPath(r)
+        val ref = reportableToRef.get(r)
+        val engine = PathUtils.findEnginePathIfExists(path)
+        ref match {
+          case Some(key) =>
+            documentMergeStrategy.toRequirementAndEngine(key, r, engine) match {
+              case Some(re) => acc + (key -> re)
+              case _ => acc
             }
-            case _ => acc
-          }
+          case _ => acc
         }
-    })
+      })
     structuredMap
   }
 
   def findMergedStructuredMap(from: StructuredMapOfList[RequirementAndEngine]) = {
-    val strategy = document.collect { case (d) => d.mergeStrategy }.getOrElse(DocumentMergeStrategy.default)
+
     val modifiedMap = from.fold[StructuredMap[Reportable]](StructuredMap())((acc, key, list) =>
-      acc + (key -> strategy.merge(key, list)))
+      acc + (key -> documentMergeStrategy.merge(key, list)))
     modifiedMap
   }
 

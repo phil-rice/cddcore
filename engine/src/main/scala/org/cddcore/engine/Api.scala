@@ -547,10 +547,18 @@ case class Document(name: Option[String] = None, title: Option[String] = None, d
 }
 
 trait DocumentMergeStrategy {
+
+  def toRequirementAndEngine(key : String, r: Reportable, e: Option[Engine]): Option[RequirementAndEngine]
   def merge(key: String, list: List[RequirementAndEngine]): Reportable
 }
 
 class DefaultDocumentMergeStrategy extends DocumentMergeStrategy {
+  def toRequirementAndEngine(key: String, r: Reportable, e: Option[Engine]): Option[RequirementAndEngine] =
+    r match {
+      case t: Test => None
+      case r: RequirementAndHolder => Some(RequirementAndEngine(r, e))
+      case _ => None
+    }
   def merge(key: String, list: List[RequirementAndEngine]) = {
     list match {
       case Nil =>
@@ -558,7 +566,7 @@ class DefaultDocumentMergeStrategy extends DocumentMergeStrategy {
       case list =>
         makeFrom(key, list, List())
     }
-  }  
+  }
   def makeFrom(key: String, res: List[RequirementAndEngine], children: List[Reportable]): MergedReportable = {
     val titles = res.groupBy(_.reportable.title).collect {
       case (title, list) =>
