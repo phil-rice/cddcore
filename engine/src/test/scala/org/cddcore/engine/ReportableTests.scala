@@ -6,9 +6,9 @@ import scala.language.implicitConversions
 
 trait ReportableTestFramework {
   implicit def stringToOption(s: String) = Some(s)
-  case class Holder(val name: String, val children: List[Reportable]) extends ReportableHolder  {
+  case class Holder(val name: String, val children: List[Reportable]) extends ReportableHolder {
   }
-  case class ReqAndHolder(val name: String, val children: List[Reportable]) extends RequirementAndHolder  {
+  case class ReqAndHolder(val name: String, val children: List[Reportable]) extends RequirementAndHolder {
     def title: Option[String] = Some(name)
     def description: Option[String] = Some("desc_" + name)
     def priority: Option[Int] = None
@@ -166,6 +166,32 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
     assertEquals((List(c2, e), "child"), called(2))
     assertEquals((List(e), "end"), called(3))
     assertEquals(4, called.size)
+  }
+
+  "A DocumentAndEngineWalker when passed a project" should "call project_start, project_end then visit the documents / engines as child functions" in {
+    val d1 = Document(name = Some("aa"))
+    val d2 = Document(name = Some("zz"))
+    val e1 = Engine[Int, String]().title("e1").useCase("uc0").scenario(0).expected("x").reference("", d2).build
+    val e2 = Engine[Int, String]().title("e2").useCase("uc1").scenario(1).expected("y").reference("", d1).build
+    val p = Project("SomeProject", e1, e2)
+    type Acc = List[(ReportableList, String)]
+    val called = ReportWalker.documentThenEngineWalker.foldWithPath(List(p), List[(ReportableList, String)](),
+      (acc: Acc, list) => acc :+ (list, "start"),
+      (acc: Acc, list) => acc :+ (list, "child"),
+      (acc: Acc, list) => acc :+ (list, "end"))
+    val docHolder = DocumentHolder(List(d1, d2))
+    val eHolder = EngineHolder(List(e1,e2))
+    assertEquals((List(p), "start"), called(0))
+    assertEquals((List(docHolder, p), "start"), called(1))
+    assertEquals((List(d1, docHolder, p), "child"), called(2))
+    assertEquals((List(d2, docHolder, p), "child"), called(3))
+    assertEquals((List(docHolder, p), "end"), called(4))
+    assertEquals((List(eHolder, p), "start"), called(5))
+    assertEquals((List(e1, eHolder, p), "child"), called(6))
+    assertEquals((List(e2, eHolder, p), "child"), called(7))
+    assertEquals((List(eHolder, p), "end"), called(8))
+    assertEquals((List(p), "end"), called(9))
+    assertEquals(10, called.size)
 
   }
 

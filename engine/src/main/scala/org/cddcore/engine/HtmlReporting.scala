@@ -34,6 +34,7 @@ case class UrlMap(val toUrl: Map[Reportable, String], val fromUrl: Map[String, L
 object ReportWalker {
   def childWalker = new ChildReportWalker
   def engineConclusionWalker = new EngineConclusionWalker
+  def documentThenEngineWalker = new DocumentThenEngineWalker
 }
 trait ReportWalker {
   import Reportable._
@@ -47,11 +48,13 @@ trait ReportWalker {
     endFn: (Acc, ReportableList) => Acc): Acc
 
   protected def walkChildren[Acc](holder: ReportableHolder, path: ReportableList, initial: Acc,
-    startFn: (Acc, ReportableList) => Acc,
-    childFn: (Acc, ReportableList) => Acc,
-    endFn: (Acc, ReportableList) => Acc) = {
+    startFn: (Acc, ReportableList) => Acc, childFn: (Acc, ReportableList) => Acc, endFn: (Acc, ReportableList) => Acc) =
+    walkInList(holder, path, holder.children, initial, startFn, childFn, endFn)
+
+  protected def walkInList[Acc](holder: ReportableHolder, path: ReportableList, list: ReportableList, initial: Acc,
+    startFn: (Acc, ReportableList) => Acc, childFn: (Acc, ReportableList) => Acc, endFn: (Acc, ReportableList) => Acc) = {
     var acc = startFn(initial, path)
-    for (c <- holder.children)
+    for (c <- list)
       acc = foldWithPath(c :: path, acc, startFn, childFn, endFn)
     acc = endFn(acc, path)
     acc
@@ -72,6 +75,33 @@ class ChildReportWalker extends ReportWalker {
   }
 }
 
+case class DocumentHolder(val children: List[Document]) extends ReportableHolder
+case class EngineHolder(val children: List[Engine]) extends ReportableHolder
+
+class DocumentThenEngineWalker extends ReportWalker {
+
+  import Reportable._
+  def foldWithPath[Acc](path: ReportableList, initial: Acc,
+    startFn: (Acc, ReportableList) => Acc, childFn: (Acc, ReportableList) => Acc, endFn: (Acc, ReportableList) => Acc): Acc = {
+    val head = path.head
+    head match {
+      case holder: Project => {
+        val documents = DocumentHolder(documentsIn(holder).toList.sortBy((x)=>x.titleString))
+        val engines = EngineHolder(holder.all(classOf[Engine]).sortBy((x)=>x.titleString))
+
+        val afterStart = startFn(initial, path)
+        val afterDocuments = foldWithPath(documents :: path, afterStart, startFn, childFn, endFn)
+        val afterEngines = foldWithPath(engines :: path, afterDocuments, startFn, childFn, endFn)
+        endFn(afterEngines, path)
+      }
+      case document: Document => childFn(initial, path)
+      case engine: Engine => childFn(initial, path)
+      case holder: ReportableHolder => walkChildren(holder, path, initial, startFn, childFn, endFn)
+      case _ => initial
+    }
+  }
+
+}
 class EngineConclusionWalker extends ReportWalker {
   import Reportable._
   def foldWithPath[Acc](path: ReportableList, initial: Acc,
@@ -633,8 +663,8 @@ class HtmlRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, live: Boolean
   import HtmlRenderer._
   def projectHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) =
     Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
-      configureAttribute(Renderer.decisionTreeConfig(None, None, None)).
-      configureReportableHolder(reportTemplate, engineWithTestsTemplate, engineWithChildEngineTemplate, childEngineTemplate, useCaseWithScenariosSummarisedTemplate).
+      configureAttribute(Renderer.setMergedReportable).
+      configureReportableHolder(reportTemplate).
       configureReportable(scenarioSummaryTemplate)
 
   def engineHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) = Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
