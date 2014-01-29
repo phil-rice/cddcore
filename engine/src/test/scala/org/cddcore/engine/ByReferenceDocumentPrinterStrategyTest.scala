@@ -22,6 +22,19 @@ trait DocumentPrinterTestFramework {
     scenario(31).expected("three-one").because((x: Int) => x == 31).
     scenario(32).expected("three-two").because((x: Int) => x == 32).
     build
+  val eSecond = Engine[Int, String]().title("Main Engine").
+    scenario(11).expected("one-one").because((x: Int) => x == 11).
+    scenario(12).expected("one-two").because((x: Int) => x == 12).reference("7.3", None).
+    scenario(13).expected("one-three").because((x: Int) => x == 13).
+
+    useCase("UC 2", "The body of the second use case").
+    scenario(21).expected("two-one").because((x: Int) => x == 21).
+    scenario(22).expected("two-two").because((x: Int) => x == 22).
+
+    useCase("UC 3", "The body of the third use case").
+    scenario(31).expected("three-one").because((x: Int) => x == 31).
+    scenario(32).expected("three-two").because((x: Int) => x == 32).
+    build
 
   val useCases = eMain.all(classOf[UseCase])
   val scenarios = eMain.all(classOf[Test])
@@ -42,19 +55,50 @@ trait DocumentPrinterTestFramework {
 }
 
 @RunWith(classOf[JUnitRunner])
-class DefaultMergeStrategyTest extends AbstractTest with DocumentPrinterTestFramework {
+class DefaultMergeStrategyTest extends AbstractTest with DocumentPrinterTestFramework with ReportableTestFramework {
   import Key._
-  
-  "The default merge strategy" should "" in {
-    
+  val documentMergeStrategy = DocumentMergeStrategy.default
+
+  "The default merge strategy toRequirementAndEngineMethod" should "turn only requirement and holders to RequirementAndEngines as we don't want to see the scenarios as their own title" in {
+    assertEquals(Some((eMain, eMain): RequirementAndEngine), documentMergeStrategy.toRequirementAndEngine(eMain, Some(eMain)))
+    assertEquals(Some((uc0, eMain): RequirementAndEngine), documentMergeStrategy.toRequirementAndEngine(uc0, Some(eMain)))
+    assertEquals(None, documentMergeStrategy.toRequirementAndEngine(scenarios(0), Some(eMain)))
+  }
+
+  "The default merge strategy merge method" should "turn the empty list into a placeholder" in {
+    assertEquals(SimpleRequirementAndHolder(), documentMergeStrategy.merge("any", List()))
+  }
+
+  it should "turn a single use case into a reportable / title / description / wrapper, leaving the scenarios under the wrapper" in {
+    val uc0list = List(uc0: RequirementAndEngine)
+    val expected = MergedReportable("some key",
+      List(MergedTitle(uc0.title,
+        List(MergedDescription(uc0.description,
+          List(SimpleRequirementAndHolder(uc0: RequirementAndEngine, uc0.children): RequirementAndEngine))))),
+      List())
+    val actual = documentMergeStrategy.merge("some key", uc0list)
+    assertEquals(expected, actual)
+  }
+
+  it should "turn an engine into a reportable / title / description / wrapper, leaving only  scenarios under the wrapper (loosing the use cases)" in {
+    val engineList = List(eSecond: RequirementAndEngine)
+    val scenarios = eSecond.asInstanceOf[EngineBuiltFromTests[_]].tests
+    val expected = MergedReportable("some key",
+      List(MergedTitle(eSecond.title,
+        List(MergedDescription(eSecond.description,
+          List(SimpleRequirementAndHolder(eSecond: RequirementAndEngine, List(scenarios(2), scenarios(1), scenarios(0))): RequirementAndEngine))))),
+      List())
+    val actual = documentMergeStrategy.merge("some key", engineList)
+    assertEquals(expected, actual)
+
   }
 
 }
 
 @RunWith(classOf[JUnitRunner])
 class ChangedMergeStrategyTest extends AbstractTest with DocumentPrinterTestFramework {
-	import Key._
-	
+  import Key._
+
 }
 
 @RunWith(classOf[JUnitRunner])

@@ -9,7 +9,7 @@ object Reportable {
   def allTests(list: List[Reportable]): List[Test] = list.flatMap(_ match { case t: Test => List(t); case rh: ReportableHolder => allTests(rh.children) })
 
   def unwrap[R <: Reportable](r: R): R = r match {
-    case w: ReportableWrapper => w.delegate.getOrElse(r).asInstanceOf[R]
+    case w: ReportableWrapper => w.delegate.collect{case r => unwrap(r)}.getOrElse(r).asInstanceOf[R]
     case _ => r
   }
 
@@ -548,12 +548,12 @@ case class Document(name: Option[String] = None, title: Option[String] = None, d
 
 trait DocumentMergeStrategy {
 
-  def toRequirementAndEngine(key : String, r: Reportable, e: Option[Engine]): Option[RequirementAndEngine]
+  def toRequirementAndEngine(r: Reportable, e: Option[Engine]): Option[RequirementAndEngine]
   def merge(key: String, list: List[RequirementAndEngine]): Reportable
 }
 
 class DefaultDocumentMergeStrategy extends DocumentMergeStrategy {
-  def toRequirementAndEngine(key: String, r: Reportable, e: Option[Engine]): Option[RequirementAndEngine] =
+  def toRequirementAndEngine(r: Reportable, e: Option[Engine]): Option[RequirementAndEngine] =
     r match {
       case t: Test => None
       case r: RequirementAndHolder => Some(RequirementAndEngine(r, e))
@@ -570,7 +570,14 @@ class DefaultDocumentMergeStrategy extends DocumentMergeStrategy {
   def makeFrom(key: String, res: List[RequirementAndEngine], children: List[Reportable]): MergedReportable = {
     val titles = res.groupBy(_.reportable.title).collect {
       case (title, list) =>
-        val descriptions = list.groupBy(_.reportable.description).collect { case (description, list) => MergedDescription(description, list) }.toList
+        val descriptions = list.groupBy(_.reportable.description).collect {
+          case (description, list) =>
+            val newChildren = list.map((re) => re match {
+              case (rh: RequirementAndHolder) =>
+                RequirementAndEngine(SimpleRequirementAndHolder(rh, rh.children.filter(_.isInstanceOf[Test])), re.engine)
+            })
+            MergedDescription(description, newChildren)
+        }.toList
         MergedTitle(title, descriptions)
     }.toList
     new MergedReportable(key, titles, children)

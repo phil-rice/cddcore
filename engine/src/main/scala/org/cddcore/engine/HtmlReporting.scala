@@ -333,7 +333,8 @@ object Renderer {
     stringTemplate.setAttribute("indent", Integer.toString(path.size))
     if (live)
       stringTemplate.setAttribute("live", Integer.toString(path.size))
-    def addFromRequirement(r: Requirement) {
+    def addFromRequirement(req: Requirement) {
+      val r = Reportable.unwrap(req)
       stringTemplate.setAttribute("description", r.description.collect { case d => ValueForRender(d) }.getOrElse(null))
       stringTemplate.setAttribute("title", ValueForRender(r.titleString))
       for (ref <- r.references)
@@ -678,9 +679,14 @@ class SimpleDocumentPrinterStrategy extends DocumentPrinterStrategy {
   def makeReportOfJustDocuments(report: ReportableHolder) = SimpleRequirementAndHolder(report)
 }
 
-case class RequirementAndEngine(reportable: RequirementAndHolder, engine: Option[Engine]) extends ReportableHolder with ReportableWrapper {
-  def delegate = Some(reportable)
+case class RequirementAndEngine(reportable: RequirementAndHolder, engine: Option[Engine]) extends RequirementAndHolder with ReportableWrapper {
+  def title = reportable.title
+  def description = reportable.description
+  def priority = reportable.priority
   def children = reportable.children
+  def references = reportable.references
+  def delegate = Some(reportable)
+  override def toString() = s"RequirementAndEngine(reportable=$reportable, engine=$engine)"
 }
 
 class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy: KeyStrategy, debug: Boolean = false) extends DocumentPrinterStrategy {
@@ -740,7 +746,7 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
         val engine = PathUtils.findEnginePathIfExists(path)
         ref match {
           case Some(key) =>
-            documentMergeStrategy.toRequirementAndEngine(key, r, engine) match {
+            documentMergeStrategy.toRequirementAndEngine(r, engine) match {
               case Some(re) => acc + (key -> re)
               case _ => acc
             }
@@ -782,12 +788,13 @@ object SimpleRequirementAndHolder {
     case _ => throw new IllegalStateException(r.getClass + "\n" + r);
   }
 
-  def apply(r: Requirement, replacementChildren: ReportableList): Requirement =
+  def apply(r: RequirementAndHolder, replacementChildren: ReportableList): RequirementAndHolder =
     (r, replacementChildren) match {
       case (s: Test, List()) => s
       case _ => new SimpleRequirementAndHolder(Some(r), r.title, r.description, r.priority, r.references, replacementChildren)
     }
 
+  def apply() = new SimpleRequirementAndHolder(None, None, None, None, Set(), List())
 }
 
 case class SimpleRequirementAndHolder(delegate: Option[Reportable], title: Option[String], description: Option[String], priority: Option[Int], references: Set[Reference], children: ReportableList) extends RequirementAndHolder with ReportableWrapper {
@@ -821,4 +828,6 @@ case class MergedTitle(title: Option[String], children: List[MergedDescription])
 }
 case class MergedDescription(description: Option[String], children: ReportableList) extends ReportableHolder with MergedShortDescription {
   def name = description.getOrElse("None")
+  override def toString = s"MergedDescription($name, children=$children)"
 }
+

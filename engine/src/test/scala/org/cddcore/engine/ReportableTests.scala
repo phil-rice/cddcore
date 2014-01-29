@@ -6,7 +6,14 @@ import scala.language.implicitConversions
 
 trait ReportableTestFramework {
   implicit def stringToOption(s: String) = Some(s)
-  case class Holder(val name: String, val children: List[Reportable]) extends ReportableHolder
+  case class Holder(val name: String, val children: List[Reportable]) extends ReportableHolder  {
+  }
+  case class ReqAndHolder(val name: String, val children: List[Reportable]) extends RequirementAndHolder  {
+    def title: Option[String] = Some(name)
+    def description: Option[String] = Some("desc_" + name)
+    def priority: Option[Int] = None
+    def references: Set[org.cddcore.engine.Reference] = Set()
+  }
   case class Req(val title: Option[String], description: Option[String], references: Set[Reference] = Set(), priority: Option[Int] = None) extends Requirement
 
   val rep1 = Req("rep1", "d1")
@@ -32,6 +39,10 @@ trait ReportableTestFramework {
   val rd2 = Req("rd2", "d2", Set(ref2))
   val rd12 = Req("rd12", "d12", Set(ref1, ref2))
   val holderD12 = Holder("holder12", List(rd1, rd2))
+
+  val reqHolder12 = ReqAndHolder("reqHolder12", List(rep1, rep2))
+  val reqHolder345 = ReqAndHolder("reqHolder345", List(rep3, rep4, rep5))
+  val reqHolder_12_345 = ReqAndHolder("reqHolder_12_345", List(reqHolder12, reqHolder345))
 
 }
 
