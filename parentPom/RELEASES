@@ -18,3 +18,4 @@
 1.8.1 Stabilisation: JUnit works better with child engines
 1.8.2 Stabilisation: Legacy works better
 1.8.3 Continuous Integration, first examples now work
+1.8.5 The documentation view and project index page now added to a JUnit run

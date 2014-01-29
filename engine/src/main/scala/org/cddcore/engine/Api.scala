@@ -9,7 +9,7 @@ object Reportable {
   def allTests(list: List[Reportable]): List[Test] = list.flatMap(_ match { case t: Test => List(t); case rh: ReportableHolder => allTests(rh.children) })
 
   def unwrap[R <: Reportable](r: R): R = r match {
-    case w: ReportableWrapper => w.delegate.collect{case r => unwrap(r)}.getOrElse(r).asInstanceOf[R]
+    case w: ReportableWrapper => w.delegate.collect { case r => unwrap(r) }.getOrElse(r).asInstanceOf[R]
     case _ => r
   }
 
@@ -542,8 +542,9 @@ trait Conclusion extends ConclusionOrDecision {
 }
 
 /** Documents are external documents such as requirements specifications, emails and so on. The are linked to scenarios, usecases and engines by references */
-case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, url: Option[String] = None, mergeStrategy: DocumentMergeStrategy = DocumentMergeStrategy.default) extends Reportable {
-  def titleString = name.getOrElse(title.getOrElse(url.getOrElse(description.getOrElse(""))))
+case class Document(name: Option[String] = None, title: Option[String] = None, description: Option[String] = None, priority: Option[Int] = None, url: Option[String] = None, mergeStrategy: DocumentMergeStrategy = DocumentMergeStrategy.default) extends Requirement {
+  def references = Set()
+  override def titleString = name.getOrElse(titleOrDescription("<Unnamed>"))
 }
 
 trait DocumentMergeStrategy {

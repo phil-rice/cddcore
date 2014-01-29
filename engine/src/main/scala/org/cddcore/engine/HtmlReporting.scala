@@ -86,8 +86,8 @@ class DocumentThenEngineWalker extends ReportWalker {
     val head = path.head
     head match {
       case holder: Project => {
-        val documents = DocumentHolder(documentsIn(holder).toList.sortBy((x)=>x.titleString))
-        val engines = EngineHolder(holder.all(classOf[Engine]).sortBy((x)=>x.titleString))
+        val documents = DocumentHolder(documentsIn(holder).toList.sortBy((x) => x.titleString))
+        val engines = EngineHolder(holder.all(classOf[Engine]).sortBy((x) => x.titleString))
 
         val afterStart = startFn(initial, path)
         val afterDocuments = foldWithPath(documents :: path, afterStart, startFn, childFn, endFn)
@@ -413,6 +413,12 @@ object Renderer {
       }
       RenderAttributeConfigurer[EngineBuiltFromTests[_]](Set(engineChildKey, engineFromTestsKey), fn)
     }
+  def documentConfig =
+    RenderAttributeConfigurer[Document](Set("Document"), (rc: RendererContext[Document]) => {
+      import rc._
+      if (r.url.isDefined)
+        stringTemplate.setAttribute("documentUrl", r.url.get)
+    })
 
   def setMergedReportable: RenderAttributeConfigurer = RenderAttributeConfigurer[MergedReportable](Set(mergedReportableKey), (rc) => {
     import rc._
@@ -527,10 +533,15 @@ class ReferenceRenderer extends AttributeRenderer {
   def toString(o: Object): String = toString(o, "")
   def toString(o: Object, format: String): String = {
     val ref = o.asInstanceOf[Reference]
-    ref.document match {
-      case Some(d) => d.url match {
-        case Some(url) => s"<a href='$url'>${Strings.htmlEscape(d.titleString)}</a>"
-        case _ => Strings.htmlEscape(d.titleString)
+    val document = ref.document
+    document match {
+      case Some(d) => {
+        val nameAndLink = Strings.htmlEscape(d.titleString)
+        val link = d.url match {
+          case Some(url) => s"<a href='$url'><img src='${HtmlRenderer.referenceIconUrl}' /></a>"
+          case _ => ""
+        }
+        nameAndLink + link
       }
       case None => ref.ref
     }
@@ -553,6 +564,7 @@ object HtmlRenderer {
   def aForLive = "$if(url)$<a id='$url$/live' href='$url$/live'>$endif$Live$if(url)$</a>$endif$"
 
   protected def cddLogo = "<img src='http://img32.imageshack.us/img32/8151/xy9u.png'  alt='Report Home Page'/>"
+  def referenceIconUrl = "http://imageshack.com/a/img850/2134/u5hr.png"
   protected def engineWithChildrenIcon = "<img src='http://i782.photobucket.com/albums/yy108/phil-rice/engineFold2_zpsb62930b9.png'  alt='engine with children icon'/>"
   protected def childEngineIcon = "<img src='http://i782.photobucket.com/albums/yy108/phil-rice/engineChild_zps3d29a414.png'  alt='child engine icon'/>"
   protected def engineWithTestsIcon = "<img src='http://i782.photobucket.com/albums/yy108/phil-rice/engine_zps9a86cef4.png'  alt='engine with tests icon'/>"
@@ -586,6 +598,17 @@ object HtmlRenderer {
 
   val projectTemplate: StringRendererRenderer =
     ("Project", "<div class='project'><div class='projectText'><b>Project: $title$</b> " + description + "</div>\n", "</div> <!-- Project -->\n")
+  val documentHolderTemplate: StringRendererRenderer =
+    ("DocumentHolder", "<div class='documentHolder'><h3>Documents</h3><ul>", "</ul></div><!-- documentHolder -->\n");
+  val engineHolderTemplate: StringRendererRenderer =
+    ("EngineHolder", "<div class='engineHolder'><h3>Engines</h3><ul>", "</ul></div><!-- engineHolder -->\n");
+  def listItemTitle(postFix: String = "") = "<li>" + a("$title$", "$description$") + postFix + "</li>"
+  val documentSummaryTemplate: StringRenderer =
+    ("Document", listItemTitle("$if(documentUrl)$<a href='$documentUrl$'><img src='" + referenceIconUrl + "' /></a>$endif$"));
+  val engineWithTestsSummaryTemplate: StringRenderer =
+    (engineFromTestsKey, listItemTitle());
+  val childEngineSummaryTemplate: StringRenderer =
+    (engineChildKey, listItemTitle());
 
   val mergedTemplate: StringRendererRenderer =
     ("Merged", "<div class='merged'><b>$key$</b> $if(multipleMergedValuesFlag)$<div class='multipleTitles'>$endif$$mergedReportable$", "$if(multipleMergedValuesFlag)$</div>$endif$</div><!-- merged -->\n")
@@ -662,10 +685,10 @@ object HtmlRenderer {
 class HtmlRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, live: Boolean) {
   import HtmlRenderer._
   def projectHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) =
-    Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
-      configureAttribute(Renderer.setMergedReportable).
-      configureReportableHolder(reportTemplate).
-      configureReportable(scenarioSummaryTemplate)
+    Renderer(loggerDisplayProcessor, rootUrl, restrict, live, walker = ReportWalker.documentThenEngineWalker).
+      configureAttribute(Renderer.documentConfig).
+      configureReportableHolder(reportTemplate, documentHolderTemplate, engineHolderTemplate).
+      configureReportable(documentSummaryTemplate, engineWithTestsSummaryTemplate, childEngineSummaryTemplate)
 
   def engineHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) = Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
     configureAttribute(Renderer.decisionTreeConfig(None, None, None)).
