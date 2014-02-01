@@ -212,11 +212,12 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
         throw new RuntimeException(s"Class: $clazz Field: $moduleField", e);
     }
   }
-  def recordEngine(clazz: Class[Any], logger: TddLogger) {
-    import EngineWithLogger._
-    val project = Project("Junit" + clazz.getPackage().getName() + "/" + clazz.getSimpleName(), allEngines: _*)
-    ReportCreator.fileSystem(logger, project).create
-  }
+  //  def recordEngine(clazz: Class[Any], logger: TddLogger) {
+  //    import EngineWithLogger._
+  //    val project = Project(clazz.getPackage().getName() + "/" + clazz.getSimpleName(), allEngines: _*)
+  //    val report = Report("JUnit", project)
+  //    ReportCreator.fileSystem(logger, report).create
+  //  }
 }
 
 class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
@@ -242,9 +243,10 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
   rootEngines.headOption match {
     case Some(engine) =>
       val packageObject = clazz.getPackage()
-      val packageName = if (packageObject == null) "default package" else packageObject.getName() 
-      val project = Project("Junit test run for " + packageName + "/" + clazz.getSimpleName, rootEngines: _*)
-      ReportCreator.fileSystem(engine.logger, project).create
+      val packageName = if (packageObject == null) "default package" else packageObject.getName()
+      val project = Project(packageName + "." + clazz.getSimpleName, rootEngines: _*)
+      val report = Report("Junit", project)
+      ReportCreator.fileSystem(engine.logger, report).create
     case _ =>
   }
 

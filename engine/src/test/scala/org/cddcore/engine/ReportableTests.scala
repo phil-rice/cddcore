@@ -169,8 +169,8 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
   }
 
   "A DocumentAndEngineWalker when passed a project" should "call project_start, project_end then visit the documents / engines as child functions" in {
-    val d1 = Document(name = Some("aa"))
-    val d2 = Document(name = Some("zz"))
+    val d1 = Document(title = Some("aa"))
+    val d2 = Document(title = Some("zz"))
     val e1 = Engine[Int, String]().title("e1").useCase("uc0").scenario(0).expected("x").reference("", d2).build
     val e2 = Engine[Int, String]().title("e2").useCase("uc1").scenario(1).expected("y").reference("", d1).build
     val p = Project("SomeProject", e1, e2)

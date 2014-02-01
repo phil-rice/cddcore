@@ -14,7 +14,7 @@ class ExceptionMessageTests extends EngineStringStringTests {
     assertEquals(b.buildTarget, e.scenario)
     assertEquals("\nActual Result: Z\n" +
       "Expected X\n" +
-      " Scenario Scenario(, A, because=, expected=X)\n" +
+      " Scenario(, A, because=, expected=X)\n" +
       "Detailed:\n" +
       "  List(A)", e.getMessage())
   }
@@ -60,7 +60,7 @@ class ExceptionMessageTests extends EngineStringStringTests {
     assertEquals(bldr.buildTarget, e.scenario)
     assertEquals("\nActual Result: Z\n" +
       "Expected X\n" +
-      " Scenario Scenario(, AB, because=, expected=X)\n" +
+      " Scenario(, AB, because=, expected=X)\n" +
       "Detailed:\n" +
       "  List(AB)", e.getMessage())
   }

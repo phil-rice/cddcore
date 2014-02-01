@@ -128,7 +128,8 @@ class EngineConclusionWalker extends ReportWalker {
 object ReportCreator {
   def unnamed = "<Unnamed>"
 
-  def fileSystem(loggerDisplayProcessor: LoggerDisplayProcessor, r: ReportableHolder, title: String = null, live: Boolean = false, reportableToUrl: FileSystemReportableToUrl = new FileSystemReportableToUrl, optUrlMap: Option[UrlMap] = None) = new FileReportCreator(loggerDisplayProcessor, r, title, live, reportableToUrl, optUrlMap)
+  def fileSystem(loggerDisplayProcessor: LoggerDisplayProcessor, r: ReportableHolder, title: String = null, live: Boolean = false, reportableToUrl: FileSystemReportableToUrl = new FileSystemReportableToUrl, optUrlMap: Option[UrlMap] = None) =
+    new FileReportCreator(loggerDisplayProcessor, r, title, live, reportableToUrl, optUrlMap)
 
 }
 
@@ -144,6 +145,9 @@ class FileReportCreator(loggerDisplayProcessor: LoggerDisplayProcessor, r: Repor
       case _ => ;
     }
   def create = {
+    val directory = reportableToUrl.directory(List(r))
+
+    Files.delete(directory)
     report.walkWithPath(makeReport)
     val documents = Reportable.documentsIn(report)
     documents.map(List(_, report)).foreach(makeReport)
@@ -162,7 +166,15 @@ class ReportCreator[RtoUrl <: ReportableToUrl](loggerDisplayProcessor: LoggerDis
     case _ => throw new IllegalArgumentException(r.toString)
   }
   val urlMap = optUrlMap.getOrElse(reportableToUrl.makeUrlMap(report))
-  val rootUrl = reportableToUrl.url(List(r, report).distinct)
+  val rootUrlObject = r match {
+    case r: Report => r.children match {
+      case h :: Nil => h;
+      case _ => throw new IllegalArgumentException("Currently can only make a report for one thing")
+    }
+    case _ => r
+  }
+  val rootUrl = reportableToUrl.url(List(rootUrlObject, report))
+  println("RootUrl = " + rootUrl)
   def htmlFor(path: ReportableList) = {
     val pathHead = path.head
     if (!urlMap.contains(pathHead))
@@ -204,8 +216,9 @@ trait ReportableToUrl {
         def makeNewName: String = {
           reqId += 1; val default = templateName(r) + reqId;
           val result = Strings.urlClean(r match {
-            case report: Report => { val result = report.title.getOrElse(default); if (result.length > 20) default else result }
-            case req: Requirement => { val result = req.titleOrDescription(default); if (result.length > 20) default else result }
+            //            case report: Report => { val result = report.title.getOrElse(default); if (result.length > 120) default else result }
+            case project: Project => { val result = project.title.getOrElse(default); if (result.length > 120) default else result }
+            case req: Requirement => { val result = req.titleOrDescription(default); if (result.length > 40) default else result }
             case _ => default;
           }).replace(" ", "_")
           if (seen.contains(result)) default else result
@@ -267,6 +280,7 @@ trait ReportableToUrl {
 
 class FileSystemReportableToUrl(val dir: File = CddRunner.directory) extends ReportableToUrl {
   import Reportable._
+  def directory(path: ReportableList) = new File(dir, apply(path, "\\"))
   def file(path: ReportableList) = new File(dir, apply(path, "\\") + "." + templateName(path) + ".html")
   def url(path: ReportableList) = Some("file:///" + file(path).getAbsolutePath())
 }
@@ -418,6 +432,12 @@ object Renderer {
       import rc._
       if (r.url.isDefined)
         stringTemplate.setAttribute("documentUrl", r.url.get)
+    })
+    def documentHolderConfig =
+    RenderAttributeConfigurer[DocumentHolder](Set("DocumentHolder"), (rc: RendererContext[DocumentHolder]) => {
+    	import rc._
+    	if (r.children.size==0)
+    		stringTemplate.setAttribute("noChildren", "true")
     })
 
   def setMergedReportable: RenderAttributeConfigurer = RenderAttributeConfigurer[MergedReportable](Set(mergedReportableKey), (rc) => {
@@ -573,7 +593,6 @@ object HtmlRenderer {
   val expectedRow = "<tr><td class='title'>Expected</td><td class='value'>$if(expected)$$expected$$endif$</td></tr>"
   protected val codeRow = "$if(code)$<tr><td class='title'>Code</td><td class='value'>$code$</td></tr>$endif$"
   protected val becauseRow = "$if(because)$<tr><td class='title'>Because</td><td class='value'>$because$</td></tr>$endif$"
-  protected val nodesCountRow = "<tr><td class='title'>Nodes</td><td class='value'>$decisionTreeNodes$</td></tr>"
   val paramsRow = "<tr><td class='title'>Parameter</td><td class='value'>$params: {p|$p$}; separator=\"<hr /> \"$</td></tr>"
   protected val useCasesRow = "$if(childrenCount)$<tr><td class='title'>Usecases</td><td class='value'>$childrenCount$</td></tr>$endif$"
   protected val scenariosRow = "$if(childrenCount)$<tr><td class='title'>Scenarios</td><td class='value'>$childrenCount$</td></tr>$endif$"
@@ -599,7 +618,7 @@ object HtmlRenderer {
   val projectTemplate: StringRendererRenderer =
     ("Project", "<div class='project'><div class='projectText'><b>Project: $title$</b> " + description + "</div>\n", "</div> <!-- Project -->\n")
   val documentHolderTemplate: StringRendererRenderer =
-    ("DocumentHolder", "<div class='documentHolder'><h3>Documents</h3><ul>", "</ul></div><!-- documentHolder -->\n");
+    ("DocumentHolder", "<div class='documentHolder'><h3>Documents</h3><ul>$if(noChildren)$No documents defined$endif$", "</ul></div><!-- documentHolder -->\n");
   val engineHolderTemplate: StringRendererRenderer =
     ("EngineHolder", "<div class='engineHolder'><h3>Engines</h3><ul>", "</ul></div><!-- engineHolder -->\n");
   def listItemTitle(postFix: String = "") = "<li>" + a("$title$", "$description$") + postFix + "</li>"
@@ -628,14 +647,14 @@ object HtmlRenderer {
 
   val engineWithTestsTemplate: StringRendererRenderer =
     (engineFromTestsKey, "<div class='engineWithTests'>" +
-      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}", engineWithTestsIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow, nodesCountRow),
+      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}", engineWithTestsIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow),
 
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
       "</div><!-- engine -->\n")
   val childEngineTemplate: StringRendererRenderer =
     (engineChildKey, "<div class='childEngine'>" +
-      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}", childEngineIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow, nodesCountRow),
+      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}", childEngineIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow),
 
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
@@ -643,14 +662,14 @@ object HtmlRenderer {
 
   val engineWithChildEngineTemplate: StringRendererRenderer =
     (engineWithChildrenKey, "<div class='engineWithChildren'>" +
-      "<div class='engineWithChildrenSummary'>" + titleAndDescription("engineText", "Engine {0}", engineWithChildrenIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow, nodesCountRow),
+      "<div class='engineWithChildrenSummary'>" + titleAndDescription("engineText", "Engine {0}", engineWithChildrenIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow),
 
       "</div><!-- engineWithChildrenSummary -->" +
       "</div><!-- engine -->\n")
 
   val liveEngineTemplate: StringRendererRenderer =
     (engineFromTestsKey, "<div class='engine'>" +
-      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + table("engineTable", refsRow, useCasesRow, nodesCountRow) + "$engineForm$",
+      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + table("engineTable", refsRow, useCasesRow) + "$engineForm$",
 
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
@@ -686,7 +705,7 @@ class HtmlRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, live: Boolean
   import HtmlRenderer._
   def projectHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) =
     Renderer(loggerDisplayProcessor, rootUrl, restrict, live, walker = ReportWalker.documentThenEngineWalker).
-      configureAttribute(Renderer.documentConfig).
+      configureAttribute(Renderer.documentConfig,Renderer.documentHolderConfig).
       configureReportableHolder(reportTemplate, documentHolderTemplate, engineHolderTemplate).
       configureReportable(documentSummaryTemplate, engineWithTestsSummaryTemplate, childEngineSummaryTemplate)
 

@@ -10,7 +10,7 @@ class BuilderNodeTests extends EngineStringStringTests {
   val c: Code = (s: String) => "x"
   val b: CodeHolder[B] = (s: String) => true
 
-  val doc1 = Document(name = Some("x"))
+  val doc1 = Document(title = Some("x"))
 
   "A builder" should "have its builder noades setable" in {
     val b1 = builder.document(doc1).title("title").description("a description").code(c).expected("x").priority(2);

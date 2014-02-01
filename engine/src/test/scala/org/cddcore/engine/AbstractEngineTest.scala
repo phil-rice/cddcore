@@ -7,8 +7,8 @@ import org.scalatest.Finders
 import scala.language.implicitConversions
 
 trait AssertEquals {
-  def assertEquals[T1, T2](expected: T1, actual: T2) {
-    def msg = "\nExpected\n" + expected + "\nActual\n" + actual
+  def assertEquals[T1, T2](expected: T1, actual: T2, prefix: String = "") {
+    def msg = prefix +"\nExpected\n" + expected + "\nActual\n" + actual
     if (expected.isInstanceOf[String] & actual.isInstanceOf[String]) {
       val expectedString = expected.asInstanceOf[String];
       val actualString = actual.asInstanceOf[String];

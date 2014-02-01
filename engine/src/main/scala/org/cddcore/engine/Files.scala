@@ -17,10 +17,18 @@ object Files {
   }
 
   def getFromClassPath(clazz: Class[_], name: String) = {
-   val fullName = clazz.getPackage().getName().replace('.', '/') + "/" + name
+    val fullName = clazz.getPackage().getName().replace('.', '/') + "/" + name
     val stream = clazz.getClassLoader().getResourceAsStream(fullName)
     if (stream == null)
       throw new FileNotFoundException(fullName)
     Source.fromInputStream(stream).mkString
+  }
+  def delete(f: java.io.File) {
+    if (f.isDirectory())
+      for (c <- f.listFiles())
+        delete(c);
+    f.delete
+    if (f.exists())
+      throw new FileNotFoundException("Failed to delete file: " + f);
   }
 }

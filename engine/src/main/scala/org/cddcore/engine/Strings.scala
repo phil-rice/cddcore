@@ -7,11 +7,11 @@ object Strings {
   val digits = stringToKvs("0123456789")
   val brackets = bracketsToKvs("<{(>})", "<<<>>>")
   val misc = stringToKvs("., /=-_")
-  val urlMisc = stringToKvs("-_")
+  val urlMisc = stringToKvs("-_.")
 
   def rawCleaner() = new StringCleaner(Map())
   private val cleaner = new StringCleaner(Map() ++ (alphas ::: digits ::: brackets ::: misc))
-  private val urlCleaner = new StringCleaner(Map() ++ (alphas ::: digits ::: urlMisc ::: bracketsToKvs(" ", "_")))
+  private val urlCleaner = new StringCleaner(Map() ++ (alphas ::: digits ::: urlMisc ::: bracketsToKvs(" /", "__")))
 
   def clean(s: String): String = cleaner.clean(s)
   def urlClean(s: String): String = urlCleaner.clean(s)

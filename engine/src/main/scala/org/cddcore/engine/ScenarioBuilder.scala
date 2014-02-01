@@ -91,9 +91,9 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   }
   object PathPrinter {
     def apply(p: List[NodePath]): String = p.map((n) => Strings.oneLine(n.parent match {
-      case Right(r) => r.scenarioThatCausedNode.because.description
-      case Left(l) => "<Conclusion>"
-    })).mkString("\n");
+      case Right(r) => "If " + r.scenarioThatCausedNode.becauseString
+      case Left(l) => "Then " + l.code.description
+    })).reverse.mkString("\n");
   }
 
   case class NodePath(parent: RorN, result: Boolean)
@@ -157,7 +157,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
   object ScenarioConflictingWithDefaultException {
     def apply(loggerDisplayProcessor: LoggerDisplayProcessor, actual: ROrException[R], s: Scenario) =
-      new ScenarioConflictingWithDefaultException(s"\nActual Result: ${actual}\nExpected ${s.expected.getOrElse("<N/A>")}\n Scenario ${ExceptionScenarioPrinter.full(loggerDisplayProcessor, s)}", actual, s)
+      new ScenarioConflictingWithDefaultException(s"\nActual Result: ${actual}\nExpected ${s.expected.getOrElse("<N/A>")}\n ${ExceptionScenarioPrinter.full(loggerDisplayProcessor, s)}", actual, s)
   }
   class ScenarioConflictingWithDefaultException(msg: String, val actual: ROrException[R], scenario: Scenario) extends ScenarioException(msg, scenario)
 
@@ -540,7 +540,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         (u, priority) => u.copy(priority = Some(priority)),
         (s, priority) => s.copy(priority = Some(priority)))
 
-    protected def findDocument(documentName: String) = builderData.documents.find((d) => d.name == Some(documentName)) match {
+    protected def findDocument(documentName: String) = builderData.documents.find((d) => d.title == Some(documentName)) match {
       case Some(d) => d
       case None => throw new CannotFindDocumentException(documentName);
     }
@@ -1076,6 +1076,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   abstract class AbstractEngine extends Engine with ParamDetails with ReportableWithTemplate with EngineWithLogger with EngineWithScenarioExceptionMap {
     def logger = EngineUniverse.this.logger
     def loggerDisplayProcessor = logger
+    override def titleString = title.getOrElse("<Unnamed>")
   }
 
   abstract class EngineWithChildrenImpl(val builderData: ScenarioBuilderData) extends AbstractEngine with EngineFull[R, FullR] with ScenarioBuilderDataAsReadableFields {

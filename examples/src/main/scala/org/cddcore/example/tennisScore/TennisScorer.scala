@@ -7,9 +7,9 @@ import org.cddcore.engine.tests.CddJunitRunner
 
 @RunWith(classOf[CddJunitRunner])
 object TennisScorer {
-  val definition = Document(name = Some("CodingDojo"), url = Some("http://codingdojo.org/cgi-bin/wiki.pl?KataTennis"))
-  val wikipedia = Document(name = Some("Wikipedia"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
-  val changeRequest = Document(name = Some("CR24"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
+  val definition = Document(title = Some("CodingDojo"), url = Some("http://codingdojo.org/cgi-bin/wiki.pl?KataTennis"))
+  val wikipedia = Document(title = Some("Wikipedia"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
+  val changeRequest = Document(title = Some("CR24"), url = Some("http://en.wikipedia.org/wiki/Tennis_score"))
 
   val lookup = Map(0 -> "love", 1 -> "fifteen", 2 -> "thirty", 3 -> "forty")
 

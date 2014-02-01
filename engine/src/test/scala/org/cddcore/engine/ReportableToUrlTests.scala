@@ -35,8 +35,8 @@ class ReportableToUrlTests extends AbstractTest with ReportableTestFramework {
     assert(urlMap.contains(doc1))
     assert(urlMap.contains(doc2))
     
-    assertEquals("/Holder1/Document4.Document.html", urlMap.apply(doc1))
-    assertEquals("/Holder1/Document5.Document.html", urlMap.apply(doc2))
+    assertEquals("/Holder1/name1.Document.html", urlMap.apply(doc1))
+    assertEquals("/Holder1/name2.Document.html", urlMap.apply(doc2))
   }
 
   it should "combine the path from the human readable names with the apply method" in {

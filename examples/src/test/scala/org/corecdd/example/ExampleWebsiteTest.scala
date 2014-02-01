@@ -47,7 +47,7 @@ class ExampleWebsiteTest extends AbstractWebsiteTest {
     }
   }
 
-  def projectPageToEnginePath: (ProjectPage) => List[ReportableList] = (pp) => pp.projectPageChecker.engineSectionCheckers.map((esc) => List[Reportable](esc.engine, project, report))
+  def projectPageToEnginePath: (ProjectPage) => List[ReportableList] = (pp) => pp.projectPageChecker.engines.map((e) => List[Reportable](e, project, report))
 
   it should "allow each engine to be display" in {
     clickAllLinks[ProjectPage, EnginePage, EngineFull[_, _]](projectPageAtIndex,
@@ -56,26 +56,13 @@ class ExampleWebsiteTest extends AbstractWebsiteTest {
       recover = _.clickLogo)
   }
 
-  it should "allow each UseCase on the project page to be displayed" in {
-    clickAllLinks[ProjectPage, UseCasePage, RequirementAndHolder](projectPageAtIndex,
-      (pp) => projectPageToEnginePath(pp).flatMap((path) => path.head.asInstanceOf[Engine].children.map(_ :: path)),
-      click = _.clickUseCase(_),
-      recover = _.clickLogo)
-  }
-
-  it should "allow each scenario on the project page to be displayed" in {
-    clickAllLinks[ProjectPage, ScenarioPage, Test](projectPageAtIndex,
-      (pp) => projectPageToEnginePath(pp).flatMap((path) => path.head.asInstanceOf[Engine].children.flatMap { case uc: RequirementAndHolder => uc.children.map { case s: Test => s :: uc :: path } }),
-      click = _.clickScenario(_),
-      recover = _.clickLogo)
-  }
-
-  
-
   it should "allow the live button to be displayed" in {
     for (e: Engine <- project.collect { case e: Engine => e }) {
       projectPageAtIndex
-      click on id(urlMap(e) + "/live")
+      val idForE = reportableToUrl.urlId(e, None);
+      click on id( idForE)
+      val enginePage = new EnginePage(List(e, project, report))
+      click on id( urlMap(e) +"/live")
       val livePage = new LivePage(e)
       if (livePage.hasForm) {
         livePage.submit match {

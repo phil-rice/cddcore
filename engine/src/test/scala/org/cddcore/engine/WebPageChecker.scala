@@ -182,7 +182,7 @@ trait WebPageChecker extends AssertEquals {
     assertEquals(4, nodesWithoutBlankText.size)
     val becauseNode = nthNodeWith(nodesWithoutBlankText, 0, "because")
     val yesNode = nodesWithoutBlankText(1)
-    val elseNode = nthNodeWith(nodesWithoutBlankText, 2, "else") 
+    val elseNode = nthNodeWith(nodesWithoutBlankText, 2, "else")
     val noNode = nodesWithoutBlankText(3)
 
     val because = new BecauseSectionChecker(decision, path, becauseNode, depth + 1)
@@ -279,12 +279,16 @@ class ProjectPageChecker(val path: ReportableList, val html: String, val reporta
   val project = path(0).asInstanceOf[Project]
   val report = path(1).asInstanceOf[Report]
   new TopLineChecker("Project: " + project.titleString)
-  val engineDivs = divsWith("engineWithTests", reportDiv.child)
-  val engineSectionCheckers = project.engines.zip(engineDivs).map(_ match { case (e: Engine, node) => new EngineSectionChecker(e :: path, node, false) }).toList
-  assertEquals(project.engines.size, engineSectionCheckers.size)
-  assertEquals(project.engines.size, engineDivs.size)
-  for (e <- engineSectionCheckers)
-    e.checkHasUseCaseSummarySections
+  val documentHolderDiv = onlyDivWith("documentHolder", divs)
+  val documentAs = documentHolderDiv \\ "a"
+
+  val engineHolderDiv = onlyDivWith("engineHolder", divs)
+  val engineAs = engineHolderDiv \\ "a"
+  assertEquals(project.engines.size, engineAs.size)
+  val engines = project.engines.toList
+  val urls = engines.map((e)=> reportableToUrl.url(e :: path).get).toSet
+  val hrefs = engineAs.map((a) => a.attribute("href").get.text).toSet
+  assertEquals(urls, hrefs)
 }
 
 class EnginePageChecker(val path: ReportableList, val html: String, val reportableToUrl: ReportableToUrl) extends WebPageChecker {
