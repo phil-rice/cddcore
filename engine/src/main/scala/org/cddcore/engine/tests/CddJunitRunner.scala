@@ -241,7 +241,9 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
 
   rootEngines.headOption match {
     case Some(engine) =>
-      val project = Project("Junit test run for " + clazz.getPackage().getName + "/" + clazz.getSimpleName, rootEngines: _*)
+      val packageObject = clazz.getPackage()
+      val packageName = if (packageObject == null) "default package" else packageObject.getName() 
+      val project = Project("Junit test run for " + packageName + "/" + clazz.getSimpleName, rootEngines: _*)
       ReportCreator.fileSystem(engine.logger, project).create
     case _ =>
   }
