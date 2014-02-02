@@ -48,9 +48,9 @@ object TennisScorer {
     scenario(0, 0).expected("love all").because((l: Int, r: Int) => l == r && l < 3).code((l: Int, r: Int) => s"${lookup(l)} all").
     scenario(2, 2).expected("thirty all").
 
-    useCase("Deuce").description("If at least three points have been scored by each player, and the scores are equal, the score is 'deuce'.").expected("deuce").
+    useCase("Deuce").description("If at least three points have been scored by each player, and the scores are equal, the score is 'deuce'.").expected("deuce").priority(1).
     reference("5", definition).
-    scenario(3, 3).because((l: Int, r: Int) => l >= 3 && r >= 3 && l == r).priority(1).
+    scenario(3, 3).because((l: Int, r: Int) => l >= 3 && r >= 3 && l == r).
     scenario(4, 4).
     scenario(6, 6).
 

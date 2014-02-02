@@ -131,7 +131,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
       throw new IllegalStateException
     val description = getDescription
     notifier.fireTestStarted(description)
-    for ((e, ed) <- allEngines.reverse.zip(description.getChildren()).reverse)
+    for ((e, ed) <- allEngines.reverse.zip(description.getChildren()))
       run(1, notifier, ed, e, Some(e))
     notifier.fireTestFinished(description)
   }
@@ -139,7 +139,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
   def runChildren(depth: Int, notifier: RunNotifier, description: Description, r: Reportable, engine: Option[Engine]): Unit =
     r match {
       case holder: ReportableHolder => {
-        val children = holder.children.zip(description.getChildren()).reverse
+        val children = holder.children.zip(description.getChildren())
         for ((c, cd) <- children)
           run(depth + 1, notifier, cd, c, engine)
       }

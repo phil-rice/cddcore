@@ -47,7 +47,7 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
     val e = b.build
     assertEquals(1, bu.builderData.depth)
     assertEquals(1, b.builderData.depth)
-    val useCases = b.builderData.all(classOf[RequirementAndHolder])
+    val useCases = b.builderData.allReversed(classOf[RequirementAndHolder])
     assertEquals(List("uc1", "uc2"), useCases.map(_.titleString))
     val uc1 = useCases(0)
     val uc2 = useCases(1)
@@ -60,7 +60,7 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
   it should "allow usecase / scenario / usecase  to be added" in {
     val b1 = Engine[Int, String]().useCase("uc1").scenario(1).expected("x")
     val b2 = b1.useCase("uc2")
-    val useCases = b2.builderData.all(classOf[RequirementAndHolder])
+    val useCases = b2.builderData.allReversed(classOf[RequirementAndHolder])
     assertEquals(List("uc1", "uc2"), useCases.map(_.titleString))
     val uc1 = useCases(0)
     val uc2 = useCases(1)
@@ -72,7 +72,7 @@ class BuilderEngineUseCaseScenarioTests extends AbstractTest {
     val b2 = b1.useCase("uc2")
     val b3 = b2.scenario(2).expected("x")
     val b4 = b3.useCase("uc3").scenario(3).expected("x")
-    val useCases = b4.builderData.all(classOf[RequirementAndHolder])
+    val useCases = b4.builderData.allReversed(classOf[RequirementAndHolder])
     assertEquals(List("uc1", "uc2", "uc3"), useCases.map(_.titleString))
   }
 

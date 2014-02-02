@@ -54,6 +54,7 @@ trait ABuilderFactory1[P, R, FullR] extends EngineUniverse[R, FullR] with Engine
       }
       case _ => new EngineWithChildrenImpl(builderData) with EngineFull[R, FullR] with Engine1[P, FullR] {
         def apply(p1: P): FullR = applyParams(List(p1));
+        override def toString =  "EngineWithChildren(" + children.collect { case e: Engine => e }.map(_.titleString).mkString(",") + ")"
       }
     }
   }

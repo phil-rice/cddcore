@@ -5,48 +5,54 @@ import org.scalatest.junit.JUnitRunner
 
 trait DocumentReportTestFixture {
   val eMain = Engine[Int, String]().title("Main Engine").
-    useCase("UC 1", "The body of the first use case").reference("r1", None).priority(3).
+    useCase("UC 0", "The body of the first use case").reference("r1", None).priority(3).
     scenario(11).expected("one-one").because((x: Int) => x == 11).
     scenario(12).expected("one-two").because((x: Int) => x == 12).
 
-    useCase("UC 2", "The body of the second use case").
+    useCase("UC 1", "The body of the second use case").
     scenario(21).expected("two-one").because((x: Int) => x == 21).
     scenario(22).expected("two-two").because((x: Int) => x == 22).
 
-    useCase("UC 3", "The body of the third use case").
+    useCase("UC 2", "The body of the third use case").
     scenario(31).expected("three-one").because((x: Int) => x == 31).
     scenario(32).expected("three-two").because((x: Int) => x == 32).
     build
+  val usecases = eMain.all(classOf[UseCase])
+  val scenarios = eMain.all(classOf[Test])
+
+  def uc(title: String) = usecases.find(_.titleString == title).get
+  def muc(title: String) = SimpleRequirementAndHolder(usecases.find(_.titleString == title).get).asInstanceOf[RequirementAndHolder]
+  def s(title: String) = SimpleRequirementAndHolder(scenarios.find(_.titleString == title).get).asInstanceOf[RequirementAndHolder]
+  val muc0 = muc("UC 0")
+  val muc1 = muc("UC 1")
+  val muc2 = muc("UC 2")
+  val uc0 = uc("UC 0")
+  val uc1 = uc("UC 1")
+  val uc2 = uc("UC 2")
 
 }
 
 @RunWith(classOf[JUnitRunner])
 class DocumentReportTests extends AbstractTest with DocumentReportTestFixture {
 
-  val usecases = eMain.all(classOf[UseCase])
-  val scenarios = eMain.all(classOf[Test])
-
-  def uc(i: Int) = SimpleRequirementAndHolder(usecases(i))
-
   "SimpleRequirementAndHolder apply method" should "make a projection of a usecase passed " in {
-    val uc0 = usecases(0)
     val modified = SimpleRequirementAndHolder(uc0).asInstanceOf[SimpleRequirementAndHolder]
     assertEquals(uc0.title, modified.title)
     assertEquals(uc0.description, modified.description)
     assertEquals(uc0.priority, modified.priority)
     assertEquals(uc0.references, modified.references)
     assertEquals(uc0.children, modified.children)
-    assertEquals(uc0, modified.delegate.get)
+    assertEquals(usecases(2), modified.delegate.get)
     assertEquals(scenarios(0), SimpleRequirementAndHolder(scenarios(0)))
   }
 
-  it should "make a projection of an engine passed in" in {
+  it should "make a projection of an engine passed in, in text order" in {
     val modified = SimpleRequirementAndHolder(eMain).asInstanceOf[SimpleRequirementAndHolder]
     assertEquals(eMain.title, modified.title)
     assertEquals(eMain.description, modified.description)
     assertEquals(eMain.priority, modified.priority)
     assertEquals(eMain.references, modified.references)
-    assertEquals(List(uc(2), uc(1), uc(0)), modified.children)
+    assertEquals(List(muc0, muc1, muc2), modified.children)
     assertEquals(eMain, modified.delegate.get)
   }
 

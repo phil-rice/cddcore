@@ -131,7 +131,7 @@ trait KeyStrategy {
 
 class SimpleKeyStrategy extends KeyStrategy {
   val rootKey = ""
-  def findKeyFor(root: String, children: List[_], child: Any) = (root, children.indexOf(child) + 1) match {
+  def findKeyFor(root: String, children: List[_], child: Any) = (root, children.sortBy(Reportable.textOrder(_)).indexOf(child) + 1) match {
     case (_, 0) => throw new IllegalStateException
     case ("", i) => i.toString
     case (root, i) => root + "." + i

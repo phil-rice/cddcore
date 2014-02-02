@@ -282,7 +282,8 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case _ => new CodeHolder(rfnMaker(Left(() => new IllegalStateException("Do not have code or expected  for this scenario: " + ExceptionScenarioPrinter(Scenario.this)))), "No expected or Code")
       }
     })
-
+    
+    val textOrder= Engine.engineCount.getAndIncrement()
     override def titleString = title.getOrElse(trimmedParamString)
     lazy val paramString = params.map(paramPrinter).mkString(",")
     lazy val trimmedParamString = if (paramString.size < 30) paramString else "<Unnamed>"
@@ -290,15 +291,15 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       s"Scenario(${title.getOrElse("")}, ${paramString}, because=${becauseString}, expected=${logger(expected.getOrElse("<N/A>"))})"
   }
 
-  case class UseCaseDescription(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: Set[Reference] = Set()) extends BuilderNode with UseCase with ReportableWithTemplate {
+  case class UseCaseDescription(textOrder: Int, title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: Set[Reference] = Set()) extends BuilderNode with UseCase with ReportableWithTemplate {
     val templateName = "UseCase"
     override def toString = "UseCase(" + titleString + " children=" + children.mkString(",") + ")"
   }
-  case class ChildEngineDescription(title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: Set[Reference] = Set()) extends BuilderNode with RequirementAndHolder {
+  case class ChildEngineDescription(textOrder: Int, title: Option[String] = None, description: Option[String] = None, children: List[Reportable] = List(), expected: Option[ROrException[R]] = None, optCode: Option[Code] = None, priority: Option[Int] = None, references: Set[Reference] = Set()) extends BuilderNode with RequirementAndHolder {
     override def toString = "ChildEngine(" + titleString + " children=" + children.mkString(",") + ")"
   }
 
-  class ChildEngineImpl(val logger: TddLogger, val arity: Int, val desc: ChildEngineDescription) extends ChildEngine[R] with BuildEngine with EvaluateEngineWithRoot {
+  class ChildEngineImpl(val textOrder: Int, val logger: TddLogger, val arity: Int, val desc: ChildEngineDescription) extends ChildEngine[R] with BuildEngine with EvaluateEngineWithRoot {
     def loggerDisplayProcessor = logger
     def priority = desc.priority
     def title = desc.title
@@ -346,7 +347,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
     protected def modifyChildForBuild(path: ReportableList): Reportable =
       path.head match {
-        case ce: ChildEngineDescription => new ChildEngineImpl(logger, arity, ce.copy(children = modifyChildrenForBuild(ce.children, path), optCode = firstCode(path)))
+        case ce: ChildEngineDescription => new ChildEngineImpl(ce.textOrder, logger, arity, ce.copy(children = modifyChildrenForBuild(ce.children, path), optCode = firstCode(path)))
         case u: UseCaseDescription => u.copy(children = modifyChildrenForBuild(u.children, path))
         case s: Scenario => {
           val expected = firstExpected(path)
@@ -354,7 +355,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         }
       }
     protected def modifyChildrenForBuild(children: List[Reportable], path: ReportableList): ReportableList =
-      children.map((r) => modifyChildForBuild(r :: path))
+      children.reverse.map((r) => modifyChildForBuild(r :: path)).sorted(Reportable.priorityOrdering)
 
     lazy val childrenModifiedForBuild =
       modifyChildrenForBuild(children, List(this));
@@ -597,13 +598,13 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         if (!c.isInstanceOf[ChildEngineDescription])
           throw new CanAddChildEngineAfterUseCaseOrScenarioException
       val optDescription = description match { case null => None; case d => Some(d) }
-      copy(builderData.copy(depth = 1, children = new ChildEngineDescription(title = Some(engineTitle), description = optDescription) :: builderData.children))
+      copy(builderData.copy(depth = 1, children = new ChildEngineDescription(textOrder = builderData.children.size, title = Some(engineTitle), description = optDescription) :: builderData.children))
     }
 
     protected def withUseCase(useCaseTitle: String, useCaseDescription: Option[String]) = {
       def newUseCase(parentDepth: Int) = {
         val childDepth = parentDepth + 1
-        val useCase = UseCaseDescription(Some(useCaseTitle), useCaseDescription)
+        val useCase = UseCaseDescription(builderData.children.size, Some(useCaseTitle), useCaseDescription)
         val atParentDepth = copy(depth = parentDepth)
         val result = atParentDepth.set[UseCaseDescription](useCase,
           (b, u) =>
@@ -641,7 +642,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         val childDepth = parentsDepth + 1
         val titleString = if (scenarioTitle == null) None else Some(scenarioTitle);
         val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
-        val scenario = new Scenario(titleString, descriptionString, params, logger)
+        val scenario = new Scenario( titleString, descriptionString, params, logger)
         copy(depth = parentsDepth).set[Scenario](scenario,
           (b, s) => b.copy(children = s :: b.builderData.children),
           (ce, s) => ce.copy(children = s :: ce.children),
@@ -1076,6 +1077,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   abstract class AbstractEngine extends Engine with ParamDetails with ReportableWithTemplate with EngineWithLogger with EngineWithScenarioExceptionMap {
     def logger = EngineUniverse.this.logger
     def loggerDisplayProcessor = logger
+    val textOrder = Engine.engineCount.getAndIncrement()
     override def titleString = title.getOrElse("<Unnamed>")
   }
 

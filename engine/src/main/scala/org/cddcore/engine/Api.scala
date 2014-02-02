@@ -1,12 +1,26 @@
 package org.cddcore.engine
 
 import scala.language.implicitConversions
+import java.util.concurrent.atomic.AtomicInteger
 
 object Reportable {
   type ReportableList = List[Reportable]
   type ReportableSet = Set[Reportable]
 
   def allTests(list: List[Reportable]): List[Test] = list.flatMap(_ match { case t: Test => List(t); case rh: ReportableHolder => allTests(rh.children) })
+  val priorityOrdering = new Ordering[Reportable]() {
+    def compare(r1: Reportable, r2: Reportable) = {
+      def priority(r: Reportable) = r match { case r: Requirement => r.priority.getOrElse(0); case _ => 0 }
+      val p1 = priority(r1)
+      val p2 = priority(r2)
+      p1 - p2
+    }
+  }
+  def textOrder(r: Any) = r match { 
+    case Some(r: ReportableWithTextOrder) => r.textOrder
+    case r: ReportableWithTextOrder => r.textOrder
+    case _ => 0
+  }
 
   def unwrap[R <: Reportable](r: R): R = r match {
     case w: ReportableWrapper => w.delegate.collect { case r => unwrap(r) }.getOrElse(r).asInstanceOf[R]
@@ -75,7 +89,8 @@ trait ReportableHolder extends Reportable with Traversable[Reportable] {
   }
 
   /** All the descendants that implement the class. Doesn't include 'this' */
-  def all[R <: Reportable](rClass: Class[R]) = foldLeft[List[R]](List())((acc, r) => if (rClass.isAssignableFrom(r.getClass)) r.asInstanceOf[R] :: acc else acc)
+  def all[R <: Reportable](rClass: Class[R]) = allReversed(rClass).reverse
+  def allReversed[R <: Reportable](rClass: Class[R]) = foldLeft[List[R]](List())((acc, r) => if (rClass.isAssignableFrom(r.getClass)) r.asInstanceOf[R] :: acc else acc)
 
   /** Calls this visitor with 'this' and all it's descendents. The parameter to visitor is the path from the head back up to 'this'. So head will be the deepest reportable */
   def walkWithPath(visitor: (ReportableList) => Unit): Unit = walkWithPath(List(), visitor)
@@ -197,14 +212,19 @@ trait Requirement extends Reportable {
   def description: Option[String]
   /** The 'priority' that is used to determine the order that the decision trees are being built */
   def priority: Option[Int]
+
   def references: Set[Reference]
+}
+
+trait ReportableWithTextOrder extends Reportable {
+  def textOrder: Int
 }
 
 /** As the name suggests this is both a requirement and a reportableholder */
 trait RequirementAndHolder extends ReportableHolder with Requirement
 
 /** Usecases are at the moment mostly 'just text'. They are effectively a grouping mechanism, to group tests */
-trait UseCase extends RequirementAndHolder {
+trait UseCase extends RequirementAndHolder with ReportableWithTextOrder {
   /** The default 'code' for scenario's underneath it. It is very common for all things implementing a use case to use the same code block, and using this makes that clear */
   def optCode: Option[AbstractCodeHolder]
   /** The default expected for scenario's underneath it. It is very common for all things implementing a use case to come to the same conclusion, and using this avoids duplication and makes it clear */
@@ -212,7 +232,7 @@ trait UseCase extends RequirementAndHolder {
 }
 
 /** This is a full 'test + optional reason why + optional code to implement the behaviour that will make the test past */
-trait Test extends Requirement {
+trait Test extends Requirement with ReportableWithTextOrder {
   /** The inputs for the test. The test is mostly saying 'if I pass the engine these parameters, then I expect this result*/
   def params: List[Any]
   /** The expected output for the test. The test is mostly saying 'if I pass the engine these parameters, then I expect this result*/
@@ -244,6 +264,8 @@ case class Project(projectTitle: String, engines: ReportableHolder*) extends Req
 }
 
 object Engine {
+  val engineCount = new AtomicInteger(0)
+
   protected def addToList[R] = (acc: List[R], r: R) => r :: acc
   protected def addToSet[R] = (acc: Set[R], r: R) => acc + r
   protected def addOption[R] = (acc: List[R], optR: Option[R]) => optR match { case Some(r) => r :: acc; case None => acc; }
@@ -350,7 +372,7 @@ trait DecisionTreeFolder[Acc] {
 }
 
 /** This is the core object that describes an Engine. */
-trait Engine extends RequirementAndHolder {
+trait Engine extends RequirementAndHolder with ReportableWithTextOrder {
   /** How many parameters the engine takes. Engine1[P,R] has 1, Engine2[P1,P2,R] has 2 */
   def arity: Int
   def decisionTreeNodes: Int
@@ -486,7 +508,9 @@ trait EngineFull[R, FullR] extends EngineWithResult[FullR] {
   def folder: Option[(FullR, R) => FullR]
   def applyParams(params: List[Any]): FullR =
     folder match {
-      case Some(f) => childEngines.foldLeft[FullR](initialFoldValue())((acc, ce) => f(acc, ce.applyParams(params)))
+      case Some(f) =>
+        childEngines.foldLeft[FullR](initialFoldValue())((acc, ce) =>
+          f(acc, ce.applyParams(params)))
       case _ => throw new IllegalStateException
     }
   lazy val decisionTreeNodes = childEngines.foldLeft(0)(_ + _.decisionTreeNodes)
@@ -542,7 +566,7 @@ trait Conclusion extends ConclusionOrDecision {
 }
 
 /** Documents are external documents such as requirements specifications, emails and so on. The are linked to scenarios, usecases and engines by references */
-case class Document( title: Option[String] = None, description: Option[String] = None, priority: Option[Int] = None, url: Option[String] = None, mergeStrategy: DocumentMergeStrategy = DocumentMergeStrategy.default) extends Requirement {
+case class Document(title: Option[String] = None, description: Option[String] = None, priority: Option[Int] = None, url: Option[String] = None, mergeStrategy: DocumentMergeStrategy = DocumentMergeStrategy.default) extends Requirement {
   def references = Set()
   override def titleString = title.getOrElse(titleOrDescription("<Unnamed>"))
 }

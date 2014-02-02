@@ -60,7 +60,7 @@ trait AbstractEngineTest[R] extends AbstractTest with EngineUniverse[R, R] with 
     }
   }
   def allScenariosForBuild(b: ScenarioBuilder) = Reportable.allTests(b.builderData.childrenModifiedForBuild)
-  def firstScenario(b: ScenarioBuilder): Scenario = b.builderData.all(classOf[Scenario])(0)
+  def firstScenario(b: ScenarioBuilder): Scenario = b.builderData.allReversed(classOf[Scenario])(0)
   def firstScenario(e: ReportableHolder): Scenario = e.all(classOf[Scenario])(0)
 
   def assertEngineMatches[P](e: Engine, n2: RorN) {

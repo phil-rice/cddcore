@@ -1,6 +1,7 @@
 package org.cddcore.engine
 
 import java.text.MessageFormat
+
 import scala.language.implicitConversions
 import org.antlr.stringtemplate.AttributeRenderer
 import org.antlr.stringtemplate.StringTemplate
@@ -76,27 +77,28 @@ class ChildReportWalker extends ReportWalker {
 }
 
 case class DocumentHolder(val children: List[Document]) extends ReportableHolder
-case class EngineHolder(val children: List[Engine]) extends ReportableHolder
+case class EngineHolder(val children: List[Reportable]) extends ReportableHolder
 
 class DocumentThenEngineWalker extends ReportWalker {
 
   import Reportable._
+
   def foldWithPath[Acc](path: ReportableList, initial: Acc,
     startFn: (Acc, ReportableList) => Acc, childFn: (Acc, ReportableList) => Acc, endFn: (Acc, ReportableList) => Acc): Acc = {
     val head = path.head
     head match {
       case holder: Project => {
         val documents = DocumentHolder(documentsIn(holder).toList.sortBy((x) => x.titleString))
-        val engines = EngineHolder(holder.all(classOf[Engine]).sortBy((x) => x.titleString))
-
+        val engines = EngineHolder(holder.children)
         val afterStart = startFn(initial, path)
         val afterDocuments = foldWithPath(documents :: path, afterStart, startFn, childFn, endFn)
         val afterEngines = foldWithPath(engines :: path, afterDocuments, startFn, childFn, endFn)
         endFn(afterEngines, path)
       }
       case document: Document => childFn(initial, path)
+      case engine: EngineFull[_, _] => walkInList(engine, path, engine.children.sortBy(Reportable.textOrder(_)), initial, startFn, childFn, endFn)
       case engine: Engine => childFn(initial, path)
-      case holder: ReportableHolder => walkChildren(holder, path, initial, startFn, childFn, endFn)
+      case holder: ReportableHolder => walkInList(holder, path, holder.children.sortBy(Reportable.textOrder(_)), initial, startFn, childFn, endFn)
       case _ => initial
     }
   }
@@ -433,11 +435,11 @@ object Renderer {
       if (r.url.isDefined)
         stringTemplate.setAttribute("documentUrl", r.url.get)
     })
-    def documentHolderConfig =
+  def documentHolderConfig =
     RenderAttributeConfigurer[DocumentHolder](Set("DocumentHolder"), (rc: RendererContext[DocumentHolder]) => {
-    	import rc._
-    	if (r.children.size==0)
-    		stringTemplate.setAttribute("noChildren", "true")
+      import rc._
+      if (r.children.size == 0)
+        stringTemplate.setAttribute("noChildren", "true")
     })
 
   def setMergedReportable: RenderAttributeConfigurer = RenderAttributeConfigurer[MergedReportable](Set(mergedReportableKey), (rc) => {
@@ -594,7 +596,7 @@ object HtmlRenderer {
   protected val codeRow = "$if(code)$<tr><td class='title'>Code</td><td class='value'>$code$</td></tr>$endif$"
   protected val becauseRow = "$if(because)$<tr><td class='title'>Because</td><td class='value'>$because$</td></tr>$endif$"
   val paramsRow = "<tr><td class='title'>Parameter</td><td class='value'>$params: {p|$p$}; separator=\"<hr /> \"$</td></tr>"
-  protected val useCasesRow = "$if(childrenCount)$<tr><td class='title'>Usecases</td><td class='value'>$childrenCount$</td></tr>$endif$"
+  //  protected val useCasesRow = "$if(childrenCount)$<tr><td class='title'>Usecases</td><td class='value'>$childrenCount$</td></tr>$endif$"
   protected val scenariosRow = "$if(childrenCount)$<tr><td class='title'>Scenarios</td><td class='value'>$childrenCount$</td></tr>$endif$"
   protected val refsRow = "$if(references)$<tr><td class='title'>References</td><td class='value'>$references: {r|$r$}; separator=\", \"$</td></tr>$endif$"
 
@@ -628,6 +630,8 @@ object HtmlRenderer {
     (engineFromTestsKey, listItemTitle());
   val childEngineSummaryTemplate: StringRenderer =
     (engineChildKey, listItemTitle());
+  val engineWithChildrenSummaryTemplate: StringRendererRenderer =
+    (engineWithChildrenKey, "<li>" + a("$title$", "$description$") + "<ul>", "</ul></li>");
 
   val mergedTemplate: StringRendererRenderer =
     ("Merged", "<div class='merged'><b>$key$</b> $if(multipleMergedValuesFlag)$<div class='multipleTitles'>$endif$$mergedReportable$", "$if(multipleMergedValuesFlag)$</div>$endif$</div><!-- merged -->\n")
@@ -647,14 +651,14 @@ object HtmlRenderer {
 
   val engineWithTestsTemplate: StringRendererRenderer =
     (engineFromTestsKey, "<div class='engineWithTests'>" +
-      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}", engineWithTestsIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow),
+      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}", engineWithTestsIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow),
 
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
       "</div><!-- engine -->\n")
   val childEngineTemplate: StringRendererRenderer =
     (engineChildKey, "<div class='childEngine'>" +
-      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}", childEngineIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow),
+      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}", childEngineIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow),
 
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
@@ -662,14 +666,14 @@ object HtmlRenderer {
 
   val engineWithChildEngineTemplate: StringRendererRenderer =
     (engineWithChildrenKey, "<div class='engineWithChildren'>" +
-      "<div class='engineWithChildrenSummary'>" + titleAndDescription("engineText", "Engine {0}", engineWithChildrenIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow, useCasesRow),
+      "<div class='engineWithChildrenSummary'>" + titleAndDescription("engineText", "Engine {0}", engineWithChildrenIcon) + "$if(live)$" + aForLive + "$endif$" + table("engineTable", refsRow),
 
       "</div><!-- engineWithChildrenSummary -->" +
       "</div><!-- engine -->\n")
 
   val liveEngineTemplate: StringRendererRenderer =
     (engineFromTestsKey, "<div class='engine'>" +
-      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + table("engineTable", refsRow, useCasesRow) + "$engineForm$",
+      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + table("engineTable", refsRow) + "$engineForm$",
 
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
@@ -705,8 +709,8 @@ class HtmlRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, live: Boolean
   import HtmlRenderer._
   def projectHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) =
     Renderer(loggerDisplayProcessor, rootUrl, restrict, live, walker = ReportWalker.documentThenEngineWalker).
-      configureAttribute(Renderer.documentConfig,Renderer.documentHolderConfig).
-      configureReportableHolder(reportTemplate, documentHolderTemplate, engineHolderTemplate).
+      configureAttribute(Renderer.documentConfig, Renderer.documentHolderConfig).
+      configureReportableHolder(reportTemplate, documentHolderTemplate, engineHolderTemplate, engineWithChildrenSummaryTemplate).
       configureReportable(documentSummaryTemplate, engineWithTestsSummaryTemplate, childEngineSummaryTemplate)
 
   def engineHtml(rootUrl: Option[String], restrict: ReportableSet = Set()) = Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
@@ -787,7 +791,7 @@ class ByReferenceDocumentPrinterStrategy(document: Option[Document], keyStrategy
               val withParent = addToFor(document, reportableToPath, mapToKey, parent);
               withParent.get(parent) match {
                 case Some(parentRef) => {
-                  val myRef = keyStrategy.findKeyFor(parentRef, parent.children.reverse, me)
+                  val myRef = keyStrategy.findKeyFor(parentRef, parent.children, me)
                   if (debug)
                     println("raw " + myRef + "<--" + Reportable.templateNameAndTitle(me))
                   withParent + (me -> myRef)
@@ -863,13 +867,17 @@ object SimpleRequirementAndHolder {
   def apply(r: RequirementAndHolder, replacementChildren: ReportableList): RequirementAndHolder =
     (r, replacementChildren) match {
       case (s: Test, List()) => s
-      case _ => new SimpleRequirementAndHolder(Some(r), r.title, r.description, r.priority, r.references, replacementChildren)
+      case _ => {
+        val sortedChildren = replacementChildren.sortBy(Reportable.textOrder(_))
+        new SimpleRequirementAndHolder(Some(r), r.title, r.description, r.priority, r.references, sortedChildren)
+      }
     }
 
   def apply() = new SimpleRequirementAndHolder(None, None, None, None, Set(), List())
 }
 
-case class SimpleRequirementAndHolder(delegate: Option[Reportable], title: Option[String], description: Option[String], priority: Option[Int], references: Set[Reference], children: ReportableList) extends RequirementAndHolder with ReportableWrapper {
+case class SimpleRequirementAndHolder(delegate: Option[Reportable], title: Option[String], description: Option[String], priority: Option[Int], references: Set[Reference], children: ReportableList) extends RequirementAndHolder with ReportableWrapper with ReportableWithTextOrder {
+  def textOrder = Reportable.textOrder(delegate)
   protected def shortToString(r: Any): String = r match {
     case m: MergedShortDescription => Reportable.templateName(m) + "(" + m.name + ")"
     case r: SimpleRequirementAndHolder => Reportable.templateName(r) + "(" + Reportable.templateName(r.delegate.getOrElse(None)) + "/" + r.delegate.collect { case r: Requirement => r.titleString } + ", children=" + r.children.map(shortToString(_)).mkString(",") + ")"

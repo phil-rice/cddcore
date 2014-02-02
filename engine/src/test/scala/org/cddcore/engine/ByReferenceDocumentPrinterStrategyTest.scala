@@ -36,13 +36,23 @@ trait DocumentPrinterTestFramework {
     scenario(32).expected("three-two").because((x: Int) => x == 32).
     build
 
-  val useCases = eMain.all(classOf[UseCase])
-  val scenarios = eMain.all(classOf[Test])
+  val useCases = eMain.all(classOf[UseCase]).sortBy(_.titleString)
+  val scenarios = eMain.all(classOf[Test]).sortBy(_.params(0).asInstanceOf[Int])
   val strategy = new ByReferenceDocumentPrinterStrategy(None, new SimpleKeyStrategy, debug = true)
   val project = Project("Some title", eMain)
-  val uc0 = useCases(0)
-  val uc1 = useCases(1)
-  val uc2 = useCases(2)
+  def findUseCase(e: Engine, title: String) = e.all(classOf[UseCase]).find(_.titleString == title).get
+  def findScenario(e: Engine, param: Int) = e.all(classOf[Test]).find(_.params(0) == param).get
+  val uc0 = findUseCase(eMain, "UC 1")
+  val uc1 = findUseCase(eMain, "UC 2")
+  val uc2 = findUseCase(eMain, "UC 3")
+
+  val s11 = findScenario(eMain, 11)
+  val s12 = findScenario(eMain, 12)
+  val s13 = findScenario(eMain, 13)
+  val s21 = findScenario(eMain, 21)
+  val s22 = findScenario(eMain, 22)
+  val s31 = findScenario(eMain, 31)
+  val s32 = findScenario(eMain, 32)
 
   val structuredMap = strategy.findStructuredMap(project)
   val mergedMap = strategy.findMergedStructuredMap(structuredMap)
@@ -86,7 +96,7 @@ class DefaultMergeStrategyTest extends AbstractTest with DocumentPrinterTestFram
     val expected = MergedReportable("some key",
       List(MergedTitle(eSecond.title,
         List(MergedDescription(eSecond.description,
-          List(SimpleRequirementAndHolder(eSecond: RequirementAndEngine, List(scenarios(2), scenarios(1), scenarios(0))): RequirementAndEngine))))),
+          List(SimpleRequirementAndHolder(eSecond: RequirementAndEngine, List(scenarios(0), scenarios(1), scenarios(2))): RequirementAndEngine))))),
       List())
     val actual = documentMergeStrategy.merge("some key", engineList)
     assertEquals(expected, actual)
@@ -110,18 +120,18 @@ class ByReferenceDocumentPrinterStrategyTest extends AbstractTest with DocumentP
     val reportableToRef = strategy.findReportableToRef(project, reportableToPath)
     assertEquals("", reportableToRef(project))
     assertEquals("1", reportableToRef(eMain))
-    assertEquals("1.1", reportableToRef(useCases(0)))
-    assertEquals("1.1.1", reportableToRef(scenarios(0)))
-    assertEquals("7.3", reportableToRef(scenarios(1)))
-    assertEquals("1.1.3", reportableToRef(scenarios(2)))
+    assertEquals("1.1", reportableToRef(uc0))
+    assertEquals("1.1.1", reportableToRef(s11))
+    assertEquals("7.3", reportableToRef(s12))
+    assertEquals("1.1.3", reportableToRef(s13))
 
-    assertEquals("1.2", reportableToRef(useCases(1)))
-    assertEquals("1.2.1", reportableToRef(scenarios(3)))
-    assertEquals("1.2.2", reportableToRef(scenarios(4)))
+    assertEquals("1.2", reportableToRef(uc1))
+    assertEquals("1.2.1", reportableToRef(s21))
+    assertEquals("1.2.2", reportableToRef(s22))
 
-    assertEquals("1.3", reportableToRef(useCases(2)))
-    assertEquals("1.3.1", reportableToRef(scenarios(5)))
-    assertEquals("1.3.2", reportableToRef(scenarios(6)))
+    assertEquals("1.3", reportableToRef(uc2))
+    assertEquals("1.3.1", reportableToRef(s31))
+    assertEquals("1.3.2", reportableToRef(s32))
   }
 
   it should "add each reportable to the structured map" in {

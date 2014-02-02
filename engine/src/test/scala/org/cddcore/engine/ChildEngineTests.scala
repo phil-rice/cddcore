@@ -22,7 +22,7 @@ class ChildEngineTests extends AbstractTest {
     val childEngines = Engine[Int, String]().
       childEngine("ce0").scenario(0).expected("zero").
       childEngine("ce1").scenario(1).expected("one").
-      builderData.childrenModifiedForBuild.collect { case e: ChildEngine[_] => e }.reverse
+      builderData.childrenModifiedForBuild.collect { case e: ChildEngine[_] => e }
 
     assertEquals("zero", childEngines(0).applyParams(List(0)))
     assertEquals("zero", childEngines(0).applyParams(List(1)))
@@ -31,11 +31,29 @@ class ChildEngineTests extends AbstractTest {
     assertEquals("one", childEngines(1).applyParams(List(1)))
   }
 
+  it should "have a toString method composed of the title strings of it's children" in {
+    val eBase = Engine.folding[Int, String, String]((acc, r) => acc, "").
+      childEngine("ce0").scenario(0).expected("zero").
+      childEngine("ce1").scenario(1).expected("one").
+      build
+    val e01 = Engine.folding[Int, String, String]((acc, r) => acc, "").
+      childEngine("ce0").scenario(0).expected("zero").
+      childEngine("ce1").priority(1).scenario(1).expected("one").
+      build
+    val e10 = Engine.folding[Int, String, String]((acc, r) => acc, "").
+      childEngine("ce0").priority(1).scenario(0).expected("zero").
+      childEngine("ce1").scenario(1).expected("one").
+      build
+    assertEquals("EngineWithChildren(ce0,ce1)", e01.toString)
+    assertEquals("EngineWithChildren(ce1,ce0)", e10.toString)
+    assertEquals("EngineWithChildren(ce0,ce1)", eBase.toString)
+  }
   it should "use the fold function to produce the correct result" in {
     val b = Engine.folding[Int, String, String](_ + _, { "Init" }).
       childEngine("ce0").scenario(0).expected("Zero").
       childEngine("ce1").scenario(1).expected("One")
     val e = b.build
+    val result = e(0)
     assertEquals("InitZeroOne", e(0))
     assertEquals("InitZeroOne", e(123))
   }
@@ -62,8 +80,8 @@ class ChildEngineTests extends AbstractTest {
     val scenarios = e.all(classOf[Test])
     val s0 = scenarios(0)
     val s1 = scenarios(1)
-//    assertEquals(e0, e.scenarioExceptionMap(s0).asInstanceOf[BecauseClauseException].getCause())
-//    assertEquals(e1, e.scenarioExceptionMap(s1))
+    //    assertEquals(e0, e.scenarioExceptionMap(s0).asInstanceOf[BecauseClauseException].getCause())
+    //    assertEquals(e1, e.scenarioExceptionMap(s1))
   }
 
 }
