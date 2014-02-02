@@ -23,4 +23,5 @@
 1.8.5.2 Minor error message improvements, minor report improvements
 1.8.5.3 Reports now appear in textOrder
 1.8.5.4 ContinuousIntegrationRunner now produces reports
+1.8.5.5 Reducing verbosity of Junit run
 

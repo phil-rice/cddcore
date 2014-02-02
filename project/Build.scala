@@ -7,7 +7,7 @@ object BuildSettings {
   val buildSettings = Defaults.defaultSettings ++  Seq(
    (testOptions in Test) += Tests.Argument(TestFrameworks.ScalaTest, "-h", "report"),
     publishMavenStyle := true,
-
+    parallelExecution in Global := false,
     publishTo <<= version { (v: String) =>
       val nexus = "https://oss.sonatype.org/"
       if (v.trim.endsWith("SNAPSHOT"))

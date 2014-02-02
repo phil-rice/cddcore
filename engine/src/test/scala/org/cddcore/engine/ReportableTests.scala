@@ -123,8 +123,9 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
 
   it should "make a url out of the path fragments" in {
     val toUrl = new FileSystemReportableToUrl
-    assertEquals(Some("file:///C:\\Users\\Phil\\.cdd\\rep3\\rep2\\rep1.Req.html"), toUrl.url(List(rep1, rep2, rep3)))
-
+    val url = toUrl.url(List(rep1, rep2, rep3)).get
+    assert (url.startsWith("file:///"))
+    assert (url.endsWith("\\.cdd\\rep3\\rep2\\rep1.Req.html"))
   }
 
   "A ReportWalker.childWalker" should "fold with paths with startEnd over itself and all it's descendants" in {
