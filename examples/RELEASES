@@ -21,4 +21,5 @@
 1.8.5 The documentation view and project index page now added to a JUnit run
 1.8.5.1 Fixed minor bug when using engine in default package
 1.8.5.2 Minor error message improvements, minor report improvements
+1.8.5.3 Reports now appear in textOrder
 
