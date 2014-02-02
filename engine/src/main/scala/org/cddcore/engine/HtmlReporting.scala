@@ -138,7 +138,7 @@ object ReportCreator {
 class FileReportCreator(loggerDisplayProcessor: LoggerDisplayProcessor, r: ReportableHolder, title: String, live: Boolean = false, reportableToUrl: FileSystemReportableToUrl, optUrlMap: Option[UrlMap]) extends ReportCreator[FileSystemReportableToUrl](loggerDisplayProcessor, r, title, live, reportableToUrl, optUrlMap) {
   protected def print(path: ReportableList, html: String) {
     val file = reportableToUrl.file(path)
-    println(file)
+    if (Engine.logging) println("Creating" + file)
     Files.printToFile(file)((p) => p.append(html))
   }
   protected def makeReport = (path: List[Reportable]) =>
@@ -176,7 +176,7 @@ class ReportCreator[RtoUrl <: ReportableToUrl](loggerDisplayProcessor: LoggerDis
     case _ => r
   }
   val rootUrl = reportableToUrl.url(List(rootUrlObject, report))
-  println("RootUrl = " + rootUrl)
+  if (Engine.logging) println("RootUrl = " + rootUrl)
   def htmlFor(path: ReportableList) = {
     val pathHead = path.head
     if (!urlMap.contains(pathHead))

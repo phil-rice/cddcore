@@ -41,7 +41,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
   def title: String
   lazy val getDescription = {
     val result = Description.createSuiteDescription(title);
-    println(enginesToNameMap)
+    if (Engine.logging) println(enginesToNameMap)
     for ((engine, name) <- enginesToNameMap)
       result.addChild(addEngine(name, engine))
     result
@@ -78,8 +78,10 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
   def addEngine(name: String, engine: Engine): Description = {
     import EngineWithScenarioExceptionMap._
     val engineDescription = Description.createSuiteDescription(name)
-    println(name)
-    println(engine)
+    if (Engine.logging) {
+      println(name)
+      println(engine)
+    }
     val result = addChildren(List(engine), engineDescription, (biMap._1 + (engine -> engineDescription), biMap._2 + (engineDescription -> engine)));
     biMap = result
     exceptionMap = exceptionMap ++ engine.scenarioExceptionMap.map
@@ -121,7 +123,9 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
     printToFile(fileFor(clazz, ed, "dt.html"))((pw) => pw.write(e.toStringWith(new HtmlIfThenPrinter)))
   }
 
-  def log(s: String) = println(s)
+  def log(s: String) =
+    if (Engine.logging)
+      println(s)
 
   def run(notifier: RunNotifier) = {
     val exceptionScenarios = exceptionMap.keySet
@@ -257,12 +261,12 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
     class SomeClass extends SomeTrait { def someMethod = "something" }
     def main(args: Array[String]) = {
       val someClassTrait: SomeTrait = Class.forName("SomeClass").newInstance().asInstanceOf[SomeTrait]
-      println("calling someClassTrait: " + someClassTrait.someMethod)
+      //      println("calling someClassTrait: " + someClassTrait.someMethod)
       val objectName = "SomeObject$"
       val cons = Class.forName(objectName).getDeclaredConstructors();
       cons(0).setAccessible(true);
       val someObjectTrait: SomeTrait = cons(0).newInstance().asInstanceOf[SomeTrait]
-      println("calling someObjectTrait: " + someObjectTrait.someMethod)
+      //      println("calling someObjectTrait: " + someObjectTrait.someMethod)
     }
   }
 }
