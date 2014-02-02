@@ -20,3 +20,5 @@
 1.8.3 Continuous Integration, first examples now work
 1.8.5 The documentation view and project index page now added to a JUnit run
 1.8.5.1 Fixed minor bug when using engine in default package
+1.8.5.2 Minor error message improvements, minor report improvements
+
