@@ -130,7 +130,8 @@ class EngineConclusionWalker extends ReportWalker {
 object ReportCreator {
   def unnamed = "<Unnamed>"
 
-  def fileSystem(loggerDisplayProcessor: LoggerDisplayProcessor, r: ReportableHolder, title: String = null, live: Boolean = false, reportableToUrl: FileSystemReportableToUrl = new FileSystemReportableToUrl, optUrlMap: Option[UrlMap] = None) =
+
+  def fileSystem(loggerDisplayProcessor: LoggerDisplayProcessor, r: ReportableHolder, title: String = null, live: Boolean = false, reportableToUrl: FileSystemReportableToUrl = new FileSystemReportableToUrl, optUrlMap: Option[UrlMap] = None): FileReportCreator =
     new FileReportCreator(loggerDisplayProcessor, r, title, live, reportableToUrl, optUrlMap)
 
 }
@@ -678,6 +679,13 @@ object HtmlRenderer {
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
       "</div><!-- engine -->\n")
+  val liveEngineWithChildrenTemplate: StringRendererRenderer =
+    (engineWithChildrenKey, "<div class='engine'>" +
+      "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + table("engineTable", refsRow) + "Cannot yet execute live Engines with children",
+
+      "</div><!-- engineSummary -->" +
+      "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
+      "</div><!-- engine -->\n")
 
   val useCaseTemplate: StringRendererRenderer =
     ("UseCase",
@@ -720,8 +728,10 @@ class HtmlRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, live: Boolean
 
   def liveEngineHtml(rootUrl: Option[String], params: Option[List[Any]], conclusion: Option[Conclusion], restrict: ReportableSet = Set(), engineForm: String) =
     Renderer(loggerDisplayProcessor, rootUrl, restrict, live).
-      configureAttribute(Renderer.decisionTreeConfig(params, conclusion, None), Renderer.setAttribute(Renderer.engineFromTestsKey, "engineForm", engineForm), Renderer.setAttribute("Engine", "live", true)).
-      configureReportableHolder(reportTemplate, projectTemplate, liveEngineTemplate)
+      configureAttribute(Renderer.decisionTreeConfig(params, conclusion, None),
+        Renderer.setAttribute(Renderer.engineFromTestsKey, "engineForm", engineForm),
+        Renderer.setAttribute("Engine", "live", true)).
+        configureReportableHolder(reportTemplate, projectTemplate, liveEngineTemplate, liveEngineWithChildrenTemplate)
 
   def usecaseHtml(rootUrl: Option[String], test: Option[Test] = None, restrict: ReportableSet = Set()) =
     Renderer(loggerDisplayProcessor, rootUrl, restrict, live).

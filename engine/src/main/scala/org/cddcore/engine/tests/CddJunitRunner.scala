@@ -1,7 +1,6 @@
 package org.cddcore.engine.tests
 
 import org.junit.runner.Description
-
 import scala.collection.JavaConversions._
 import org.junit.runner.Runner
 import org.junit.runner.notification.RunNotifier
@@ -16,12 +15,25 @@ import sys.process._
 import java.lang.reflect.Field
 import junit.framework.AssertionFailedError
 import org.cddcore.engine.ReportableWithTemplate
+import java.util.concurrent.atomic.AtomicBoolean
+import org.junit.runner.notification.RunListener
+import org.junit.runner.Result
+import java.util.concurrent.atomic.AtomicReference
 
 object CddRunner {
   val separator = "\n#########\n"
   val userHome = System.getProperty("user.home");
-  val directory = new File(userHome, ".cdd")
-
+  var directory = new File(userHome, ".cdd")
+  val needToAddListener = new AtomicBoolean(true)
+  val enginesInTest = new AtomicReference(List[Engine]())
+  def addToEngines(l: List[Engine]) {
+    while (true) {
+      val original = enginesInTest.get()
+      val next = original ::: l
+      if (enginesInTest.compareAndSet(original, next))
+        return
+    }
+  }
 }
 trait NotActuallyFactory[R, FullR] extends EngineUniverse[R, FullR] {
   def builder: RealScenarioBuilder = ???
@@ -157,6 +169,14 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
 
   def run(depth: Int, notifier: RunNotifier, description: Description, reportable: Reportable, engine: Option[Engine]) {
     test {
+      if (CddRunner.needToAddListener.getAndSet(false)) {
+        notifier.addListener(new RunListener() {
+          override def testRunFinished(result: Result) = {
+            println("JUnit Finished")
+            recordEngines(CddRunner.enginesInTest.get)
+          }
+        })
+      }
       notifier.fireTestStarted(description)
       log(msg(depth, "started", reportable, description))
       try {
@@ -216,6 +236,19 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
         throw new RuntimeException(s"Class: $clazz Field: $moduleField", e);
     }
   }
+  def recordEngines(engines: List[Engine]) {
+    import EngineWithLogger._
+    engines.headOption match {
+      case Some(engine) =>
+        val packageObject = clazz.getPackage()
+        val packageName = if (packageObject == null) "default package" else packageObject.getName()
+        val project = Project("JUnit", engines: _*)
+        val report = Report("Reports", project)
+        ReportCreator.fileSystem(engine.logger, report).create
+      case _ =>
+    }
+  }
+
   //  def recordEngine(clazz: Class[Any], logger: TddLogger) {
   //    import EngineWithLogger._
   //    val project = Project(clazz.getPackage().getName() + "/" + clazz.getSimpleName(), allEngines: _*)
@@ -226,7 +259,6 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
 
 class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
   import org.cddcore.engine.Engine._
-  import EngineWithLogger._
 
   def title = "CDD: " + clazz.getName
   val instance = test { instantiate(clazz) };
@@ -243,16 +275,7 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
   }
 
   val rootEngines = rootEnginesAndNames.map(_._1)
-
-  rootEngines.headOption match {
-    case Some(engine) =>
-      val packageObject = clazz.getPackage()
-      val packageName = if (packageObject == null) "default package" else packageObject.getName()
-      val project = Project(packageName + "." + clazz.getSimpleName, rootEngines: _*)
-      val report = Report("Junit", project)
-      ReportCreator.fileSystem(engine.logger, report).create
-    case _ =>
-  }
+  CddRunner.addToEngines(rootEngines.toList)
 
   object Main {
     trait SomeTrait { def someMethod: String }

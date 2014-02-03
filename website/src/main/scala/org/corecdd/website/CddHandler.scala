@@ -52,7 +52,7 @@ class CddHandler(loggerDisplayProcessor: LoggerDisplayProcessor, p: RequirementA
         } catch {
           case e: Throwable =>
             println(ph);
-//            e.printStackTrace();
+            //            e.printStackTrace();
             throw e
         }
       case _ => ;
@@ -87,25 +87,43 @@ class LivePathHandler extends CddPathHandler {
   override def findUriPath(uri: String): String = uri.substring(0, uri.length() - 5)
   override def paramsINeed(context: HandlerContext) = {
     import context._
-    engine.paramDetails.map((x) => Some(Strings.clean(x.displayName))).padTo(engine.arity, None).zipWithIndex.map { case (None, i) => "param" + i; case (Some(x), _) => x }
+    engine match {
+      case pd: ParamDetails => pd.paramDetails.map((x) => Some(Strings.clean(x.displayName))).padTo(engine.arity, None).zipWithIndex.map { case (None, i) => "param" + i; case (Some(x), _) => x }
+      case _ => List()
+    }
   }
 
   def html(context: HandlerContext, params: List[(String, String)]): String = {
     import context._
-    implicit def toEngineWithTests(e: Engine) = e.asInstanceOf[EngineBuiltFromTests[_]]
     val (engineForm, paramNameAndValues, conclusion) = try {
-      val paramNameAndValues = params.zip(engine.paramDetails).map { case ((paramName, paramString), details) => Param(paramName, paramString, details.parser(paramString)) }.toList
+      val paramNameAndValues = engine match {
+        case pd: ParamDetails =>
+          params.zip(engine.paramDetails).map {
+            case ((paramName, paramString), details) => Param(paramName, paramString, details.parser(paramString))
+          }.toList
+        case _ => List()
+      }
       val engineParams = paramNameAndValues.map(_.value)
-      val conclusion = engine.findConclusionFor(engineParams)
-      val result = engine.evaluateConclusionNoException(engineParams, conclusion)
-      (formHtml(context, paramNameAndValues, result.toString), Some(engineParams), Some(conclusion))
+      engine match {
+        case e: EngineBuiltFromTests[_] if paramNameAndValues.size == e.arity => {
+          val conclusion = e.findConclusionFor(engineParams)
+          val result = e.evaluateConclusionNoException(engineParams, conclusion)
+          (formHtml(context, paramNameAndValues, result.toString), Some(engineParams), Some(conclusion))
+        }
+        case _ => {
+          val result = "Live execution on engine with children not yet supported"
+          (formHtml(context, paramNameAndValues, result.toString), Some(engineParams), None)
+        }
+      }
     } catch { case t: Throwable => t.printStackTrace(); (formHtml(context, params.map((n) => Param(n._1, n._2, "")), t.getClass + ": " + t.getMessage()), None, None) }
-    HtmlRenderer(loggerDisplayProcessor, true).liveEngineHtml(reportCreator.rootUrl, paramNameAndValues, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap, Report("Try: " + engine.titleOrDescription(""), engine))
+    HtmlRenderer(loggerDisplayProcessor, true).liveEngineHtml(reportCreator.rootUrl, paramNameAndValues, conclusion, Set(), engineForm).render(reportCreator.reportableToUrl, urlMap,
+      Report("Try: " + engine.titleOrDescription(""),
+        engine))
   }
 
   def formHtml(context: HandlerContext, paramNameAndValues: List[Param], result: String) = {
     import context._
-    val form =
+    val center = if (engine.arity == paramNameAndValues.size)
       <form class='paramsForm' method='post' action={ fullUri }>
         {
           for (i <- 0 to (engine.arity - 1)) yield {
@@ -117,7 +135,9 @@ class LivePathHandler extends CddPathHandler {
         }
         <input id='submitForm' type='submit'/>
       </form>
-    val center = if (engine.arity == engine.paramDetails.size) form else <p class='notConfigured'>This engine isn't configured for live operations. Add 'param' details</p>;
+    else
+      <p class='notConfigured'>This engine isn't configured for live operations. Add 'param' details</p>;
+
     <div>
       { center }
       <br/>
