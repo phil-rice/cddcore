@@ -28,7 +28,6 @@ class CddContinuousIntegrationRunner(val clazz: Class[Any]) extends CddRunner {
   }
 }
 
-@RunWith(classOf[CddContinuousIntegrationRunner])
 trait CddContinuousIntegrationTest extends HasEngines {
   def engines: List[Engine]
 }

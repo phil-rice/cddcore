@@ -581,7 +581,7 @@ object HtmlRenderer {
   protected val description = "$if(description)$$description$$endif$"
   protected val date = "$if(reportDate)$<hr /><div class='dateTitle'>$reportDate$</div><hr /><div>$reportDate$</div>$endif$"
   def titleAndDescription(clazz: String, titlePattern: String, iconPrefix: String = "") =
-    s"<div class='$clazz'>" + a(iconPrefix + MessageFormat.format(titlePattern, title)) + description + "</div>"
+    s"<div class='$clazz'>" + a(iconPrefix + MessageFormat.format(titlePattern, title)) + "<br />"+description + "</div>"
   def a(body: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$'>$endif$" + body + "$if(url)$</a>$endif$"
   def a(body: String, title: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$' title='" + title + "'>$endif$" + body + "$if(url)$</a>$endif$"
   def aForLive = "$if(url)$<a id='$url$/live' href='$url$/live'>$endif$Live$if(url)$</a>$endif$"

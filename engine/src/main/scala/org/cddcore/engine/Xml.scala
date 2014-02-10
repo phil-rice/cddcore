@@ -27,10 +27,15 @@ object Xml {
 
   def xml(x: Elem): Fragment[Elem, NodeSeq, _, _] = Fragment(xmlFragStrategy, x, List(), None)
 
+  def optionDate: (NodeSeq) => Option[Option[DateTime]] = optionDate("yyyy-MM-dd")
+  def optionDate(pattern: String):(NodeSeq) =>  Option[Option[DateTime]] = (n: NodeSeq) =>
+    try { Some(Some(DateTimeFormat.forPattern(pattern).parseDateTime(n.text)))  } catch {
+      case e: Throwable => Some(None)
+    };
   def date: (NodeSeq) => Option[DateTime] = date("yyyy-MM-dd")
   def date(pattern: String) = (n: NodeSeq) =>
     try { Some(DateTimeFormat.forPattern(pattern).parseDateTime(n.text)) } catch {
-      case e: Throwable =>  None
+      case e: Throwable => None
     };
 
   def string = (n: NodeSeq) => Some(n.text)
@@ -41,6 +46,11 @@ object Xml {
   def yesNo: (NodeSeq) => Option[Boolean] = (n: NodeSeq) => n.text match {
     case "yes" => Some(true)
     case "no" => Some(false)
+    case _ => None
+  }
+  def boolean: (NodeSeq) => Option[Boolean] = (n: NodeSeq) => n.text.toLowerCase() match {
+    case "true" => Some(true)
+    case "false" => Some(false)
     case _ => None
   }
   def yesNo(default: Boolean): (NodeSeq) => Option[Boolean] = (n: NodeSeq) => n.text match {
@@ -63,7 +73,7 @@ object Xml {
     println(f1())
     println(f2())
   }
-} 
+}
 
 trait XmlSituation extends Structure[Elem, NodeSeq] {
   type XmlFragment = Fragment[Elem, NodeSeq, _, _]
@@ -75,10 +85,10 @@ trait XmlSituation extends Structure[Elem, NodeSeq] {
   protected lazy val fragmentsToString = findFragmentsToString(fragmentFields.fieldMap, (e) => e.mkString(","))
   protected lazy val xmlsToString = structuresToString(pathMap, (s) => {
     val f = xmlFields.findFieldWithValue(s) match {
-      case Some(f) => f.getName+"\n"
+      case Some(f) => f.getName + "\n"
       case _ => ""
     }
-    "  Xml: " + f + "  " + s.toString.replace('\n', ' ') +"\n"
+    "  Xml: " + f + "  " + s.toString.replace('\n', ' ') + "\n"
   })
 
   override def toString() = {

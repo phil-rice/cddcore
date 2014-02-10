@@ -369,7 +369,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       case Some(b) =>
         val result = try {
           makeClosureForBecause(s.params).apply(b.fn)
-        } catch { case t: Throwable => throw new BecauseClauseException("", t) } // In practice this helps a lot when debugging if you have an engine calling a nested engine. 
+        } catch { case t: Throwable => throw new BecauseClauseException(s"Threw exception evaluating because for " +ExceptionScenarioPrinter.full(logger,s) , t) } // In practice this helps a lot when debugging if you have an engine calling a nested engine. 
         if (!result)
           throw new ScenarioBecauseException(s.becauseString + " is not true for " + ExceptionScenarioPrinter.full(logger, s) + "\n", s);
       case None =>
