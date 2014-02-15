@@ -282,11 +282,11 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case _ => new CodeHolder(rfnMaker(Left(() => new IllegalStateException("Do not have code or expected  for this scenario: " + ExceptionScenarioPrinter(Scenario.this)))), "No expected or Code")
       }
     })
-    
-    val textOrder= Engine.engineCount.getAndIncrement()
+
+    val textOrder = Engine.engineCount.getAndIncrement()
     override def titleString = title.getOrElse(trimmedParamString)
     lazy val paramString = params.map(paramPrinter).mkString(",")
-    lazy val trimmedParamString = if (paramString.size < 30) paramString else "<Unnamed>"
+    lazy val trimmedParamString = if (paramString.size < 30) paramString else "<Too long @" + System.identityHashCode(this) + ">"
     override def toString =
       s"Scenario(${title.getOrElse("")}, ${paramString}, because=${becauseString}, expected=${logger(expected.getOrElse("<N/A>"))})"
   }
@@ -369,7 +369,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       case Some(b) =>
         val result = try {
           makeClosureForBecause(s.params).apply(b.fn)
-        } catch { case t: Throwable => throw new BecauseClauseException(s"Threw exception evaluating because for " +ExceptionScenarioPrinter.full(logger,s) , t) } // In practice this helps a lot when debugging if you have an engine calling a nested engine. 
+        } catch { case t: Throwable => throw new BecauseClauseException(s"Threw exception evaluating because for " + ExceptionScenarioPrinter.full(logger, s), t) } // In practice this helps a lot when debugging if you have an engine calling a nested engine. 
         if (!result)
           throw new ScenarioBecauseException(s.becauseString + " is not true for " + ExceptionScenarioPrinter.full(logger, s) + "\n", s);
       case None =>
@@ -642,7 +642,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         val childDepth = parentsDepth + 1
         val titleString = if (scenarioTitle == null) None else Some(scenarioTitle);
         val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
-        val scenario = new Scenario( titleString, descriptionString, params, logger)
+        val scenario = new Scenario(titleString, descriptionString, params, logger)
         copy(depth = parentsDepth).set[Scenario](scenario,
           (b, s) => b.copy(children = s :: b.builderData.children),
           (ce, s) => ce.copy(children = s :: ce.children),

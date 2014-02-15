@@ -264,8 +264,10 @@ class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
   val instance = test { instantiate(clazz) };
 
   val rootEnginesAndNames =
-    clazz.getDeclaredMethods().filter((m) => returnTypeIsEngine(m)).map((m) => (m.invoke(instance).asInstanceOf[Engine], m.getName)) ++
-      clazz.getFields().filter((f) => typeIsEngine(f)).map((f) => (f.get(instance).asInstanceOf[Engine], f.getName)).sortBy(_._2)
+    test {
+      clazz.getDeclaredMethods().filter((m) => returnTypeIsEngine(m)).map((m) => (m.invoke(instance).asInstanceOf[Engine], m.getName)) ++
+        clazz.getFields().filter((f) => typeIsEngine(f)).map((f) => (f.get(instance).asInstanceOf[Engine], f.getName)).sortBy(_._2)
+    }
 
   val enginesToNameMap = Map(rootEnginesAndNames: _*)
   if (logging) {
