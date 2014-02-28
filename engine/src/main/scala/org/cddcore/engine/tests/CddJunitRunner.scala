@@ -78,9 +78,12 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
     }
     name
   }
+
   def descriptionfor(r: Reportable, postFix: String): Description = {
     val name = Strings.clean(r match {
-      case t: Test => t.titleString + " => " + logger(t.expected.getOrElse(""))
+      case t: Test =>
+        val result = t.titleString + " => " + logger(t.expected.getOrElse(""))
+        result
       case r: Requirement => r.title.getOrElse("")
       case _ => throw new IllegalStateException(r.getClass() + "/" + r)
     })

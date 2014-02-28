@@ -286,7 +286,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     val textOrder = Engine.engineCount.getAndIncrement()
     override def titleString = title.getOrElse(trimmedParamString)
     lazy val paramString = params.map(paramPrinter).mkString(",")
-    lazy val trimmedParamString = if (paramString.size < 30) paramString else "<Too long @" + System.identityHashCode(this) + ">"
+    lazy val trimmedParamString = if (paramString.size < 30) paramString else "<Too long-" + textOrder + ">"
     override def toString =
       s"Scenario(${title.getOrElse("")}, ${paramString}, because=${becauseString}, expected=${logger(expected.getOrElse("<N/A>"))})"
   }

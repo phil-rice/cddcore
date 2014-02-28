@@ -26,3 +26,4 @@
 1.8.5.5 Reducing verbosity of Junit run
 1.8.5.6 Junit runs produce a merged report
 1.8.5.7 Added Boolean and optionDate to Xml types
+1.8.5.8 Junit now handles unnamed scenarios a little better
