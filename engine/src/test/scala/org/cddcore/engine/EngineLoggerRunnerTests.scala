@@ -61,10 +61,10 @@ class EngineLoggerRunnerDisplayTests extends AbstractEngine1Test[DisplayTest, Di
     e("B")
     checkLastMessages(
       "DEBUG Run()  Executing {A}",
-      "INFO  Run()   Condition CodeHolder(A) was true",
+      "INFO  Run()   Condition Left(CodeHolder(A)) was true",
       "DEBUG Run()   Result {X}",
       "DEBUG Run()  Executing {B}",
-      "INFO  Run()   Condition CodeHolder(A) was false",
+      "INFO  Run()   Condition Left(CodeHolder(A)) was false",
       "DEBUG Run()   Result {Z}")
   }
 

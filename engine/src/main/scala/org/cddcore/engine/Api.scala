@@ -238,9 +238,9 @@ trait Test extends Requirement with ReportableWithTextOrder {
   /** The expected output for the test. The test is mostly saying 'if I pass the engine these parameters, then I expect this result*/
   def expected: Option[ROrException[_]]
   /** The because is a tool that the engine uses to come to the correct conclusions. A good because function should have no sideeffects and execute quickly*/
-  def because: Option[AbstractCodeHolder]
+  def because: Option[Either[AbstractCodeHolder, AbstractCodeHolder]]
   /** If you want to display the because, this returns the description or an empty string if none is defined */
-  def becauseString = because match { case Some(b) => b.description; case _ => "" }
+  def becauseString = because match { case Some(b) => b match {case Left(b) => b.description; case Right(b) => b.description}; case _ => "" }
   /** The code for the scenario. This is optional as if the result is 'the expected' then the code is redundant */
   def optCode: Option[AbstractCodeHolder]
 }
@@ -542,7 +542,7 @@ trait ConclusionOrDecision extends Reportable {
 /** This represents a decision in the decision tree*/
 trait Decision extends ConclusionOrDecision {
   /** The condition that be evaluated. Usually there will be only one item in the list. Because of the idea of 'node merging': see EngineOrTests, this is a list. Effectively the condition is true if any of the becauses are true */
-  def because: List[AbstractCodeHolder]
+  def because: List[Either[AbstractCodeHolder, AbstractCodeHolder]]
   /** If the because is true, then go this way*/
   def yes: Either[Conclusion, Decision]
   /** If the because is false, then go this way*/

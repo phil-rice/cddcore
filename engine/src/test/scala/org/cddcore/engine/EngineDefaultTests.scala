@@ -7,7 +7,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class EngineDefaultTests extends EngineStringStringTests {
   implicit override def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineFromTestsImpl]
-
+  
   "An engine" should "throw UndecidedException if no code has been given" in {
     val e = builderWithUseCase.build
     evaluating { e("x") } should produce[UndecidedException]
@@ -30,7 +30,7 @@ class EngineDefaultTests extends EngineStringStringTests {
 
     val s = e.tests(0)
     assertEngineMatches(e, Right(EngineNode(inputs = List("A"),
-      because = List("A"),
+      because = List(Left("A")),
       yes = Left(CodeAndScenarios(s.actualCode, List(s))),
       no = Left(CodeAndScenarios(e.defaultRoot.left.get, List(), true)),
       scenarioThatCausedNode = s)))

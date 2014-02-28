@@ -117,7 +117,7 @@ class BuilderNodeTests extends EngineStringStringTests {
     assertEquals(Some("two"), s2.title);
     assertEquals(Some("d"), s1.description);
     assertEquals(Some(c), s1.optCode);
-    assertEquals(Some(b), s1.because);
+    assertEquals(Some(Left(b)), s1.because);
     assertEquals(Some(ROrException[String]("x")), s1.expected);
     assertEquals(Some(ROrException[String](new RuntimeException)), s2.expected);
     assertEquals(Some(2), s1.priority);

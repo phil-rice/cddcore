@@ -39,10 +39,12 @@ trait NotActuallyFactory[R, FullR] extends EngineUniverse[R, FullR] {
   def builder: RealScenarioBuilder = ???
   def logger: org.cddcore.engine.TddLogger = TddLogger.noLogger
   def rfnMaker: scala.util.Either[() => Exception, Any] => RFn = ???
-  def makeClosureForBecause(params: List[Any]) = ???
+  def makeClosureForBecause(params: ParamsTuple) = ???
   def makeClosureForCfg(params: List[Any]) = ???
-  def makeClosureForResult(params: List[Any]) = ???
+  def makeClosureForResult(params: ParamsTuple) = ???
   def makeClosureForAssertion(params: List[Any], r: ROrException[R]) = ???
+  def tupleToList(p: ParamsTuple) = ???
+  def listToTuple(params: List[Any]) = ???
 
 }
 

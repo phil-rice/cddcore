@@ -19,7 +19,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
 
   "A scenario" should " remember parameters and have None for the other parameters" in {
     val c = firstScenario
-    assert(c.params == firstParams)
+    assert(c.paramsTuple == firstParams)
     assert(c.optCode == None)
     assert(c.because == None)
     assert(c.expected == None)
@@ -36,7 +36,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
 
   it should "add expected when produces is called" in {
     val c = firstScenario(builderWithScenario.expected(firstResult))
-    assert(c.params == firstParams)
+    assert(c.paramsTuple == firstParams)
     assert(c.optCode == None)
     assert(c.because == None)
     assert(c.expected == Some(ROrException[R](firstResult)), c)
@@ -45,7 +45,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
 
   it should "add code when byCalling is called" in {
     val c = firstScenario(builderWithScenario.expected(firstResult).code(codeFn))
-    assert(c.params == firstParams)
+    assert(c.paramsTuple == firstParams)
     val expectedCode = Some(new CodeHolder(codeFn, "AbstractScenarioTests.this.codeFn"))
     assertEquals(expectedCode, c.optCode)
     assert(c.because == None)
@@ -55,9 +55,9 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
 
   it should "add because when because is called" in {
     val c = firstScenario(builderWithScenario.expected(firstResult).because(because))
-    assert(c.params == firstParams)
+    assert(c.paramsTuple == firstParams)
     assert(c.optCode == None)
-    val expected = Some(new CodeHolder(because, "AbstractScenarioTests.this.because"))
+    val expected = Some(Left(new CodeHolder(because, "AbstractScenarioTests.this.because")))
     assert(c.because == expected, c.because)
     assert(c.expected == Some(ROrException[R](firstResult)))
     assert(c.configuration == None)
@@ -86,7 +86,7 @@ trait AbstractScenarioTests[R] extends FirstScenarioTest[R] {
 @RunWith(classOf[JUnitRunner])
 class Scenario1Tests extends FirstScenario1Test[Int, Int] with AbstractScenarioTests[Int] {
 
-  val firstParams: List[Any] = List(1)
+  val firstParams = 1
   val codeFn = (i: Int) => i + 1
   val because = (i: Int) => true
   val falseBecause = (i: Int) => false
@@ -119,7 +119,7 @@ class Scenario1Tests extends FirstScenario1Test[Int, Int] with AbstractScenarioT
 }
 @RunWith(classOf[JUnitRunner])
 class Scenario2Tests extends FirstScenario2Test[Int, Int, Int] with AbstractScenarioTests[Int] {
-  val firstParams: List[Any] = List(1, 1)
+  val firstParams = (1,1)
   val codeFn: RFn = (i: Int, j: Int) => i + j
   val because = (i: Int, j: Int) => true
   val falseBecause = (i: Int, j: Int) => false

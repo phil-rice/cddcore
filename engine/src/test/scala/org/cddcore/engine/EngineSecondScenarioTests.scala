@@ -17,7 +17,7 @@ class EngineSecondScenarioTests extends EngineStringStringTests {
     val a = e.tests(1); assertEquals("A", a.becauseString)
     val b = e.tests(2); assertEquals("", b.becauseString)
 
-    assertEngineMatches(e, Right(EngineNode(because = List("A"), scenarioThatCausedNode = a, inputs = List("A"),
+    assertEngineMatches(e, Right(EngineNode(because = List(Left("A")), scenarioThatCausedNode = a, inputs = List("A"),
       yes = Left(CodeAndScenarios("X", List(a))),
       no = Left(CodeAndScenarios("Z", List(b, w))))))
   }
@@ -44,7 +44,7 @@ class EngineSecondScenarioTests extends EngineStringStringTests {
     val a = e.tests(1); assertEquals(List("A"), a.params)
     val ab = e.tests(2); assertEquals(List("AB"), ab.params)
 
-    assertEngineMatches(e, Right(EngineNode(because = List("A"), inputs = List("A"), yes = Left(CodeAndScenarios("X", List(ab, a))), no = Left(CodeAndScenarios("Z", List(w))), scenarioThatCausedNode = a)))
+    assertEngineMatches(e, Right(EngineNode(because = List(Left("A")), inputs = List("A"), yes = Left(CodeAndScenarios("X", List(ab, a))), no = Left(CodeAndScenarios("Z", List(w))), scenarioThatCausedNode = a)))
   }
 
   it should "add to yes clause if because is true for root" in {
@@ -58,8 +58,8 @@ class EngineSecondScenarioTests extends EngineStringStringTests {
     val ab = e.tests(2); assertEquals(List("AB"), ab.params)
 
     assertEngineMatches(e,
-      Right(EngineNode(because = List("A"), scenarioThatCausedNode = a, inputs = List("A"),
-        yes = Right(EngineNode(because = List("B"), scenarioThatCausedNode = ab, inputs = List("AB"),
+      Right(EngineNode(because = List(Left("A")), scenarioThatCausedNode = a, inputs = List("A"),
+        yes = Right(EngineNode(because = List(Left("B")), scenarioThatCausedNode = ab, inputs = List("AB"),
           yes = Left(CodeAndScenarios("Y", List(ab))),
           no = Left(CodeAndScenarios("X", List(a))))),
         no = Left(CodeAndScenarios("Z", List(w))))))

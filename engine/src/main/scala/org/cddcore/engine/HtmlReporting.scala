@@ -130,7 +130,6 @@ class EngineConclusionWalker extends ReportWalker {
 object ReportCreator {
   def unnamed = "<Unnamed>"
 
-
   def fileSystem(loggerDisplayProcessor: LoggerDisplayProcessor, r: ReportableHolder, title: String = null, live: Boolean = false, reportableToUrl: FileSystemReportableToUrl = new FileSystemReportableToUrl, optUrlMap: Option[UrlMap] = None): FileReportCreator =
     new FileReportCreator(loggerDisplayProcessor, r, title, live, reportableToUrl, optUrlMap)
 
@@ -479,7 +478,10 @@ object Renderer {
     stringTemplate.setAttribute("code", ValueForRender(optCode.collect { case c => c.pretty } getOrElse (null)))
     stringTemplate.setAttribute("expected", ValueForRender(expected.getOrElse("")))
     stringTemplate.setAttribute("paramCount", params.size)
-    stringTemplate.setAttribute("because", ValueForRender(r.because.collect { case c => c.pretty } getOrElse (null)))
+    stringTemplate.setAttribute("because", ValueForRender(r.because.collect {
+      case c =>
+        c match { case Left(b) => b.pretty; case Right(p) => p.pretty }
+    } getOrElse (null)))
     addParams(stringTemplate, "params", loggerDisplayProcessor, params)
   })
 }
@@ -581,7 +583,7 @@ object HtmlRenderer {
   protected val description = "$if(description)$$description$$endif$"
   protected val date = "$if(reportDate)$<hr /><div class='dateTitle'>$reportDate$</div><hr /><div>$reportDate$</div>$endif$"
   def titleAndDescription(clazz: String, titlePattern: String, iconPrefix: String = "") =
-    s"<div class='$clazz'>" + a(iconPrefix + MessageFormat.format(titlePattern, title)) + "<br />"+description + "</div>"
+    s"<div class='$clazz'>" + a(iconPrefix + MessageFormat.format(titlePattern, title)) + "<br />" + description + "</div>"
   def a(body: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$'>$endif$" + body + "$if(url)$</a>$endif$"
   def a(body: String, title: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$' title='" + title + "'>$endif$" + body + "$if(url)$</a>$endif$"
   def aForLive = "$if(url)$<a id='$url$/live' href='$url$/live'>$endif$Live$if(url)$</a>$endif$"

@@ -29,7 +29,13 @@ trait EngineTypes[R, FullR] {
   /** RFn is a function from the parameters of the engine to a result R. It is used to calculate the result of the engine */
   type RFn
   /** PF is a partial function from the parameters of the engine to a result R */
-  type PF
+  type PFn = PartialFunction[ParamsTuple, R]
+
+  /** The parameters as a tuple */
+  type ParamsTuple
+
+  def tupleToList(pt: ParamsTuple): List[Any]
+  def listToTuple(list: List[Any]): ParamsTuple
 
   type RFnMaker = (Either[Exception, R]) => RFn
   type FoldFn = (FullR, R) => FullR
@@ -41,7 +47,8 @@ trait EngineTypes[R, FullR] {
   /** In order to call an A in the building code, when we don't know anything about the arity, we create a closure holding the parameters and reusltand pass the A function to it */
   type AssertionClosure = (A) => Boolean
   /** In order to call a B in the building code, when we don't know anything about the arity, we create a closure holding the parameters and pass the B function to it */
-  type BecauseClosure = (B) => Boolean
+  case class BecauseClosure(val fn: (B) => Boolean, val paramsTuple: ParamsTuple)
+
   /** In order to call a RFN in the building code, when we don't know anything about the arity, we create a closure holding the parameters and pass the B function to it */
   type ResultClosure = (RFn) => R
   type CfgClosure = (CfgFn) => Unit
@@ -49,15 +56,33 @@ trait EngineTypes[R, FullR] {
   /** This is just a type synonym to save messy code */
   type Code = CodeHolder[RFn]
 
+  type HolderBOrPfn = Either[CodeHolder[B], CodeHolder[PFn]]
+  type BecauseList = List[HolderBOrPfn]
+
   def makeClosureForAssertion(params: List[Any], r: ROrException[R]): AssertionClosure
-  def makeClosureForBecause(params: List[Any]): BecauseClosure
-  def makeClosureForResult(params: List[Any]): ResultClosure
+  def makeClosureForBecause(params: ParamsTuple): BecauseClosure
+  def makeClosureForBecause(params: List[Any]): BecauseClosure = makeClosureForBecause(listToTuple(params))
+  def makeClosureForResult(params: ParamsTuple): ResultClosure
+  def makeClosureForResult(params: List[Any]): ResultClosure = makeClosureForResult(listToTuple(params))
   def makeClosureForCfg(params: List[Any]): CfgClosure
 
   /** turns parameters into fragment results. For example in XML in an engine 2 it might be (P1,P2)=>NodeSeq. I would love to know how to make this more type safe... */
   type FragFn
   /** turns the params into a Fragment. This can be modified by the fragment specifiers */
   type ParamsToFragmentFn
+
+  def eval(closure: BecauseClosure, holder: HolderBOrPfn): Boolean = {
+    holder match {
+      case Left(b) =>
+        if (closure.fn(b.fn))
+          return true
+      case Right(pfn) =>
+        if (pfn.fn.isDefinedAt(closure.paramsTuple))
+          return true
+    }
+    return false
+  }
+
 }
 
 object ROrException {
@@ -150,9 +175,9 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   object CannotDefineCodeTwiceException {
     def apply(original: Code, beingAdded: Code) = new CannotDefineCodeTwiceException(s"Original Code:\n${original}\nBeingAdded\n${beingAdded}", original, beingAdded);
   }
-  class CannotDefineBecauseTwiceException(msg: String, val original: CodeHolder[B], val beingAdded: CodeHolder[B]) extends EngineException(msg, null)
+  class CannotDefineBecauseTwiceException(msg: String, val original: HolderBOrPfn, val beingAdded: HolderBOrPfn) extends EngineException(msg, null)
   object CannotDefineBecauseTwiceException {
-    def apply(original: CodeHolder[B], beingAdded: CodeHolder[B]) = new CannotDefineBecauseTwiceException(s"Original Because:\n${original}\nBeingAdded\n${beingAdded}", original, beingAdded);
+    def apply(original: HolderBOrPfn, beingAdded: HolderBOrPfn) = new CannotDefineBecauseTwiceException(s"Original Because:\n${original}\nBeingAdded\n${beingAdded}", original, beingAdded);
   }
 
   object ScenarioConflictingWithDefaultException {
@@ -235,7 +260,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     }
   }
 
-  case class EngineNode(val because: List[CodeHolder[B]], inputs: List[Any], yes: RorN, no: RorN, scenarioThatCausedNode: Scenario) extends Decision {
+  case class EngineNode(val because: BecauseList, inputs: List[Any], yes: RorN, no: RorN, scenarioThatCausedNode: Scenario) extends Decision {
     def allScenarios = scenarios(Right(this))
     def becauseString = because.map(_.description).mkString(" or ")
     def prettyString = because.map(_.pretty).mkString(" or ")
@@ -245,12 +270,12 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case Right(n) => scenarios(n.yes) ++ scenarios(n.no)
       }
     }
-    def evaluateBecause(fn: BecauseClosure): Boolean = {
-      for (b <- because)
-        if (fn(b.fn))
+
+    def evaluateBecause(closure: BecauseClosure): Boolean = {
+      for (bec <- because)
+        if (eval(closure, bec))
           return true
       false
-
     }
     override def toString = getClass().getSimpleName() + "(" + becauseString + " => " + yes.toString() + " =/> " + no.toString() + " / " + scenarioThatCausedNode.description + ")";
   }
@@ -263,11 +288,11 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   case class Scenario(
     title: Option[String],
     description: Option[String],
-    params: List[Any],
+    paramsTuple: ParamsTuple,
     paramPrinter: LoggerDisplayProcessor,
     expected: Option[ROrException[R]] = None,
     optCode: Option[Code] = None,
-    because: Option[CodeHolder[B]] = None,
+    because: Option[HolderBOrPfn] = None,
     assertions: List[CodeHolder[A]] = List(),
     configuration: Option[CfgFn] = None,
     priority: Option[Int] = None,
@@ -282,7 +307,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case _ => new CodeHolder(rfnMaker(Left(() => new IllegalStateException("Do not have code or expected  for this scenario: " + ExceptionScenarioPrinter(Scenario.this)))), "No expected or Code")
       }
     })
-
+    val params = tupleToList(paramsTuple)
     val textOrder = Engine.engineCount.getAndIncrement()
     override def titleString = title.getOrElse(trimmedParamString)
     lazy val paramString = params.map(paramPrinter).mkString(",")
@@ -368,7 +393,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     s.because match {
       case Some(b) =>
         val result = try {
-          makeClosureForBecause(s.params).apply(b.fn)
+          eval(makeClosureForBecause(s.paramsTuple), b)
         } catch { case t: Throwable => throw new BecauseClauseException(s"Threw exception evaluating because for " + ExceptionScenarioPrinter.full(logger, s), t) } // In practice this helps a lot when debugging if you have an engine calling a nested engine. 
         if (!result)
           throw new ScenarioBecauseException(s.becauseString + " is not true for " + ExceptionScenarioPrinter.full(logger, s) + "\n", s);
@@ -588,9 +613,22 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         (_, _) => throw new NeedScenarioException,
         (s, b) => {
           if (s.because.isDefined)
-            throw CannotDefineBecauseTwiceException(s.because.get, b)
+            throw CannotDefineBecauseTwiceException(s.because.get, Left(b))
           validateBecause(s);
-          s.copy(because = Some(b))
+          s.copy(because = Some(Left(b)))
+        })
+
+    /** Set the 'because' of the 'last thing to be mentioned' to be this value. i.e. the builder/usecase/scenario. Throws CannotDefineBecauseTwiceException if expected already set. If you haven't set a code, then this will also act as the code*/
+    def ifThen(b: CodeHolder[PFn], comment: String = "") =
+      set[CodeHolder[PFn]](b.copy(comment = comment),
+        (_, _) => throw new NeedScenarioException,
+        (_, _) => throw new NeedScenarioException,
+        (_, _) => throw new NeedScenarioException,
+        (s, b) => {
+          if (s.because.isDefined)
+            throw CannotDefineBecauseTwiceException(s.because.get, Right(b))
+          validateBecause(s);
+          s.copy(because = Some(Right(b)))
         })
 
     def childEngine(engineTitle: String, description: String = null) = {
@@ -637,12 +675,12 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     /** Starts the definition of a new case. A use case can be thought of as a list of scenarios */
     def useCase(useCaseTitle: String, useCaseDescription: String) = withUseCase(useCaseTitle, Some(useCaseDescription))
 
-    protected def newScenario(scenarioTitle: String, scenarioDescription: String, params: List[Any]): RealScenarioBuilder = {
+    protected def newScenario(scenarioTitle: String, scenarioDescription: String, paramsTuple: ParamsTuple): RealScenarioBuilder = {
       def newScenario(parentsDepth: Int) = {
         val childDepth = parentsDepth + 1
         val titleString = if (scenarioTitle == null) None else Some(scenarioTitle);
         val descriptionString = if (scenarioDescription == null) None else Some(scenarioDescription);
-        val scenario = new Scenario(titleString, descriptionString, params, logger)
+        val scenario = new Scenario(titleString, descriptionString, paramsTuple, logger)
         copy(depth = parentsDepth).set[Scenario](scenario,
           (b, s) => b.copy(children = s :: b.builderData.children),
           (ce, s) => ce.copy(children = s :: ce.children),
@@ -726,12 +764,12 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     def findConclusionFor(params: List[Any]): Conclusion = findConclusionFor(makeClosureForBecause(params), root)
     def evaluateConclusion(params: List[Any], conclusion: Conclusion): R = {
       conclusion match {
-        case c: CodeAndScenarios => makeClosureForResult(params)(c.code.fn)
+        case c: CodeAndScenarios => makeClosureForResult(listToTuple(params))(c.code.fn)
       }
     }
     def evaluateConclusionNoException(params: List[Any], conclusion: Conclusion): ROrException[R] = {
       try conclusion match {
-        case c: CodeAndScenarios => ROrException(makeClosureForResult(params)(c.code.fn))
+        case c: CodeAndScenarios => ROrException(makeClosureForResult(listToTuple(params))(c.code.fn))
       } catch { case e: Throwable => ROrException(e) }
     }
   }
@@ -798,9 +836,9 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     }
     protected def checkExpectedMatchesAction(root: RorN, s: Scenario) {
       s.configure
-      val bec = makeClosureForBecause(s.params)
+      val bec = makeClosureForBecause(s.paramsTuple)
       val rFn: RFn = evaluate(bec, root, false).code.fn
-      val actualFromScenario: ROrException[R] = safeCall(makeClosureForResult(s.params), rFn)
+      val actualFromScenario: ROrException[R] = safeCall(makeClosureForResult(s.paramsTuple), rFn)
       if (s.expected.isEmpty)
         throw NoExpectedException(loggerDisplayProcessor, s)
       if (actualFromScenario != s.expected)
@@ -810,9 +848,9 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     protected def validateScenario(root: RorN, t: Test) = t match {
       case s: Scenario =>
         s.configure
-        val bec = makeClosureForBecause(s.params)
+        val bec = makeClosureForBecause(s.paramsTuple)
         val rFn: RFn = evaluate(bec, root, false).code.fn
-        val actualFromScenario: ROrException[R] = safeCall(makeClosureForResult(s.params), rFn)
+        val actualFromScenario: ROrException[R] = safeCall(makeClosureForResult(s.paramsTuple), rFn)
         if (s.expected.isEmpty)
           throw NoExpectedException(loggerDisplayProcessor, s)
         if (Some(actualFromScenario) != s.expected)
@@ -864,8 +902,8 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       for (s <- scenarios) {
 
         s.configure
-        val bc = makeClosureForBecause(s.params)
-        val fnr = makeClosureForResult(s.params)
+        val bc = makeClosureForBecause(s.paramsTuple)
+        val fnr = makeClosureForResult(s.paramsTuple)
         val conclusionNode = evaluate(bc, root, false);
         if (!conclusionNode.scenarios.contains(s))
           throw new RuntimeException(s"$s came to wrong node $conclusionNode")
@@ -884,14 +922,14 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
           e.evaluateBecause(makeClosureForBecause(params))
       }
     }
-    def evaluateBecauseForScenario(c: Scenario, params: List[Any]) = {
-      val fn = makeClosureForBecause(params)
+    def evaluateBecauseForScenario(c: Scenario, paramsTuple: ParamsTuple) = {
+      val fn = makeClosureForBecause(paramsTuple)
       //    c.configure
-      c.because match { case Some(b) => fn(b.fn); case _ => throw new IllegalStateException("No because in " + c) }
+      c.because match { case Some(b) => eval(fn, b); case _ => throw new IllegalStateException("No because in " + c) }
     }
 
-    def evaluateResultForScenario(c: Scenario, params: List[Any]): ROrException[R] = {
-      val fnr = makeClosureForResult(params)
+    def evaluateResultForScenario(c: Scenario, paramsTuple: ParamsTuple): ROrException[R] = {
+      val fnr = makeClosureForResult(paramsTuple)
       c.configure
       try {
         val result = ROrException(fnr(c.actualCode.fn));
@@ -915,15 +953,15 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
      *  This is asking whether the parameters in p come to the same conclusion as c
      */
     private def resultsSame(l: CodeAndScenarios, c: Scenario): Boolean = {
-      val resultFromScenario: ROrException[R] = evaluateResultForScenario(c, c.params)
+      val resultFromScenario: ROrException[R] = evaluateResultForScenario(c, c.paramsTuple)
       val result = l.scenarios match {
         case (lc :: tail) =>
-          val resultFromRoot: ROrException[R] = evaluateResultForScenario(lc, c.params)
+          val resultFromRoot: ROrException[R] = evaluateResultForScenario(lc, c.paramsTuple)
           val resultSame = resultFromScenario == resultFromRoot
           resultSame
         case _ => //so I don't have a scenario. But I have a code. 
           c.configure
-          val resultFromRoot = makeClosureForResult(c.params)(l.fn);
+          val resultFromRoot = makeClosureForResult(c.paramsTuple)(l.fn);
           val resultSame = resultFromScenario == Left(resultFromRoot)
           resultSame
       }
@@ -937,7 +975,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case null => if (parents.isEmpty) Nil else throw new IllegalStateException(PathPrinter(parents))
         case Left(l: CodeAndScenarios) => NodePath(Left(l), true) :: parents; //we got to the bottom! The true... not sure about 
         case Right(r) =>
-          evaluateBecauseForScenario(r.scenarioThatCausedNode, s.params) match {
+          evaluateBecauseForScenario(r.scenarioThatCausedNode, listToTuple(s.params)) match {
             case true => findWhereItGoes(NodePath(n, true) :: parents, r.yes, s);
             case false => findWhereItGoes(NodePath(n, false) :: parents, r.no, s);
           }
@@ -957,7 +995,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       }
     }
     def addAssertion(fullPath: List[NodePath], codeAndScenarios: CodeAndScenarios, s: Scenario): RorN = {
-      val actualResultIfUseThisScenariosCode: ROrException[R] = safeCall(makeClosureForResult(s.params), codeAndScenarios.code.fn);
+      val actualResultIfUseThisScenariosCode: ROrException[R] = safeCall(makeClosureForResult(s.paramsTuple), codeAndScenarios.code.fn);
       val result = (s.expected, actualResultIfUseThisScenariosCode) match {
         case (Some(ROrException(Some(v1), None)), ROrException(Some(v2), None)) if (v1 == v2) => { logger.addScenarioFor[RFn](s.titleString, codeAndScenarios.code); Left(codeAndScenarios.copy(scenarios = s :: codeAndScenarios.scenarios)) }
         case (Some(ROrException(Some(_), None)), ROrException(Some(_), None)) if (fullPath.isEmpty) => throw ScenarioConflictingWithDefaultException(loggerDisplayProcessor, actualResultIfUseThisScenariosCode, s)
@@ -982,7 +1020,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     def checkDoesntMatch(codeAndScenarios: CodeAndScenarios, scenarioBeingAdded: Scenario) {
       for (scenario <- codeAndScenarios.scenarios) {
         scenario.configure
-        val result = makeClosureForBecause(scenario.params)(scenarioBeingAdded.because.get.fn)
+        val result = eval(makeClosureForBecause(scenario.paramsTuple), scenarioBeingAdded.because.get)
         if (result)
           throw ScenarioConflictException(scenario, scenarioBeingAdded)
       }
@@ -1018,7 +1056,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case (NodePath(Left(codeAndScenarios), _) :: Nil, Some(because)) =>
           val optParent = lastParent(fullPath)
 
-          val actualResultIfUseThisScenariosCode: ROrException[R] = safeCall(makeClosureForResult(s.params), codeAndScenarios.code.fn);
+          val actualResultIfUseThisScenariosCode: ROrException[R] = safeCall(makeClosureForResult(s.paramsTuple), codeAndScenarios.code.fn);
           val expectedSame = Some(actualResultIfUseThisScenariosCode) == s.expected
           (expectedSame, optParent) match {
             case (true, None) =>
@@ -1118,13 +1156,13 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       failedCall(conclusion, exception)
     }
 
-    def applyParams(root: RorN, params: List[Any], log: Boolean): R = {
-      if (log) logParams(params)
-      val bec = makeClosureForBecause(params)
+    def applyParams(root: RorN, paramsTuple: ParamsTuple, log: Boolean): R = {
+      if (log) logParams(tupleToList(paramsTuple))
+      val bec = makeClosureForBecause(paramsTuple)
       val conclusion = evaluate(bec, root, log);
       try {
         val rfn = conclusion.code.fn
-        val result = makeClosureForResult(params)(rfn)
+        val result = makeClosureForResult(paramsTuple)(rfn)
         if (log) logResult(conclusion, result)
         result
       } catch {
@@ -1136,7 +1174,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
     private def checkScenario(root: RorN, c: Scenario) {
       validateBecause(c);
       validateScenario(root, c);
-      val actualFromEngine = applyParams(root, c.params, false);
+      val actualFromEngine = applyParams(root, c.paramsTuple, false);
       if (actualFromEngine != c.expected)
         throw new EngineResultException("Wrong result for " + c.actualCode.description + " for " + c.params + "\nActual: " + actualFromEngine + "\nExpected: " + c.expected);
     }

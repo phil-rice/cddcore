@@ -87,19 +87,19 @@ class AbstractEngine3Test[P1, P2, P3, R] extends BuilderFactory3[P1, P2, P3, R, 
 trait FirstScenarioTest[R] extends AbstractEngineTest[R] {
   def builderWithScenario: RealScenarioBuilder;
   def firstScenario: Scenario = firstScenario(builderWithScenario)
-  def firstParams: List[Any]
+  def firstParams: ParamsTuple
 }
 
 trait FirstScenario1Test[P, R] extends AbstractEngine1Test[P, R] with FirstScenarioTest[R] {
-  def builderWithScenario = builderWithUseCase.scenario(firstParams(0).asInstanceOf[P])
+  def builderWithScenario = builderWithUseCase.scenario(firstParams)
 }
 
 trait FirstScenario2Test[P1, P2, R] extends AbstractEngine2Test[P1, P2, R] with FirstScenarioTest[R] {
-  def builderWithScenario = builderWithUseCase.scenario(firstParams(0).asInstanceOf[P1], firstParams(1).asInstanceOf[P2])
+  def builderWithScenario = builderWithUseCase.scenario(firstParams._1, firstParams._2)
 }
 
 trait FirstScenario3Test[P1, P2, P3, R] extends AbstractEngine3Test[P1, P2, P3, R] with FirstScenarioTest[R] {
-  def builderWithScenario = builderWithUseCase.scenario(firstParams(0).asInstanceOf[P1], firstParams(1).asInstanceOf[P2], firstParams(2).asInstanceOf[P3])
+  def builderWithScenario = builderWithUseCase.scenario(firstParams._1, firstParams._2, firstParams._3)
 }
 
 trait EngineStringTests extends AbstractEngineTest[String] {
