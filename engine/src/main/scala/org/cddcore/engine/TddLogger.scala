@@ -7,22 +7,22 @@ trait LoggerDisplay {
   def loggerDisplay(dp: LoggerDisplayProcessor): String
 }
 
-case class ClassFunction[C, T](clazz: Class[C], fn: (C) => T) {
-  def apply(c: C) = fn(c)
+case class ClassFunction[C, T](clazz: Class[C], fn: (LoggerDisplayProcessor, C) => T) {
+  def apply(loggerDisplayProcessor: LoggerDisplayProcessor, c: C) = fn(loggerDisplayProcessor, c)
 }
 
 case class ClassFunctionList[T](list: List[ClassFunction[_, T]] = List()) {
-  def apply[C](c: C) =
-    list.collectFirst({ case ClassFunction(clazz, f) if clazz.isAssignableFrom(c.getClass) => f.asInstanceOf[(C) => T](c.asInstanceOf[C]) })
-  def getOrElse[C](c: C, default: => T): T =
-    apply(c).getOrElse(default)
+  def apply[C](ldp: LoggerDisplayProcessor, c: C) =
+    list.collectFirst({ case ClassFunction(clazz, f) if clazz.isAssignableFrom(c.getClass) => f.asInstanceOf[(LoggerDisplayProcessor, C) => T](ldp, c.asInstanceOf[C]) })
+  def getOrElse[C](ldp: LoggerDisplayProcessor, c: C, default: => T): T =
+    apply(ldp, c).getOrElse(default)
 
 }
 
 trait LoggerDisplayProcessor extends Function[Any, String] {
   def displayMap: ClassFunctionList[String]
   def apply(a: Any): String =
-    displayMap.getOrElse(a,
+    displayMap.getOrElse(this, a,
       a match {
         case d: LoggerDisplay => d.loggerDisplay(this);
         case a => a.toString
@@ -89,7 +89,7 @@ trait SimpleTddLogger extends TddLogger {
   def addingUnder(description: String, parentWasTrue: Boolean, parentDescription: String) = message(Level.DEBUG, TddLogger.compile, "Adding " + description + " under " + (if (parentWasTrue) "yes" else "no") + " of node " + parentDescription)
   def addScenarioForRoot(description: String) = message(Level.DEBUG, TddLogger.compile, "Adding " + description + " as extra scenario for root")
   def addFirstIfThenElse(description: String) = message(Level.DEBUG, TddLogger.compile, "Adding " + description + " as first if then else")
-  def addScenarioFor[X](description: String, code: CodeHolder[X]) = 
+  def addScenarioFor[X](description: String, code: CodeHolder[X]) =
     message(Level.DEBUG, TddLogger.compile, "Adding " + description + " as extra scenario for " + code.description)
 
   def merge(parentDescription: String, childDescription: String, yesNo: Boolean) =

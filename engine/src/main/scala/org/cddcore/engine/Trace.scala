@@ -7,6 +7,38 @@ object ConclusionOrResult {
   implicit def liftConclusion(c: Conclusion): ConclusionOrResult = Some(c)
 }
 
+trait TraceItemVistor {
+  def startItem(depth: Int, item: TraceItem)
+  def endItem(depth: Int, item: TraceItem)
+}
+
+object TraceItem {
+  def walk(item: TraceItem, visitor: TraceItemVistor) { walk(0, item, visitor) }
+
+  private def walk(depth: Int, item: TraceItem, visitor: TraceItemVistor) {
+    visitor.startItem(depth, item)
+    for (i <- item.nested)
+      walk(depth + 1, i, visitor)
+    visitor.endItem(depth, item)
+  }
+
+  def fold[Acc](initial: Acc, startFn: (Acc, Int, TraceItem) => Acc, endFn: (Acc, Int, TraceItem) => Acc, item: TraceItem): Acc =
+    fold(initial, startFn, endFn, 0, item)
+
+  private def fold[Acc](initial: Acc, startFn: (Acc, Int, TraceItem) => Acc, endFn: (Acc, Int, TraceItem) => Acc, depth: Int, item: TraceItem): Acc = {
+    val afterStart = startFn(initial, depth, item)
+    val afterChildren = item.nested.foldLeft(afterStart)((acc: Acc, i: TraceItem) => fold[Acc](acc, startFn, endFn, depth + 1, i))
+    val result = endFn(afterChildren, depth, item)
+    result
+  }
+
+  def print(ldp: LoggerDisplayProcessor= LoggerDisplayProcessor())(item: TraceItem ): String = fold[String]("",
+    (acc: String, depth: Int, i: TraceItem) => acc + "\n" + Strings.blanks(depth) + i.engine.titleString + "(" + i.params.map(ldp(_)).mkString(",") + ") => " + ldp(i.result) +" ... " + i.took,
+    (acc: String, depth: Int, i: TraceItem) => acc,
+    item)
+
+}
+
 class NestedTraceBuilder(val params: List[Any], engine: Engine, items: List[TraceItem], val parent: TraceBuilder) extends TraceBuilder(items, parent.ignore) {
   import ConclusionOrResult._
   override def finished(conclusion: ConclusionOrResult, result: Any) = parent.copyWithNewItem(new TraceItem(engine, params, items, conclusion, ROrException(result), System.nanoTime() - startTime))
@@ -19,7 +51,6 @@ class IgnoreTraceBuilder(val parent: TraceBuilder) extends TraceBuilder(List(), 
   override def finished(conclusion: ConclusionOrResult, result: Any) = parent
   override def failed(conclusion: ConclusionOrResult, exception: Throwable): TraceBuilder = parent
   override def copyWithNewItem(item: TraceItem) = this
-
 }
 
 class TraceBuilder(val items: List[TraceItem], val ignore: List[Engine]) {

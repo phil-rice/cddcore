@@ -35,7 +35,7 @@ class EngineLoggerRunnerDisplayTests extends AbstractEngine1Test[DisplayTest, Di
   }
 
   it should "use the class function list in preference to the display method " in {
-    val processor = new SimpleLoggerDisplayProcessor(ClassFunctionList(List(ClassFunction(classOf[DisplayTest], (d: DisplayTest) => "<" + d.x + ">"))))
+    val processor = new SimpleLoggerDisplayProcessor(ClassFunctionList(List(ClassFunction(classOf[DisplayTest], (ldp: LoggerDisplayProcessor, d: DisplayTest) => "<" + d.x + ">"))))
     assert("msg" == processor("msg"))
     assert("1" == processor(1))
     assert("<1>" == processor(DisplayTest("1")))

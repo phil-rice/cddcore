@@ -523,7 +523,7 @@ trait EngineFull[R, FullR] extends EngineWithResult[FullR] {
         case _ => throw new IllegalStateException
       }
     } catch {
-      case e => {
+      case e: Throwable => {
         Engine.failedCall(None, e)
         throw e
       }

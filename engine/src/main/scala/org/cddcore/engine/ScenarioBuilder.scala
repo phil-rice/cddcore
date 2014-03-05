@@ -67,7 +67,8 @@ object ROrException {
   def from[R](from: => R) = try { apply(from) } catch { case e: Throwable => apply(e) }
 
 }
-case class ROrException[R](value: Option[R], exception: Option[Throwable]) {
+case class ROrException[R](value: Option[R], exception: Option[Throwable]) extends LoggerDisplay {
+  def loggerDisplay(dp: LoggerDisplayProcessor): String = dp(value.getOrElse(exception.getOrElse("")))
   if (value.isDefined && exception.isDefined) throw new IllegalStateException
   lazy val isDefined = value.isDefined || exception.isDefined
   lazy val isEmpty = !isDefined
