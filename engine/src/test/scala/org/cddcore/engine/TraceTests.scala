@@ -6,6 +6,7 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TraceTests extends AbstractTest {
+  import ConclusionOrResult._
   implicit def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineBuiltFromTests[String]]
   val exception = new RuntimeException
   val e1 = Engine[String, String].code((s: String) => s + "_1").build;
@@ -53,6 +54,30 @@ class TraceTests extends AbstractTest {
     val (r, t) = Engine.trace { eException("x") }
     assertEquals(ROrException(exception), r)
     assertEquals(List(TraceItem(eException, List("x"), List(TraceItem(eException1, List("x"), List(), eException1Conclusion, ROrException(exception), 0)), eExceptionConclusion, ROrException(exception), 0)), t)
+  }
+
+  "An engine being traced" should "ignore traceitems for engines in the 'ignore' list" in {
+    val (r, t) = Engine.trace(e("x"), ignore = List(e1))
+    assertEquals(ROrException("[x_1,x_2]"), r)
+    assertEquals(List(TraceItem(e, List("x"), List(TraceItem(e2, List("x"), List(), e2Conclusion, ROrException("x_2"), 0)), eConclusion, ROrException("[x_1,x_2]"), 0)), t)
+  }
+
+  "An engine with children being traced" should "report itself and it's children " in {
+    val eWithC = Engine.folding[Int, String, List[String]]((acc, v) => v :: acc, List()).title("folding").
+      childEngine("ce1").scenario(0).expected("0").code((i: Int) => i.toString).
+      childEngine("ce2").scenario(0).expected("00").code((i: Int) => i.toString + i.toString).
+      build
+    val ce1 = eWithC.all(classOf[Engine])(0)
+    val ce2 = eWithC.all(classOf[Engine])(1)
+    val ce1Conclusion = ce1.asInstanceOf[EngineBuiltFromTests[String]].findConclusionFor(List(0))
+    val ce2Conclusion = ce2.asInstanceOf[EngineBuiltFromTests[String]].findConclusionFor(List(0))
+
+    val (r, t) = Engine.trace(eWithC(0))
+    assertEquals(ROrException(List("00", "0")), r)
+    assertEquals(List(TraceItem(eWithC, List(0), List(
+      TraceItem(ce1, List(0), List(), ce1Conclusion, ROrException("0"), 0),
+      TraceItem(ce2, List(0), List(), ce2Conclusion, ROrException("00"), 0)),
+      None, ROrException(List("00", "0")), 0)), t)
   }
 
 }

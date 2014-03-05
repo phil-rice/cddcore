@@ -1091,6 +1091,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
   abstract class EngineFromTestsImpl(val builderData: ScenarioBuilderData) extends AbstractEngine with BuildEngine with EvaluateEngineWithRoot with EngineBuiltFromTests[R] with ScenarioBuilderDataAsReadableFields {
     import org.cddcore.engine.Engine._
+    import ConclusionOrResult._
 
     def templateName = Renderer.engineFromTestsKey
     lazy val children = builderData.childrenModifiedForBuild

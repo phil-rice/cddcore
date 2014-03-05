@@ -19,7 +19,7 @@ object Strings {
   def stringToKvs(s: String) = s.foldLeft(List[(Char, Char)]()) { (m, c) => (c, c) :: m }
   def bracketsToKvs(left: String, right: String) = left.zip(right).toList
 
-  def oneLine(s: String) = s.replace('\n', ' ')
+  def oneLine(s: String) = s.replace('\n', ' ').replaceAll("\r", " ")
   def htmlEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace("&gt;", ">").replace("\n", "<br />")
   def htmlTooltipEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace("&gt;", ">")
   def url(s: String*) = s.mkString("/")

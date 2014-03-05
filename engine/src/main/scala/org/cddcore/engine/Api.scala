@@ -2,6 +2,8 @@ package org.cddcore.engine
 
 import scala.language.implicitConversions
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.Future
 
 object Reportable {
   type ReportableList = List[Reportable]
@@ -16,7 +18,7 @@ object Reportable {
       p1 - p2
     }
   }
-  def textOrder(r: Any) = r match { 
+  def textOrder(r: Any) = r match {
     case Some(r: ReportableWithTextOrder) => r.textOrder
     case r: ReportableWithTextOrder => r.textOrder
     case _ => 0
@@ -264,6 +266,7 @@ case class Project(projectTitle: String, engines: ReportableHolder*) extends Req
 }
 
 object Engine {
+  import ConclusionOrResult._
   val engineCount = new AtomicInteger(0)
 
   protected def addToList[R] = (acc: List[R], r: R) => r :: acc
@@ -323,21 +326,21 @@ object Engine {
     }
   }
 
-  def endCall(conclusion: Conclusion, result: Any) {
+  def endCall(conclusion: ConclusionOrResult, result: Any) {
     _traceBuilder.get match {
       case Some(tb) => _traceBuilder.set(Some(tb.finished(conclusion, result)))
       case None =>
     }
   }
-  def failedCall(conclusion: Conclusion, exception: Throwable) {
+  def failedCall(conclusion: ConclusionOrResult, exception: Throwable) {
     _traceBuilder.get match {
       case Some(tb) => _traceBuilder.set(Some(tb.failed(conclusion, exception)))
       case None =>
     }
   }
-  def trace[T](x: => T): Tuple2[ROrException[T], List[TraceItem]] = {
+  def trace[T](x: => T, ignore: List[Engine] = List()): Tuple2[ROrException[T], List[TraceItem]] = {
     try {
-      _traceBuilder.set(Some(new TraceBuilder(List())));
+      _traceBuilder.set(Some(new TraceBuilder(List(), ignore)));
       try {
         val result = x
         (ROrException(result), _traceBuilder.get.get.items)
@@ -414,6 +417,7 @@ trait EngineWithResult[R] extends Engine {
 
 /** This is the 'normal' engine. It */
 trait EngineBuiltFromTests[R] extends EngineWithResult[R] {
+  import ConclusionOrResult._
   def root: Either[Conclusion, Decision]
   lazy val tests = all(classOf[Test])
 
@@ -499,6 +503,7 @@ trait ParamDetails {
 /** An engine with child engines and a folding function for aggregating the results */
 trait EngineFull[R, FullR] extends EngineWithResult[FullR] {
   import Reportable._
+  import ConclusionOrResult._
   def documents: List[Document]
   //  def root: Either[Conclusion, Decision]
   //  protected def toStringWith(path: ReportableList, root: Either[Conclusion, Decision], printer: IfThenPrinter): String
@@ -506,26 +511,70 @@ trait EngineFull[R, FullR] extends EngineWithResult[FullR] {
   lazy val childEngines: List[ChildEngine[R]] = all(classOf[ChildEngine[R]])
   def initialFoldValue: () => FullR
   def folder: Option[(FullR, R) => FullR]
-  def applyParams(params: List[Any]): FullR =
-    folder match {
-      case Some(f) =>
-        childEngines.foldLeft[FullR](initialFoldValue())((acc, ce) =>
-          f(acc, ce.applyParams(params)))
-      case _ => throw new IllegalStateException
+  def applyParams(params: List[Any]): FullR = {
+    Engine.call(this, params)
+    try {
+      folder match {
+        case Some(f) =>
+          val result = childEngines.foldLeft[FullR](initialFoldValue())((acc, ce) =>
+            f(acc, ce.applyParams(params)))
+          Engine.endCall(None, result)
+          result
+        case _ => throw new IllegalStateException
+      }
+    } catch {
+      case e => {
+        Engine.failedCall(None, e)
+        throw e
+      }
     }
+  }
   lazy val decisionTreeNodes = childEngines.foldLeft(0)(_ + _.decisionTreeNodes)
+}
+
+trait DelegatedEngine extends Engine {
+  def delegate: Engine
+  def decisionTreeNodes = delegate.decisionTreeNodes
+  def children = delegate.children
+  def textOrder = delegate.textOrder
+  def title = delegate.title
+  def description = delegate.description
+  def priority = delegate.priority
+  def references = delegate.references
+}
+
+class CachedEngine1[P, R](val delegate: Engine1[P, R]) extends Engine1[P, R] with DelegatedEngine {
+  private val cache = new AtomicReference[Map[P, Future[R]]](Map())
+  def apply(p: P) = Maps.getOrCreate(cache, p, delegate(p))
+
 }
 
 trait Engine1[P, R] extends Engine with Function1[P, R] {
   def arity = 1
+  def cached = new CachedEngine1[P, R](this);
+}
+class CachedEngine2[P1, P2, R](val delegate: Engine2[P1, P2, R]) extends Engine2[P1, P2, R] with DelegatedEngine {
+  private val cache = new AtomicReference[Map[(P1, P2), Future[R]]](Map())
+  def apply(p1: P1, p2: P2) = Maps.getOrCreate(cache, (p1, p2), delegate(p1, p2))
 }
 
 trait Engine2[P1, P2, R] extends Engine with Function2[P1, P2, R] {
   def arity = 2
+  def cached = new CachedEngine2[P1, P2, R](this)
+}
+class CachedEngine3[P1, P2, P3, R](val delegate: Engine3[P1, P2, P3, R]) extends Engine3[P1, P2, P3, R] with DelegatedEngine {
+  private val cache = new AtomicReference[Map[(P1, P2, P3), Future[R]]](Map())
+  def apply(p1: P1, p2: P2, p3: P3) = Maps.getOrCreate(cache, (p1, p2, p3), delegate(p1, p2, p3))
 }
 
 trait Engine3[P1, P2, P3, R] extends Engine with Function3[P1, P2, P3, R] {
   def arity = 3
+  private def outerEngine = this
+  def cached = new Engine3[P1, P2, P3, R] with DelegatedEngine {
+    private val cache = new AtomicReference[Map[(P1, P2, P3), Future[R]]](Map())
+    def delegate = outerEngine
+    def apply(p1: P1, p2: P2, p3: P3) = Maps.getOrCreate(cache, (p1, p2, p3), outerEngine(p1, p2, p3))
+  }
 }
 
 /** The decision tree inside an engine with tests is made of nodes that either a conclusion or a decision. Both conclusion and decision extend this*/

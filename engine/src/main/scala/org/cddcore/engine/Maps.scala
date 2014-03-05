@@ -27,36 +27,47 @@ object Maps {
 
   private val monitor = new Object
 
-  class SettableFuture[V] extends Future[V] {
+  class SettableFuture[V](key: Any) extends Future[V] {
     private val latch = new CountDownLatch(1)
+    val settingThread = Thread.currentThread()
     var value: Option[V] = None
     var isCancelled = false;
     def cancel(mayInterruptIfRunning: Boolean) = throw new IllegalStateException
     def isDone = latch.getCount() == 0;
     def set(v: V) = { value = Some(v); latch.countDown() }
-    def get(time: Long, unit: TimeUnit) = { latch.await(time, unit); value.get }
-    def get = { latch.await; value.get }
+    def checkThread { if (latch.getCount() != 0 && Thread.currentThread() == settingThread) throw new IllegalStateException("Cannot call cache for key: " + key + " inside the 'value' of the cache. ") }
+    def get(time: Long, unit: TimeUnit) = { checkThread; latch.await(time, unit); value.get }
+    def get = { checkThread; latch.await; value.get }
+    override def toString = "Future(@" + System.identityHashCode(this) + ", " + latch.getCount() + ", " + value + ")"
   }
 
   /**  Making a thread safe cache is a little hard. This should only call the value method once, and all other calls wait until it is calculated. It uses a lock, but this lock doesn't need to be in a lock order, as no external code is called during the lock  */
   def getOrCreate[K, V](ref: AtomicReference[Map[K, Future[V]]], key: K, value: => V): V = {
-    val map = ref.get()
-    map.get(key) match {
-      case Some(f) => f.get
+    val map1 = ref.get()
+    map1.get(key) match {
+      case Some(f) =>
+        f.get
       case _ =>
         val optFuture = monitor.synchronized {
-          val map = ref.get()
-          map.get(key) match {
+          val map2 = ref.get() // just in case map was updated between map1 and start of synchronized block
+          map2.get(key) match {
             case Some(f) => None
             case _ =>
-              val future = new SettableFuture[V]
-              ref.set(map + (key -> future))
+              val future = new SettableFuture[V](key)
+              ref.set(map2 + (key -> future))
               Some(future)
           }
         }
+        //Note that the value calculation is done outside the lock. So this shouldn't cause any deadlocks
+
+        val map3 = ref.get()
         optFuture match {
-          case Some(f) => { f.set(value); value }
-          case _ => map(key).get
+          case Some(f) => {
+            val v = value
+            f.set(v);
+            map3(key).get
+          }
+          case _ => map3(key).get
         }
     }
   }
