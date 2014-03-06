@@ -135,6 +135,33 @@ br {
 	border: 1px solid gray;
 }
 
+.traceItem {
+	width: 98%%;
+	float: left;
+	margin: 10px;
+	padding: 2px;
+	border: 1px solid gray;
+}
+
+.traceItemEngine{
+	float: left;
+	width: 98%%;
+	padding: 2px;
+}
+.traceItemTable {
+	margin: 0px;
+	padding: 5px;
+	border: 1px solid gray;
+}
+
+.traceItemTable {
+	margin: 0px;
+	padding: 5px;
+	border: 1px solid gray;
+	width: 40%;
+	float: left;
+}
+
 .childEngine {
 	width: auto;
 	margin: 0px;

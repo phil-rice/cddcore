@@ -199,6 +199,11 @@ object PathUtils {
       case (acc, _) => acc
     });
 
+  def findTraceItem(path: ReportableList): TraceItem = path match {
+    case (traceItem: TraceItem) :: tail => traceItem
+    case h :: tail => findTraceItem(tail)
+    case _ => throw new IllegalArgumentException
+  }
 }
 
 /** Very little is known about Reportables: no methods are implemented. Requirements are the main Reportable. Requirements include Engines, UseCases and Scenarios */

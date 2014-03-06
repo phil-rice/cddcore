@@ -17,7 +17,7 @@ object TraceItem {
 
   private def walk(depth: Int, item: TraceItem, visitor: TraceItemVistor) {
     visitor.startItem(depth, item)
-    for (i <- item.nested)
+    for (i <- item.children)
       walk(depth + 1, i, visitor)
     visitor.endItem(depth, item)
   }
@@ -27,15 +27,22 @@ object TraceItem {
 
   private def fold[Acc](initial: Acc, startFn: (Acc, Int, TraceItem) => Acc, endFn: (Acc, Int, TraceItem) => Acc, depth: Int, item: TraceItem): Acc = {
     val afterStart = startFn(initial, depth, item)
-    val afterChildren = item.nested.foldLeft(afterStart)((acc: Acc, i: TraceItem) => fold[Acc](acc, startFn, endFn, depth + 1, i))
+    val afterChildren = item.children.foldLeft(afterStart)((acc: Acc, i: TraceItem) => fold[Acc](acc, startFn, endFn, depth + 1, i))
     val result = endFn(afterChildren, depth, item)
     result
   }
 
-  def print(ldp: LoggerDisplayProcessor= LoggerDisplayProcessor())(item: TraceItem ): String = fold[String]("",
-    (acc: String, depth: Int, i: TraceItem) => acc + "\n" + Strings.blanks(depth) + i.engine.titleString + "(" + i.params.map(ldp(_)).mkString(",") + ") => " + ldp(i.result) +" ... " + i.took,
+  def print(ldp: LoggerDisplayProcessor = LoggerDisplayProcessor())(item: TraceItem): String = fold[String]("",
+    (acc: String, depth: Int, i: TraceItem) => acc + "\n" + Strings.blanks(depth) + i.engine.titleString + "(" + i.params.map(ldp(_)).mkString(",") + ") => " + ldp(i.result) + " ... " + i.took,
     (acc: String, depth: Int, i: TraceItem) => acc,
     item)
+
+  def html(ldp: LoggerDisplayProcessor = LoggerDisplayProcessor())(items: TraceItem*): String = {
+    val report = Report("Trace", items: _*)
+    val reportableToUrl = new SimpleReportableToUrl
+    val urlMap = reportableToUrl.makeUrlMap(report)
+    HtmlRenderer.apply(ldp, false).traceHtml(None).render(reportableToUrl, urlMap, report)
+  }
 
 }
 
@@ -62,10 +69,10 @@ class TraceBuilder(val items: List[TraceItem], val ignore: List[Engine]) {
   def failed(conclusion: ConclusionOrResult, exception: Throwable): TraceBuilder = throw new IllegalStateException;
 }
 
-case class TraceItem(engine: Engine, params: List[Any], nested: List[TraceItem], conclusion: ConclusionOrResult.ConclusionOrResult, result: ROrException[Any], took: Long) {
-  def toString(loggerDisplayProcesser: LoggerDisplayProcessor, indent: String): String = s"${indent}TraceItem(${engine.titleString}, ${loggerDisplayProcesser(params)} => ${result}\n${nested.map(_.toString(loggerDisplayProcesser, indent + "  "))}"
+case class TraceItem(engine: Engine, params: List[Any], children: List[TraceItem], conclusion: ConclusionOrResult.ConclusionOrResult, result: ROrException[Any], took: Long) extends ReportableHolder {
+  def toString(loggerDisplayProcesser: LoggerDisplayProcessor, indent: String): String = s"${indent}TraceItem(${engine.titleString}, ${loggerDisplayProcesser(params)} => ${result}\n${children.map(_.toString(loggerDisplayProcesser, indent + "  "))}"
   def toString(loggerDisplayProcesser: LoggerDisplayProcessor): String = toString(loggerDisplayProcesser, "")
   override def hashCode = engine.hashCode() + params.hashCode
   override def equals(other: Any) =
-    other match { case t: TraceItem => t.engine == engine && t.params == params && t.nested == nested && t.conclusion == conclusion && t.result == result; case _ => false }
+    other match { case t: TraceItem => t.engine == engine && t.params == params && t.children == children && t.conclusion == conclusion && t.result == result; case _ => false }
 } 

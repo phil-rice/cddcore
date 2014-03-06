@@ -101,13 +101,13 @@ trait XmlSituation extends Structure[Elem, NodeSeq] {
     findFragmentsToString(fragmentFields.fieldMap, (e) => e.mkString(","), (f, a) => raw"<tr><td>${f.getName}</td><td> $a</td></tr>") +
     "</table></div><!--xmlFound -->\n" +
     "<div class='xmlFields'>" +
-    structuresToString(pathMap, (s) => {
-      val f = xmlFields.findFieldWithValue(s) match {
-        case Some(f) => f.getName
-        case _ => ""
-      }
-      "<div class='XmlTitle' title='" + Strings.htmlTooltipEscape(s.toString) + "'>" + Strings.htmlEscape(f) + "</div><!--XmlTitle'-->\n"
-    }, separator = "<br />") +
+//    structuresToString(pathMap, (s) => {
+//      val f = xmlFields.findFieldWithValue(s) match {
+//        case Some(f) => f.getName
+//        case _ => ""
+//      }
+//      "<div class='XmlTitle' title='" + Strings.htmlTooltipEscape(s.toString) + "'>" + Strings.htmlEscape(f) + "</div><!--XmlTitle'-->\n"
+//    }, separator = "<br />") +
     "</div><!--xmlFields -->\n" +
     "</div><!--xmlSituationBody -->\n" +
     "</div><!--xmlSituation -->\n"
