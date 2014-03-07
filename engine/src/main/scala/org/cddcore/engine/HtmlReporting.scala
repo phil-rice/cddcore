@@ -36,6 +36,7 @@ object ReportWalker {
   def childWalker = new ChildReportWalker
   def engineConclusionWalker = new EngineConclusionWalker
   def documentThenEngineWalker = new DocumentThenEngineWalker
+  def traceItemWalker = new TraceItemWalker
 }
 trait ReportWalker {
   import Reportable._
@@ -59,6 +60,26 @@ trait ReportWalker {
       acc = foldWithPath(c :: path, acc, startFn, childFn, endFn)
     acc = endFn(acc, path)
     acc
+  }
+}
+
+class TraceItemWalker extends ReportWalker {
+  import Reportable._
+  def foldWithPath[Acc](path: ReportableList, initial: Acc,
+    startFn: (Acc, ReportableList) => Acc,
+    childFn: (Acc, ReportableList) => Acc,
+    endFn: (Acc, ReportableList) => Acc): Acc = {
+    val head = path.head
+    head match {
+      case traceItem: TraceItem => {
+        val afterStart = startFn(initial, path)
+        val afterEngine = childFn(afterStart, traceItem.engine :: path)
+        val afterChildren = traceItem.children.foldLeft(afterEngine)((acc, i) => foldWithPath(i :: path, acc, startFn, childFn, endFn))
+        endFn(afterChildren, path)
+      }
+      case holder: ReportableHolder => walkChildren(holder, path, initial, startFn, childFn, endFn)
+      case _ => childFn(initial, path)
+    }
   }
 }
 
@@ -129,7 +150,6 @@ class EngineConclusionWalker extends ReportWalker {
 
 object ReportCreator {
   def unnamed = "<Unnamed>"
-
 
   def fileSystem(loggerDisplayProcessor: LoggerDisplayProcessor, r: ReportableHolder, title: String = null, live: Boolean = false, reportableToUrl: FileSystemReportableToUrl = new FileSystemReportableToUrl, optUrlMap: Option[UrlMap] = None): FileReportCreator =
     new FileReportCreator(loggerDisplayProcessor, r, title, live, reportableToUrl, optUrlMap)
@@ -382,8 +402,8 @@ object Renderer {
       stringTemplate.setAttribute("live", Integer.toString(path.size))
     def addFromRequirement(req: Requirement) {
       val r = Reportable.unwrap(req)
-      stringTemplate.setAttribute("description", r.description.collect { case d => ValueForRender(d) }.getOrElse(null))
-      stringTemplate.setAttribute("title", ValueForRender(r.titleString))
+      stringTemplate.setAttribute("description", r.description.collect { case d => ValueForRender(d, loggerDisplayProcessor) }.getOrElse(null))
+      stringTemplate.setAttribute("title", ValueForRender(r.titleString, loggerDisplayProcessor))
       for (ref <- r.references)
         stringTemplate.setAttribute("references", ref)
       if (urlMap.contains(r)) {
@@ -394,18 +414,18 @@ object Renderer {
     }
     r match {
       case r: MergedReportable =>
-        stringTemplate.setAttribute("key", ValueForRender(r.key))
+        stringTemplate.setAttribute("key", ValueForRender(r.key, loggerDisplayProcessor))
       case t: MergedTitle =>
-        stringTemplate.setAttribute("title", ValueForRender(t.title.getOrElse("")))
+        stringTemplate.setAttribute("title", ValueForRender(t.title.getOrElse(""), loggerDisplayProcessor))
       case d: MergedDescription =>
-        stringTemplate.setAttribute("description", ValueForRender(d.description.getOrElse("")))
+        stringTemplate.setAttribute("description", ValueForRender(d.description.getOrElse(""), loggerDisplayProcessor))
       case m: MergedShortDescription =>
-        stringTemplate.setAttribute("title", ValueForRender(m.name))
+        stringTemplate.setAttribute("title", ValueForRender(m.name, loggerDisplayProcessor))
       case re: RequirementAndEngine =>
         addFromRequirement(re.reportable)
         val engineName = re.engine.collect { case e: Engine => e.titleOrDescription("") }.getOrElse("")
-        stringTemplate.setAttribute("engineName", ValueForRender(engineName))
-        stringTemplate.setAttribute("engineSummary", ValueForRender(Strings.firstCharacters(engineName)))
+        stringTemplate.setAttribute("engineName", ValueForRender(engineName, loggerDisplayProcessor))
+        stringTemplate.setAttribute("engineSummary", ValueForRender(Strings.firstCharacters(engineName), loggerDisplayProcessor))
       case req: Requirement => addFromRequirement(req)
 
       case _ =>
@@ -418,6 +438,27 @@ object Renderer {
   })
 
   protected def engineConfig = RenderAttributeConfigurer[Engine](Set(engineFromTestsKey), (rc) => { import rc._; stringTemplate.setAttribute("decisionTreeNodes", r.decisionTreeNodes) })
+
+  def traceItemConfig = RenderAttributeConfigurer[TraceItem](Set("TraceItem"), (rc: RendererContext[TraceItem]) => {
+    import rc._ //    addParams(stringTemplate, "params", loggerDisplayProcessor, r.params)
+    //    stringTemplate.setAttribute("title", r.engine.titleString)
+    //    stringTemplate.setAttribute("result", loggerDisplayProcessor(r.result))
+    ;
+  })
+  def traceItemEngineConfig = RenderAttributeConfigurer[Engine](Set(engineChildKey, engineWithChildrenKey, engineFromTestsKey), (rc: RendererContext[Engine]) => {
+    import rc._
+    val traceItem = PathUtils.findTraceItem(path)
+    addParams(stringTemplate, "params", loggerDisplayProcessor, traceItem.params)
+    r match {
+      case e: EngineBuiltFromTests[_] =>
+        stringTemplate.setAttribute("decisionTree", e.toStringWith(
+          new HtmlWithTestIfThenPrinter(traceItem.params, traceItem.conclusion, None, reportableToUrl, urlMap)))
+      case _ =>
+    }
+    //    stringTemplate.setAttribute("title", r.titleString)
+
+    stringTemplate.setAttribute("result", ValueForRender(traceItem.result, loggerDisplayProcessor))
+  })
 
   def decisionTreeConfig(params: Option[List[Any]], conclusion: Option[Conclusion], test: Option[Test]) =
     {
@@ -462,13 +503,13 @@ object Renderer {
     stringTemplate.setAttribute("reportDate", dateFormatter.print(System.currentTimeMillis()))
   })
 
-  def addParams(st: StringTemplate, attributeName: String, paramPrinter: LoggerDisplayProcessor, params: List[Any]) {
+  def addParams(st: StringTemplate, attributeName: String, loggerDisplayProcessor: LoggerDisplayProcessor, params: List[Any]) {
     for (p <- params)
       p match {
         case h: HtmlDisplay =>
-          st.setAttribute(attributeName, ValueForRender(h))
+          st.setAttribute(attributeName, ValueForRender(h, loggerDisplayProcessor))
         case _ =>
-          st.setAttribute(attributeName, ValueForRender(paramPrinter(p)))
+          st.setAttribute(attributeName, ValueForRender(p, loggerDisplayProcessor))
       }
   }
 
@@ -476,10 +517,10 @@ object Renderer {
     import rendererContext._
     import r._
     //    stringTemplate.setAttribute("title", ValueForRender(titleString))
-    stringTemplate.setAttribute("code", ValueForRender(optCode.collect { case c => c.pretty } getOrElse (null)))
-    stringTemplate.setAttribute("expected", ValueForRender(expected.getOrElse("")))
+    stringTemplate.setAttribute("code", ValueForRender(optCode.collect { case c => c.pretty } getOrElse (null), loggerDisplayProcessor))
+    stringTemplate.setAttribute("expected", ValueForRender(expected.getOrElse(""), loggerDisplayProcessor))
     stringTemplate.setAttribute("paramCount", params.size)
-    stringTemplate.setAttribute("because", ValueForRender(r.because.collect { case c => c.pretty } getOrElse (null)))
+    stringTemplate.setAttribute("because", ValueForRender(r.because.collect { case c => c.pretty } getOrElse (null), loggerDisplayProcessor))
     addParams(stringTemplate, "params", loggerDisplayProcessor, params)
   })
 }
@@ -531,12 +572,12 @@ case class StringTemplateRenderer(template: String) extends Renderer {
   }
 }
 
-class ValueForRender(val value: Any) {
-  override def toString = if (value == null) "" else value.toString
+class ValueForRender(val value: Any, val ldp: LoggerDisplayProcessor) {
+  override def toString = if (value == null) "" else ldp(value)
 }
 
 object ValueForRender {
-  def apply(o: Object) = if (o == null) null else new ValueForRender(o)
+  def apply(o: Any, ldp: LoggerDisplayProcessor) = if (o == null) null else new ValueForRender(o, ldp)
 }
 
 class ValueForRenderer extends AttributeRenderer {
@@ -546,7 +587,7 @@ class ValueForRenderer extends AttributeRenderer {
       case v: ValueForRender => v.value match {
         case null => null
         case x: HtmlDisplay => x.htmlDisplay
-        case _ => Strings.htmlEscape(o.toString())
+        case _ => Strings.htmlEscape(v.ldp(o))
       }
     }
   }
@@ -581,7 +622,7 @@ object HtmlRenderer {
   protected val description = "$if(description)$$description$$endif$"
   protected val date = "$if(reportDate)$<hr /><div class='dateTitle'>$reportDate$</div><hr /><div>$reportDate$</div>$endif$"
   def titleAndDescription(clazz: String, titlePattern: String, iconPrefix: String = "") =
-    s"<div class='$clazz'>" + a(iconPrefix + MessageFormat.format(titlePattern, title)) + "<br />"+description + "</div>"
+    s"<div class='$clazz'>" + a(iconPrefix + MessageFormat.format(titlePattern, title)) + "<br />" + description + "</div>"
   def a(body: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$'>$endif$" + body + "$if(url)$</a>$endif$"
   def a(body: String, title: String) = "$if(url)$<a $if(urlId)$id='$urlId$' $endif$href='$url$' title='" + title + "'>$endif$" + body + "$if(url)$</a>$endif$"
   def aForLive = "$if(url)$<a id='$url$/live' href='$url$/live'>$endif$Live$if(url)$</a>$endif$"
@@ -597,6 +638,8 @@ object HtmlRenderer {
   protected val codeRow = "$if(code)$<tr><td class='title'>Code</td><td class='value'>$code$</td></tr>$endif$"
   protected val becauseRow = "$if(because)$<tr><td class='title'>Because</td><td class='value'>$because$</td></tr>$endif$"
   val paramsRow = "<tr><td class='title'>Parameter</td><td class='value'>$params: {p|$p$}; separator=\"<hr /> \"$</td></tr>"
+  def engineRow(icon: String): String = "<tr><td class='title'>Engine</td><td class='value'>" + icon + "$title$</td></tr>"
+  val resultsRow = "<tr><td class='title'>Result</td><td class='value'>$result$</td></tr>"
   //  protected val useCasesRow = "$if(childrenCount)$<tr><td class='title'>Usecases</td><td class='value'>$childrenCount$</td></tr>$endif$"
   protected val scenariosRow = "$if(childrenCount)$<tr><td class='title'>Scenarios</td><td class='value'>$childrenCount$</td></tr>$endif$"
   protected val refsRow = "$if(references)$<tr><td class='title'>References</td><td class='value'>$references: {r|$r$}; separator=\", \"$</td></tr>$endif$"
@@ -679,6 +722,7 @@ object HtmlRenderer {
       "</div><!-- engineSummary -->" +
       "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n" +
       "</div><!-- engine -->\n")
+
   val liveEngineWithChildrenTemplate: StringRendererRenderer =
     (engineWithChildrenKey, "<div class='engine'>" +
       "<div class='engineSummary'>" + titleAndDescription("engineText", "Engine {0}") + table("engineTable", refsRow) + "Cannot yet execute live Engines with children",
@@ -706,6 +750,22 @@ object HtmlRenderer {
       becauseRow) + "</div><!-- scenario -->\n")
 
   val scenarioSummaryTemplate: StringRenderer = ("Scenario", a("<img src='" + HtmlForIfThenPrinter.normalScenarioIcon + "' $if(title)$title='$title$'$endif$ />"))
+
+  val traceItemTemplate: StringRendererRenderer =
+    ("TraceItem",
+      "<div class='traceItem'>\n",
+      "</div> <!-- TraceItem -->\n")
+
+  val traceItemEngineWithChildrenTemplate: StringRenderer =
+    (engineWithChildrenKey, table("traceItemTable", engineRow(engineWithChildrenIcon), paramsRow, resultsRow))
+
+  val traceItemEngineChildTemplate: StringRenderer =
+    (engineChildKey,
+      "<div class='traceItemEngine'>" + table("traceItemTable", engineRow(childEngineIcon), resultsRow) + "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n </div><!-- traceItemEngine -->\n")
+
+  val traceItemEngineBuiltFromTestsTemplate: StringRenderer =
+    (engineFromTestsKey,
+      "<div class='traceItemEngine'>" + table("traceItemTable", engineRow(childEngineIcon), paramsRow, resultsRow) + "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n </div><!-- traceItemEngine -->\n")
 
   def table(clazz: String, rows: String*) = {
     val result = s"<table class='$clazz'>${rows.mkString("")}</table>"
@@ -753,6 +813,11 @@ class HtmlRenderer(loggerDisplayProcessor: LoggerDisplayProcessor, live: Boolean
     configureReportableHolder(mergedTemplate, mergedTitleTemplate, mergedDescriptionTemplate,
       requirementAndEngineTemplate, useCaseIconTemplate).
       configureReportable(scenarioSummaryTemplate)
+
+  def traceHtml(rootUrl: Option[String]) = Renderer(loggerDisplayProcessor, rootUrl, Set(), live, walker = new TraceItemWalker).
+    configureAttribute(Renderer.traceItemConfig, Renderer.traceItemEngineConfig).
+    configureReportableHolder(reportTemplate, traceItemTemplate).
+    configureReportable(traceItemEngineWithChildrenTemplate, traceItemEngineChildTemplate, traceItemEngineBuiltFromTestsTemplate)
 
 }
 
