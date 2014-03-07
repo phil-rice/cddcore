@@ -30,3 +30,4 @@
 1.8.5.9 Maps utility added
 1.8.5.10 Fixed bug in Maps Utility and added cached engines. Also made trace work with Engines that have child engines
 1.8.5.11 TraceItem now has a printer that makes viewing traces easier
+1.8.5.12 Added an HTML viewer to TraceItem
