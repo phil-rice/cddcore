@@ -548,6 +548,10 @@ trait DelegatedEngine extends Engine {
   def references = delegate.references
 }
 
+trait EngineCache[Params, R] {
+  def getOrCreate(p: Params, r: =>R): R
+}
+
 class CachedEngine1[P, R](val delegate: Engine1[P, R]) extends Engine1[P, R] with DelegatedEngine {
   private val cache = new AtomicReference[Map[P, Future[R]]](Map())
   def apply(p: P) = Maps.getOrCreate(cache, p, delegate(p))

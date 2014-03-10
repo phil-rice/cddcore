@@ -140,7 +140,7 @@ br {
 	float: left;
 	margin: 10px;
 	padding: 2px;
-	border: 1px solid gray;
+	border: 1px solid #d0d0d0;
 }
 
 .traceItemEngine{
@@ -205,6 +205,14 @@ br {
 	font-family: monospace;
 }
 
+.decisionTreeForTraceItem {
+	width: 58%;
+	height: 100%;
+	float: right;
+	padding: 0px;
+	font-family: monospace;
+}
+
 .usecase {
 	position: relative;
 	margin: 6px;
@@ -252,12 +260,23 @@ br {
 	width: 125px;
 }
 
+.engineTitle {
+	width: 125px;
+	background-color: #b29f8c;
+	padding: 2px;
+}
+
+
 .input {
 	width: 100%
 }
 
 .value {
 	
+}
+.engineValue {
+	background-color: #b29f8c;
+	padding: 2px;
 }
 
 .indent {

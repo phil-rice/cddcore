@@ -638,7 +638,7 @@ object HtmlRenderer {
   protected val codeRow = "$if(code)$<tr><td class='title'>Code</td><td class='value'>$code$</td></tr>$endif$"
   protected val becauseRow = "$if(because)$<tr><td class='title'>Because</td><td class='value'>$because$</td></tr>$endif$"
   val paramsRow = "<tr><td class='title'>Parameter</td><td class='value'>$params: {p|$p$}; separator=\"<hr /> \"$</td></tr>"
-  def engineRow(icon: String): String = "<tr><td class='title'>Engine</td><td class='value'>" + icon + "$title$</td></tr>"
+  def engineRow(icon: String): String = "<tr><td class='engineTitle'>Engine</td><td class='engineValue'>" + icon + "$title$</td></tr>"
   val resultsRow = "<tr><td class='title'>Result</td><td class='value'>$result$</td></tr>"
   //  protected val useCasesRow = "$if(childrenCount)$<tr><td class='title'>Usecases</td><td class='value'>$childrenCount$</td></tr>$endif$"
   protected val scenariosRow = "$if(childrenCount)$<tr><td class='title'>Scenarios</td><td class='value'>$childrenCount$</td></tr>$endif$"
@@ -761,11 +761,11 @@ object HtmlRenderer {
 
   val traceItemEngineChildTemplate: StringRenderer =
     (engineChildKey,
-      "<div class='traceItemEngine'>" + table("traceItemTable", engineRow(childEngineIcon), resultsRow) + "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n </div><!-- traceItemEngine -->\n")
+      "<div class='traceItemEngine'>" + table("traceItemTable", engineRow(childEngineIcon), resultsRow) + "<div class='decisionTreeForTraceItem'>\n$decisionTree$</div><!-- decisionTree -->\n </div><!-- traceItemEngine -->\n")
 
   val traceItemEngineBuiltFromTestsTemplate: StringRenderer =
     (engineFromTestsKey,
-      "<div class='traceItemEngine'>" + table("traceItemTable", engineRow(childEngineIcon), paramsRow, resultsRow) + "<div class='decisionTree'>\n$decisionTree$</div><!-- decisionTree -->\n </div><!-- traceItemEngine -->\n")
+      "<div class='traceItemEngine'>" + table("traceItemTable", engineRow(childEngineIcon), paramsRow, resultsRow) + "<div class='decisionTreeForTraceItem'>\n$decisionTree$</div><!-- decisionTree -->\n </div><!-- traceItemEngine -->\n")
 
   def table(clazz: String, rows: String*) = {
     val result = s"<table class='$clazz'>${rows.mkString("")}</table>"
