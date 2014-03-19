@@ -13,7 +13,9 @@ trait HasEngines {
 
 class CddContinuousIntegrationRunner(val clazz: Class[Any]) extends CddRunner {
   def title = "Constraint Driven Development"
-  val instance = Engine.test { instantiate(clazz) }.asInstanceOf[HasEngines];
+  val instance = Engine.test {
+    instantiate(clazz)
+  }.asInstanceOf[HasEngines];
   lazy val enginesToNameMap = Map(instance.engines.map((e) => (e, e.titleOrDescription("<No Name>"))): _*)
   val rootEngines = instance.engines
   rootEngines.headOption match {

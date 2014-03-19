@@ -1,22 +1,19 @@
+
+
 package org.corecdd.example
 
 import org.cddcore.engine._
-import org.cddcore.engine.Test
 import org.cddcore.example.customerCategorisation.CategorisePerson
 import org.cddcore.example.processCheque_DM_Xml.ProcessChequeXml
 import org.cddcore.example.tennisScore.TennisScorer
 import org.corecdd.website.AbstractWebsiteTest
-import org.corecdd.website.CddHandler
 import org.junit.runner.RunWith
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.htmlunit.HtmlUnitDriver
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.junit.JUnitRunner
 import org.cddcore.engine.EngineWithResult
-import org.corecdd.website.WebServer
+import org.cddcore.engine.ParamDetails.toParamDetails
+import org.cddcore.engine.Reportable.ReportableList
 
-@RunWith(classOf[JUnitRunner])
-class ExampleWebsiteTest extends AbstractWebsiteTest {
+//@RunWith(classOf[JUnitRunner])
+class ExampleWebsiteTest extends AbstractWebsiteTest { 
   import Reportable._
   lazy val blankEngine = Engine[Int, String]().build
   lazy val project = Project("Example",

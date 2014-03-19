@@ -353,7 +353,7 @@ object Engine {
     } finally
       _traceBuilder.set(None);
   }
-  var logging = ("true" == System.getenv("cdd.junit.log")) || false
+  var logging = ("true" == System.getenv("cdd.junit.log")) || true
 
   def testing = _testing.get
   private var _testing = new ThreadLocal[Boolean] {
@@ -386,6 +386,9 @@ trait Engine extends RequirementAndHolder with ReportableWithTextOrder {
   def decisionTreeNodes: Int
 }
 
+trait EngineWithConstructionString extends Engine {
+  def constructionString: String
+}
 /** Engines have loggers which record interesting events. However to avoid polluting the API with them, if you absolutely need access to the logger you can import EngineWithLogger._ */
 object EngineWithLogger {
   implicit def toEngineWithLogger(e: Engine) = e.asInstanceOf[EngineWithLogger]
@@ -549,7 +552,7 @@ trait DelegatedEngine extends Engine {
 }
 
 trait EngineCache[Params, R] {
-  def getOrCreate(p: Params, r: =>R): R
+  def getOrCreate(p: Params, r: => R): R
 }
 
 class CachedEngine1[P, R](val delegate: Engine1[P, R]) extends Engine1[P, R] with DelegatedEngine {

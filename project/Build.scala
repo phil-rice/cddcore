@@ -43,7 +43,7 @@ object BuildSettings {
     unmanagedClasspath in Runtime <+= (baseDirectory) map { bd => Attributed.blank(bd / "src/main/resources") },
     organization := "org.cddcore",
     //version := "1.6.4-SNAPSHOT",
-    version := "1.8.5.12",
+    version := "1.8.5.13",
     scalacOptions ++= Seq(),
     retrieveManaged := false,
     scalaVersion := "2.10.1",
@@ -58,6 +58,7 @@ object BuildSettings {
       "mysql" % "mysql-connector-java" % "5.1.6",
       "commons-dbcp" % "commons-dbcp" % "1.2.2",
       "org.springframework" % "spring-jdbc" % "3.2.3.RELEASE",
+	  "com.novocode" % "junit-interface" % "0.9" % "test",
       "org.scala-stm" %% "scala-stm" % "0.7",
       "org.scala-lang" % "scala-reflect" % "2.10.1",
       "org.scala-lang" % "scala-compiler" % "2.10.1",
@@ -102,8 +103,11 @@ object HelloBuild extends Build {
   }
 
   lazy val constraint = Project(id = "constraint", settings = buildSettings, base = file("constraint"))
+  
   lazy val engine = Project(id = "engine", settings = buildSettings, base = file("engine")) dependsOn (constraint)
+  
   lazy val website = Project(id = "website", settings = websiteSettings, base = file("website")) dependsOn (constraint, engine % "compile->compile;test->test")
+  
   lazy val legacy = Project(id = "legacy", settings = buildSettings, base = file("legacy")) dependsOn (constraint, engine % "compile->compile;test->test")
   lazy val examples = Project(id = "examples", settings = exampleSettings, base = file("examples")) dependsOn (constraint, engine % "compile->compile;test->test", website % "compile->compile;test->test", legacy)
   lazy val root = Project(id = "root", settings = buildSettings ++ Seq(copyTask, copyDepTask), base = file(".")) aggregate (constraint, engine, examples, website, legacy)

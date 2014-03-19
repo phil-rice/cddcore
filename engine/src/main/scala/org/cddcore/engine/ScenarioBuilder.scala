@@ -179,6 +179,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   }
 
   class ScenarioConflictingWithoutBecauseException(msg: String, scenario: Scenario, beingAdded: Scenario, cause: Throwable = null) extends ScenarioConflictException(msg, scenario, beingAdded, cause)
+  class ScenarioHasRedundantBecauseException(msg: String, scenario: Scenario) extends ScenarioException(msg, scenario)
 
   object ScenarioConflictException {
     def apply(existing: Scenario, beingAdded: Scenario, cause: Throwable = null) =
@@ -1027,6 +1028,8 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
               Left(codeAndScenarios.copy(scenarios = s :: codeAndScenarios.scenarios))
             case (true, Some((lastParent, yesNo))) =>
               val newBecause = s.because.collect { case b => b :: lastParent.because }.getOrElse(lastParent.because)
+              if (newBecause.size > 1)
+                throw new ScenarioHasRedundantBecauseException("Temporary fix: this exception will be fixed shortly", s)
               logger.merge(lastParent.scenarioThatCausedNode.titleString, s.titleString, yesNo)
               if (yesNo)
                 (Right(lastParent.copy(because = newBecause, yes = Left(codeAndScenarios.copy(scenarios = s :: codeAndScenarios.scenarios)))), true)
@@ -1090,7 +1093,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
       throw new CannotHaveChildEnginesWithoutFolderException
   }
 
-  abstract class EngineFromTestsImpl(val builderData: ScenarioBuilderData) extends AbstractEngine with BuildEngine with EvaluateEngineWithRoot with EngineBuiltFromTests[R] with ScenarioBuilderDataAsReadableFields {
+  abstract class EngineFromTestsImpl(val builderData: ScenarioBuilderData) extends AbstractEngine with BuildEngine with EvaluateEngineWithRoot with EngineBuiltFromTests[R] with ScenarioBuilderDataAsReadableFields with EngineWithConstructionString {
     import org.cddcore.engine.Engine._
     import ConclusionOrResult._
 
