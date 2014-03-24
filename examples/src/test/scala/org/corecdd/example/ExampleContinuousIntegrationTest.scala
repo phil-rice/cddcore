@@ -5,6 +5,7 @@ import org.junit.runner.RunWith
 import org.cddcore.example.customerCategorisation.CategorisePerson
 import org.junit.runner.RunWith
 import org.cddcore.engine.Engine
+import org.cddcore.example.tennisScore.TennisScorer
 
 /**
  * This class will be swept up by JUnit. It should access all the engines that you want to check
@@ -13,11 +14,8 @@ import org.cddcore.engine.Engine
 @RunWith(classOf[CddContinuousIntegrationRunner])
 class ExampleContinuousIntegrationTest extends CddContinuousIntegrationTest {
   val engines = List(
-    CategorisePerson.categorise)
-}
-
-object check {
-  def main(args: Array[String]) {
-
-  } 
+    CategorisePerson.categorise,
+    CategorisePerson.categorise.cached,
+    TennisScorer.scorer
+  )
 }

@@ -109,7 +109,7 @@ class TextOrderTests extends AbstractTest with SomeEngines {
 class ByReferenceDocumentPrinterStrategyWithMultipleEnginesAndOverlappingUseCasesTest extends AbstractTest with SomeEngines {
 
   val rawReport = Report("Document View", project);
-  val strategy = new ByReferenceDocumentPrinterStrategy(Some(document), new SimpleKeyStrategy(), debug = true)
+  val strategy = new ByReferenceDocumentPrinterStrategy(Some(document), new SimpleKeyStrategy(), debug = false)
   val report = strategy.makeReportOfJustDocuments(rawReport).asInstanceOf[SimpleRequirementAndHolder]
 
   val mainCarersUseCase = findUseCase(mainCarers, 0)

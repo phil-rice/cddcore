@@ -38,7 +38,7 @@ trait DocumentPrinterTestFramework {
 
   val useCases = eMain.all(classOf[UseCase]).sortBy(_.titleString)
   val scenarios = eMain.all(classOf[Test]).sortBy(_.params(0).asInstanceOf[Int])
-  val strategy = new ByReferenceDocumentPrinterStrategy(None, new SimpleKeyStrategy, debug = true)
+  val strategy = new ByReferenceDocumentPrinterStrategy(None, new SimpleKeyStrategy, debug = false)
   val project = Project("Some title", eMain)
   def findUseCase(e: Engine, title: String) = e.all(classOf[UseCase]).find(_.titleString == title).get
   def findScenario(e: Engine, param: Int) = e.all(classOf[Test]).find(_.params(0) == param).get

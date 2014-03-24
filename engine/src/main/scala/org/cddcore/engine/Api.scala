@@ -150,11 +150,15 @@ object PathUtils {
   }
 
   /** Walks up the path until it finds the first engine with tests*/
-  def findEngineWithTests(path: ReportableList) = engineWithTestsPath(path).head.asInstanceOf[EngineBuiltFromTests[_]]
+  def findEngineWithTests(path: ReportableList) = {
+    val newPath = engineWithTestsPath(path)
+    newPath.head.asInstanceOf[EngineBuiltFromTests[_]]
+  }
   /** Walks up the path until it finds the first engine with tests, return a truncated path with the engine as the head */
   def engineWithTestsPath(path: ReportableList): ReportableList = path match {
     case (engine: EngineBuiltFromTests[_]) :: tail => path
-    case h :: tail => enginePath(tail)
+    case (engine: DelegatedEngine) :: tail=>  engineWithTestsPath(engine.delegate :: tail)
+    case h :: tail => engineWithTestsPath(tail)
     case _ => throw new IllegalArgumentException
   }
   /** Walks up the path until it finds the first engine*/
@@ -540,7 +544,7 @@ trait EngineFull[R, FullR] extends EngineWithResult[FullR] {
   lazy val decisionTreeNodes = childEngines.foldLeft(0)(_ + _.decisionTreeNodes)
 }
 
-trait DelegatedEngine extends Engine {
+trait DelegatedEngine extends Engine with EngineWithScenarioExceptionMap with EngineWithLogger {
   def delegate: Engine
   def decisionTreeNodes = delegate.decisionTreeNodes
   def children = delegate.children
@@ -549,6 +553,8 @@ trait DelegatedEngine extends Engine {
   def description = delegate.description
   def priority = delegate.priority
   def references = delegate.references
+  def scenarioExceptionMap: ScenarioExceptionMap = delegate.asInstanceOf[EngineWithScenarioExceptionMap].scenarioExceptionMap
+  def logger: TddLogger = delegate.asInstanceOf[EngineWithLogger].logger
 }
 
 trait EngineCache[Params, R] {

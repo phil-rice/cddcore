@@ -7,7 +7,6 @@ import org.scalatest.junit.JUnitRunner
 class EngineFirstTwoScenarioTests extends EngineStringStringTests {
 
   "An empty engine" should "allow the first use not to have a because, and become the default value" in {
-    println(engineWithDefault)
     assertEquals(1, engineWithDefault.tests.size)
     assertEngineMatches(engineWithDefault, Left(CodeAndScenarios("Z": Code, List(defaultScenario))));
     assertEquals("Z", engineWithDefault("A"))

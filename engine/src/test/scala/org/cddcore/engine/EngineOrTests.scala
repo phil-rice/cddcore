@@ -58,7 +58,6 @@ class EngineOrTests extends EngineStringStringTests {
   it should "not allow a scenario in the else clause of the parent to be broken" in {
     case class FourBooleans(a: Boolean, b: Boolean, c: Boolean, d: Boolean)
     implicit def toFourBooleans(x: (Boolean, Boolean, Boolean, Boolean)) = FourBooleans(x._1, x._2, x._3, x._4)
-    Engine.logging = true
     val builder = Engine[FourBooleans, String]().
       scenario((false, false, false, false), "-").expected("none").
       scenario((true, false, false, false), "A").expected("a").because((w: FourBooleans) => w.a).
