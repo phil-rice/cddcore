@@ -102,8 +102,8 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   object ExceptionScenarioPrinter {
     val fullScenario = false
     def apply(s: Test) = scenario2Str(s)
-    def existingAndBeingAdded(existing: Test, s: Test) =
-      s"Existing: ${existing.titleString}\nBeing Added: ${s.titleString}\nDetailed existing:\n${existing}\nDetailed of being Added:\n${s}"
+    def existingAndBeingAdded(ldp: LoggerDisplayProcessor, existing: Test, s: Test) =
+      s"Existing: ${existing.titleString}\nBeing Added: ${s.titleString}\nDetailed existing:\n${ldp(existing)}\nDetailed of being Added:\n${ldp(s)}"
     def full(ldp: LoggerDisplayProcessor, s: Test) = s + "\nDetailed:\n  " + ldp(s.params)
     def scenario2Str(s: Test) =
       if (fullScenario)
@@ -170,7 +170,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case NodePath(Left(l: CodeAndScenarios), _) :: tail =>
           l.addedBy match {
             case Some(existing) =>
-              new ScenarioConflictingWithoutBecauseException(s"\nCame to wrong conclusion: ${actual}\nInstead of ${expected}\nPath\n$pathString\n${ExceptionScenarioPrinter.existingAndBeingAdded(existing, beingAdded)}", existing, beingAdded)
+              new ScenarioConflictingWithoutBecauseException(s"\nCame to wrong conclusion: ${actual}\nInstead of ${expected}\nPath\n$pathString\n${ExceptionScenarioPrinter.existingAndBeingAdded(loggerDisplayProcessor, existing, beingAdded)}", existing, beingAdded)
             case None => throw ScenarioConflictingWithDefaultException(loggerDisplayProcessor, actual, beingAdded);
           }
         case _ => throw new IllegalStateException;
@@ -179,12 +179,24 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   }
 
   class ScenarioConflictingWithoutBecauseException(msg: String, scenario: Scenario, beingAdded: Scenario, cause: Throwable = null) extends ScenarioConflictException(msg, scenario, beingAdded, cause)
-  class ScenarioHasRedundantBecauseException(msg: String, scenario: Scenario) extends ScenarioException(msg, scenario)
+
+  object ScenarioCausingProblemWithOrRuleException {
+    def apply(ldp: LoggerDisplayProcessor, existing: Scenario, beingAdded: Scenario, oldResult: ROrException[R], newResult: ROrException[R]) =
+      new ScenarioCausingProblemWithOrRuleException(s"The scenario you added already came to the correct conclusion. \nAs well as that it had a because clause, and if the because clause was added, another scenario that as already been added would now come to the wrong conclusion\n" +
+        s"Existing: ${existing.titleString}\n  which used to come to ${ldp(oldResult)}, would now come to ${ldp(newResult)}\nBeing Added: ${beingAdded.titleString}\nDetailed existing:\n${ldp(existing)}\nDetailed of being Added:\n${ldp(beingAdded)}",
+        existing, beingAdded, oldResult, newResult)
+  }
+  class ScenarioCausingProblemWithOrRuleException(
+    msg: String,
+    scenario: Scenario,
+    beingAdded: Scenario,
+    oldResult: ROrException[R],
+    newResult: ROrException[R]) extends ScenarioException(msg, scenario)
 
   object ScenarioConflictException {
-    def apply(existing: Scenario, beingAdded: Scenario, cause: Throwable = null) =
+    def apply(loggerDisplayProcessor: LoggerDisplayProcessor, existing: Scenario, beingAdded: Scenario, cause: Throwable = null) =
       new ScenarioConflictException(s"Cannot differentiate based on:\n ${beingAdded.becauseString}" +
-        s"\n${ExceptionScenarioPrinter.existingAndBeingAdded(existing, beingAdded)}", existing, beingAdded, cause)
+        s"\n${ExceptionScenarioPrinter.existingAndBeingAdded(loggerDisplayProcessor, existing, beingAdded)}", existing, beingAdded, cause)
   }
   class ScenarioConflictException(msg: String, scenario: Scenario, val beingAdded: Scenario, cause: Throwable = null) extends ScenarioException(msg, scenario, cause)
   class MultipleExceptions(msg: String, val scenarioExceptionMap: ScenarioExceptionMap) extends EngineException(msg, scenarioExceptionMap.first.get)
@@ -204,7 +216,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
   class NoExceptionThrownException(msg: String, scenario: Scenario, val expected: Class[_ <: Throwable], actual: Any) extends ScenarioException(msg, scenario)
 
   object AssertionDoesntMatchBecauseException {
-    def apply(existing: Scenario, beingAdded: Scenario) = new AssertionDoesntMatchBecauseException(ExceptionScenarioPrinter.existingAndBeingAdded(existing, beingAdded), existing, beingAdded)
+    def apply(loggerDisplayProcessor: LoggerDisplayProcessor, existing: Scenario, beingAdded: Scenario) = new AssertionDoesntMatchBecauseException(ExceptionScenarioPrinter.existingAndBeingAdded(loggerDisplayProcessor, existing, beingAdded), existing, beingAdded)
   }
   class AssertionDoesntMatchBecauseException(msg: String, scenario: Scenario, beingAdded: Scenario) extends ScenarioConflictException(msg, scenario, beingAdded)
 
@@ -880,6 +892,14 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         }
       }
     }
+
+    def evaluteBecauseForParams(because: List[CodeHolder[B]], params: List[Any]): Boolean = {
+      val bec = makeClosureForBecause(params)
+      for (b <- because)
+        if (bec(b.fn))
+          return true
+      false
+    }
     def evaluateBecauseForDecision(decision: Decision, params: List[Any]) = {
       decision match {
         case e: EngineNode =>
@@ -986,7 +1006,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         scenario.configure
         val result = makeClosureForBecause(scenario.params)(scenarioBeingAdded.because.get.fn)
         if (result)
-          throw ScenarioConflictException(scenario, scenarioBeingAdded)
+          throw ScenarioConflictException(loggerDisplayProcessor, scenario, scenarioBeingAdded)
       }
     }
 
@@ -1028,12 +1048,23 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
               Left(codeAndScenarios.copy(scenarios = s :: codeAndScenarios.scenarios))
             case (true, Some((lastParent, yesNo))) =>
               val newBecause = s.because.collect { case b => b :: lastParent.because }.getOrElse(lastParent.because)
-              if (newBecause.size > 1)
-                throw new ScenarioHasRedundantBecauseException("Temporary fix: this exception will be fixed shortly", s)
               logger.merge(lastParent.scenarioThatCausedNode.titleString, s.titleString, yesNo)
-              if (yesNo)
+              if (yesNo) {
+                if (newBecause.size > 1) {
+                  //If I add me in as an or clause I might break existing tests that are down the parent's else clause
+                  val scenariosInLastParentsElse = lastParent.no match {
+                    case Right(elseParent) => elseParent.allScenarios
+                    case Left(CodeAndScenarios(_, scenarios, _)) => scenarios
+                  }
+                  val brokenScenarios = scenariosInLastParentsElse.filter((s: Scenario) => evaluteBecauseForParams(newBecause, s.params))
+                  brokenScenarios match {
+                    case Nil =>
+                    case head :: tail =>
+                      throw ScenarioCausingProblemWithOrRuleException(loggerDisplayProcessor, head, s, head.expected.get, actualResultIfUseThisScenariosCode)
+                  }
+                }
                 (Right(lastParent.copy(because = newBecause, yes = Left(codeAndScenarios.copy(scenarios = s :: codeAndScenarios.scenarios)))), true)
-              else
+              } else
                 (Right(lastParent.copy(because = newBecause, no = Left(codeAndScenarios.copy(scenarios = s :: codeAndScenarios.scenarios)))), true)
             case (false, Some((lastParent, yesNo))) =>
               checkDoesntMatch(codeAndScenarios, s)

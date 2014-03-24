@@ -6,23 +6,27 @@ import org.cddcore.engine.tests.CddJunitRunner
 import scala.language.implicitConversions
 import org.cddcore.engine.EngineBuiltFromTests
 import org.cddcore.engine.EngineWithConstructionString
+import org.cddcore.engine.EngineWithScenarioExceptionMap
 
-case class Widget(a: Boolean, b: Boolean, c: Boolean, d: Boolean)
 @RunWith(classOf[CddJunitRunner])
 object RulesWithLotsOfBecauses {
-  implicit def toWidget(x: (Boolean, Boolean, Boolean, Boolean)) = Widget(x._1, x._2, x._3, x._4)
+case class FourBooleans(a: Boolean, b: Boolean, c: Boolean, d: Boolean)
+  implicit def toFourBooleans(x: (Boolean, Boolean, Boolean, Boolean)) = FourBooleans(x._1, x._2, x._3, x._4)
   Engine.logging = true
-  val builder = Engine[Widget, String]().
-    scenario((false, false, false, false), "FFFF").expected("none").
-    scenario((true, false, false, false), "TFFF").expected("a").because((w: Widget) => w.a).
-    scenario((true, false, true, false), "TFTF").expected("d").because((w: Widget) => w.a && w.c).
-    scenario((false, true, false, false), "FTFF").expected("b").because((w: Widget) => w.b).
-    scenario((true, false, true, true), "TFTT").expected("d").because((w: Widget) => w.a && true)
+  val builder = Engine[FourBooleans, String]().
+    scenario((false, false, false, false), "-").expected("none").
+    scenario((true, false, false, false), "A").expected("a").because((w: FourBooleans) => w.a).
+    scenario((true, false, true, false), "AC").expected("d").because((w: FourBooleans) => w.a && w.c).
+    scenario((false, true, false, false), "B").expected("b").because((w: FourBooleans) => w.b).
+    scenario((true, false, true, true), "ACD").expected("d").because((w: FourBooleans) => w.a && true)
 
   val engine = Engine.test(builder.build)
+//  val engine = builder.build
 
   def main(args: Array[String]) {
     println(engine.asInstanceOf[EngineWithConstructionString].constructionString)
+    println("================== Exceptions ================ ")
+    println(engine.asInstanceOf[EngineWithScenarioExceptionMap].scenarioExceptionMap)
   }
 
 }

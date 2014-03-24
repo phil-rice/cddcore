@@ -1,23 +1,29 @@
 Short Term
 ==========
 
-
 We need a more flexible requirement structure.
    Look at the Tennis scorer for an example. Under the 'Wins if...' it would be nice to group the left won and the right won.
-   Plus if we don't want a use case, we shouldn't need one
+
    
-BUGS: Usecase references not visible 
+BUGS: 
+Sort out the 'redundant becauses' bug
+Usecase references not visible 
 Minor tweak to live website: try website has a link. the decision view on live is lying
+
+From the Blackpool trial
+* The 'default code' is not being used for engines/childengines. Exact recreation unknown yet. Work around is to have that code on the first scenario
+* The 'undecided exception' should include information about the scenario, and which engine it is in. It's quite hard to debug when an engine calls another engine
+* Engines that are 'defs' instead of 'vars' should throw an exception if there isn't an annotation stopping it. In most scenarios I am aware of this would be a defect
+* Allow more variables to be added to the XmlSituation. Perhaps using an annotation
+* The JsonSituation would be very simple and very useful.
 
  
 Legacy website
 
-Nested Engines
 
 
 Medium term
 ==========
-Document driven view of the website
 
 
 
@@ -38,4 +44,7 @@ Ensure the examples look really good
 XML situation print out
 Decision tree slightly nicer
 Usecase command should do title and description at the same time.. probably for the scenario as well
+Document driven view of the website
+Nested Engines
+If we don't want a use case, we shouldn't need one
   

@@ -21,7 +21,7 @@ object CategorisePerson {
     expected("person.valid").
     useCase("A person under 16 cannot use this system").
     scenario(Person(savings = 10000, ageInYears = 10)).expected("person.invalid.child").
-    because((p: Person) => p.ageInYears < 5).
+    because((p: Person) => p.ageInYears < 16).
 
     scenario(Person(savings = 100, ageInYears = 15)).expected("person.invalid.child").
 

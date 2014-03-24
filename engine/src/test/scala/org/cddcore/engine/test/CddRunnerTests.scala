@@ -122,8 +122,8 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
     assertEquals(List(
       "testStarted: Test",
       "testStarted: engineName",
-      "testStarted: d1 => throws RuntimeException",
-      "testFinished: d1 => throws RuntimeException",
+      "testStarted: d1 => java.lang.RuntimeException",
+      "testFinished: d1 => java.lang.RuntimeException",
       "testFinished: engineName",
       "testFinished: Test"), runAndGetListOfNotifications(e))
   }

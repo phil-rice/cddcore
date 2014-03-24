@@ -1,6 +1,7 @@
 package org.cddcore.engine
 
 import org.junit.runner.RunWith
+import scala.language.implicitConversions
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
@@ -52,6 +53,30 @@ class EngineOrTests extends EngineStringStringTests {
     assertEquals("X", e("A"))
     assertEquals("X", e("B"))
     assertEquals("Z", e("C"))
+  }
+
+  it should "not allow a scenario in the else clause of the parent to be broken" in {
+    case class FourBooleans(a: Boolean, b: Boolean, c: Boolean, d: Boolean)
+    implicit def toFourBooleans(x: (Boolean, Boolean, Boolean, Boolean)) = FourBooleans(x._1, x._2, x._3, x._4)
+    Engine.logging = true
+    val builder = Engine[FourBooleans, String]().
+      scenario((false, false, false, false), "-").expected("none").
+      scenario((true, false, false, false), "A").expected("a").because((w: FourBooleans) => w.a).
+      scenario((true, false, true, false), "AC").expected("d").because((w: FourBooleans) => w.a && w.c).
+      scenario((false, true, false, false), "B").expected("b").because((w: FourBooleans) => w.b).
+      scenario((true, false, true, true), "ACD").expected("d").because((w: FourBooleans) => w.a && true)
+
+    val e = evaluating { builder.build } should produce[EngineException]
+    assertEquals(
+      "The scenario you added already came to the correct conclusion. \n" +
+        "As well as that it had a because clause, and if the because clause was added, another scenario that as already been added would now come to the wrong conclusion\n" +
+        "Existing: A\n" +
+        "  which used to come to a, would now come to d\n" +
+        "Being Added: ACD\n" +
+        "Detailed existing:\n" +
+        "Scenario(A, FourBooleans(true,false,false,false), because=((w: FourBooleans) => w.a), expected=a)\n" +
+        "Detailed of being Added:\n" +
+        "Scenario(ACD, FourBooleans(true,false,true,true), because=((w: FourBooleans) => w.a.&&(true)), expected=d)", e.getMessage())
   }
 
 }

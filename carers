@@ -32,3 +32,4 @@
 1.8.5.11 TraceItem now has a printer that makes viewing traces easier
 1.8.5.12 Added an HTML viewer to TraceItem
 1.8.5.13 Emergency Patch: There is an error in handling becauses that aren't needed. 
+1.8.5.14 Non emergency patch, handling the becauses properly

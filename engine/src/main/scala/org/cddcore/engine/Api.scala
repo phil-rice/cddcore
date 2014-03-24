@@ -353,7 +353,7 @@ object Engine {
     } finally
       _traceBuilder.set(None);
   }
-  var logging = ("true" == System.getenv("cdd.junit.log")) || true
+  var logging = ("true" == System.getenv("cdd.junit.log")) || false
 
   def testing = _testing.get
   private var _testing = new ThreadLocal[Boolean] {
