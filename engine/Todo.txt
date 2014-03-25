@@ -4,22 +4,31 @@ Short Term
 We need a more flexible requirement structure.
    Look at the Tennis scorer for an example. Under the 'Wins if...' it would be nice to group the left won and the right won.
 
+BJSS getting started
+* Scaladoc => Javadoc as part of up load
+  
+Our ideas
+* PersonUnit
    
 BUGS: 
-Sort out the 'redundant becauses' bug
-Usecase references not visible 
-Minor tweak to live website: try website has a link. the decision view on live is lying
+* Usecase references not visible 
+* Minor tweak to live website: try website has a link. the decision view on live is lying
 
 From the Blackpool trial
+Bug
 * The 'default code' is not being used for engines/childengines. Exact recreation unknown yet. Work around is to have that code on the first scenario
+
+Is it a feature, is it a bug?
 * The 'undecided exception' should include information about the scenario, and which engine it is in. It's quite hard to debug when an engine calls another engine
 * Engines that are 'defs' instead of 'vars' should throw an exception if there isn't an annotation stopping it. In most scenarios I am aware of this would be a defect
+Features
 * Allow more variables to be added to the XmlSituation. Perhaps using an annotation
 * The JsonSituation would be very simple and very useful.
 
- 
-Legacy website
-
+Completed
+Bugs 
+* The caching engine cannot be Junit tested  
+* the 'redundant becauses' bug 
 
 
 Medium term
