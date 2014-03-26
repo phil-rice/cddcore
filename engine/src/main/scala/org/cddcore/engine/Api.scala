@@ -157,7 +157,7 @@ object PathUtils {
   /** Walks up the path until it finds the first engine with tests, return a truncated path with the engine as the head */
   def engineWithTestsPath(path: ReportableList): ReportableList = path match {
     case (engine: EngineBuiltFromTests[_]) :: tail => path
-    case (engine: DelegatedEngine) :: tail=>  engineWithTestsPath(engine.delegate :: tail)
+    case (engine: DelegatedEngine) :: tail => engineWithTestsPath(engine.delegate :: tail)
     case h :: tail => engineWithTestsPath(tail)
     case _ => throw new IllegalArgumentException
   }
@@ -328,25 +328,50 @@ object Engine {
     override def initialValue = None
   }
 
+  private var profiler = new ThreadLocal[Option[Profiler[Engine]]] {
+    override def initialValue = None
+  }
+
   def call(e: Engine, params: List[Any]) = {
     _traceBuilder.get match {
       case Some(tb) => _traceBuilder.set(Some(tb.nest(e, params)))
       case None =>
     }
+    profiler.get() match {
+      case Some(p) => p.start(e)
+      case None =>
+    }
   }
 
-  def endCall(conclusion: ConclusionOrResult, result: Any) {
+  def endCall(e: Engine, conclusion: ConclusionOrResult, result: Any) {
     _traceBuilder.get match {
       case Some(tb) => _traceBuilder.set(Some(tb.finished(conclusion, result)))
       case None =>
     }
+    profiler.get() match {
+      case Some(p) => p.end(e)
+      case None =>
+    }
   }
-  def failedCall(conclusion: ConclusionOrResult, exception: Throwable) {
+  def failedCall(e: Engine, conclusion: ConclusionOrResult, exception: Throwable) {
     _traceBuilder.get match {
       case Some(tb) => _traceBuilder.set(Some(tb.failed(conclusion, exception)))
       case None =>
     }
+    profiler.get() match {
+      case Some(p) => p.end(e)
+      case None =>
+    }
   }
+  def profile[T](x: => T, p: Profiler[Engine] = new SimpleProfiler[Engine]): (T, Profiler[Engine]) = {
+    profiler.set(Some(p))
+    try {
+      (x, p)
+    } finally {
+      profiler.set(None)
+    }
+  }
+
   def trace[T](x: => T, ignore: List[Engine] = List()): Tuple2[ROrException[T], List[TraceItem]] = {
     try {
       _traceBuilder.set(Some(new TraceBuilder(List(), ignore)));
@@ -441,7 +466,7 @@ trait EngineBuiltFromTests[R] extends EngineWithResult[R] {
     Engine.call(this, params)
     val conclusion = findConclusionFor(params)
     val result = evaluateConclusion(params, conclusion)
-    Engine.endCall(conclusion, result);
+    Engine.endCall(this, conclusion, result);
     result
   }
 
@@ -530,13 +555,13 @@ trait EngineFull[R, FullR] extends EngineWithResult[FullR] {
         case Some(f) =>
           val result = childEngines.foldLeft[FullR](initialFoldValue())((acc, ce) =>
             f(acc, ce.applyParams(params)))
-          Engine.endCall(None, result)
+          Engine.endCall(this, None, result)
           result
         case _ => throw new IllegalStateException
       }
     } catch {
       case e: Throwable => {
-        Engine.failedCall(None, e)
+        Engine.failedCall(this, None, e)
         throw e
       }
     }

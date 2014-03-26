@@ -1145,13 +1145,13 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
     def logResult(fn: => (Conclusion, R)): R = {
       val (conclusion, result) = fn;
-      endCall(conclusion, result)
+      endCall(this,conclusion, result)
       logger.result(result)
       result
     }
     def logFailed(fn: => (Conclusion, Throwable)) {
       val (conclusion, exception) = fn;
-      failedCall(conclusion, exception)
+      failedCall(this,conclusion, exception)
     }
 
     def applyParams(root: RorN, params: List[Any], log: Boolean): R = {
