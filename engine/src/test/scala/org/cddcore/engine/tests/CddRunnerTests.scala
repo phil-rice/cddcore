@@ -1,4 +1,4 @@
-package org.cddcore.engine.test
+package org.cddcore.engine.tests
 
 import org.cddcore.engine._
 import scala.language.implicitConversions
@@ -10,6 +10,7 @@ import org.junit.runner.notification._
 import org.scalatest.exceptions.TestFailedException
 import org.scalatest.junit.JUnitRunner
 import org.cddcore.engine.ChildEngine
+import java.util.concurrent.atomic.AtomicInteger
 
 class RunListenerForTests extends RunListener {
   var list = List[String]()
@@ -29,10 +30,12 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
   import org.cddcore.engine.Engine._
   implicit def toBuildEngine[R](e: Engine) = e.asInstanceOf[BuildEngine]
 
-  class CddRunnerForTests(engine: Engine) extends CddRunner {
+  class CddRunnerForTests(engine: Engine*) extends CddRunner {
     def title = "Test"
     def clazz = getClass
-    def enginesToNameMap = Map(engine -> "engineName")
+    val count = new AtomicInteger(1)
+    def nextEngineName = count.getAndIncrement() match { case 1 => ""; case x => x.toString }
+    def enginesToNameMap = engine.foldLeft(Map[Engine, String]())((acc, v) => acc + (v -> ("engineName" + nextEngineName)))
   }
 
   "An engine" should "notify started and finished for root, engine, usecase and scenario when one scenario" in {
@@ -49,6 +52,23 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testFinished: uc1",
       "testFinished: engineName",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
+  }
+
+  it should "generate unique names for reportables" in {
+    val engine1 = builder.useCase("uc1").build
+    val engine2 = builder.useCase("uc1").build
+    assertEquals(List(
+      "testStarted: Test",
+      "testStarted: engineName",
+      "testStarted: uc1",
+      "testFinished: uc1",
+      "testFinished: engineName",
+      "testStarted: engineName2",
+      "testStarted: uc1_2",
+      "testFinished: uc1_2",
+      "testFinished: engineName2",
+      "testFinished: Test"), runAndGetListOfNotifications(engine1, engine2))
+
   }
 
   it should "notify started and finished for root, engine, usecase and scenario wihen two scenarios in same use case" in {
@@ -168,15 +188,15 @@ class CddRunnerTests extends AbstractEngine1Test[String, String] {
       "testStarted: ce1",
       "testStarted: sname => exp",
       "testFailure: sname => exp: ((p: String) => p.==(\"two\")) is not true for Scenario(sname, one, because=((p: String) => p.==(\"two\")), expected=exp)\nDetailed:\n  List(one)\n",
-      "testStarted: sname => exp",
-      "testFinished: sname => exp",
+      "testStarted: sname => exp_2",
+      "testFinished: sname => exp_2",
       "testFinished: ce1",
       "testFinished: engineName",
       "testFinished: Test"), runAndGetListOfNotifications(engine1))
   }
 
-  def runAndGetListOfNotifications(engine: Engine) = {
-    val runner = new CddRunnerForTests(engine)
+  def runAndGetListOfNotifications(engine: Engine*) = {
+    val runner = new CddRunnerForTests(engine: _*)
     val listener = new RunListenerForTests
     val notifier = new RunNotifier()
     notifier.addFirstListener(listener)

@@ -11,8 +11,9 @@ import org.junit.runner.RunWith
 import org.cddcore.engine.EngineWithResult
 import org.cddcore.engine.ParamDetails.toParamDetails
 import org.cddcore.engine.Reportable.ReportableList
+import org.scalatest.junit.JUnitRunner
 
-//@RunWith(classOf[JUnitRunner])
+@RunWith(classOf[JUnitRunner])
 class ExampleWebsiteTest extends AbstractWebsiteTest { 
   import Reportable._
   lazy val blankEngine = Engine[Int, String]().build

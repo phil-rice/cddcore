@@ -35,3 +35,4 @@
 1.8.5.14 Non emergency patch, handling the becauses properly
 1.8.5.15 Allowed Cached Engines to work in the Junit tests
 1.8.5.16 Execution Profiler added
+1.8.5.17 Bug fixes: Junit descriptions now have unique names. Default code now works with scenarios

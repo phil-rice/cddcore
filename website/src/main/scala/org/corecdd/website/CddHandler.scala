@@ -31,31 +31,34 @@ trait CddPathHandler {
 
 case class Param(name: String, valueAsString: String, value: Any)
 
-class CddHandler(loggerDisplayProcessor: LoggerDisplayProcessor, p: RequirementAndHolder, pathHandlers: List[CddPathHandler]) extends AbstractHandler {
+class CddHandler(loggerDisplayProcessor: LoggerDisplayProcessor, p: RequirementAndHolder, pathHandlers: List[CddPathHandler], val prefix: String = "") extends AbstractHandler {
   val reportCreator = new ReportCreator(loggerDisplayProcessor, p, title = null, live = true, reportableToUrl = new SimpleReportableToUrl)
   val urlMap = reportCreator.urlMap
 
   def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse) {
     val uri = baseRequest.getUri();
-    val path = uri.getPath
-    pathHandlers.find(_.willHandle(path)) match {
-      case Some(ph) =>
-        try {
-          baseRequest.setHandled(true);
-          response.setContentType("text/html;charset=utf-8");
-          response.setStatus(HttpServletResponse.SC_OK);
-          val context = new HandlerContext(loggerDisplayProcessor, p, reportCreator, baseRequest.getMethod(), path, ph.findUriPath(path))
-          val paramsINeed = ph.paramsINeed(context)
-          val paramsNameAndValue = paramsINeed.map((name) => (name, baseRequest.getParameter(name)))
-          val html = ph.html(context, paramsNameAndValue)
-          response.getWriter().println(html)
-        } catch {
-          case e: Throwable =>
-            println(ph);
-            //            e.printStackTrace();
-            throw e
-        }
-      case _ => ;
+    val fullPath = uri.getPath
+    if (fullPath.startsWith(prefix)) {
+      val path = fullPath.substring(prefix.length())
+      pathHandlers.find(_.willHandle(path)) match {
+        case Some(ph) =>
+          try {
+            baseRequest.setHandled(true);
+            response.setContentType("text/html;charset=utf-8");
+            response.setStatus(HttpServletResponse.SC_OK);
+            val context = new HandlerContext(loggerDisplayProcessor, p, reportCreator, baseRequest.getMethod(), path, ph.findUriPath(path))
+            val paramsINeed = ph.paramsINeed(context)
+            val paramsNameAndValue = paramsINeed.map((name) => (name, baseRequest.getParameter(name)))
+            val html = ph.html(context, paramsNameAndValue)
+            response.getWriter().println(html)
+          } catch {
+            case e: Throwable =>
+              println(ph);
+              //            e.printStackTrace();
+              throw e
+          }
+        case _ => ;
+      }
     }
   }
 }

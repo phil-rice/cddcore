@@ -202,6 +202,7 @@ object PathUtils {
       case (Some(p), r: Requirement) if (r.priority.isDefined && r.priority.get > p) => Some(p);
       case (acc, _) => acc
     });
+  
 
   def findTraceItem(path: ReportableList): TraceItem = path match {
     case (traceItem: TraceItem) :: tail => traceItem

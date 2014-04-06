@@ -6,8 +6,22 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.CountDownLatch
 
 class Maps {
+}
+
+class MapToUniqueName[X](fn: (X, Int) => String, map: Map[X, String] = Map[X, String](), values: Set[String] = Set()) {
+  def add(x: X):MapToUniqueName[X] = add(x, 1)
+
+  def apply(x: X) = map(x)
+  protected def add(x: X, count: Int): MapToUniqueName[X] = {
+    val name = fn(x, count)
+    values.contains(name) match {
+      case true => add(x, count + 1)
+      case false => new MapToUniqueName(fn, map + (x -> name), values + name)
+    }
+  }
 
 }
+
 object Maps {
 
   def addToList[K, V](map: Map[K, List[V]], key: K, value: V) = map + (key -> (value :: map.getOrElse(key, Nil)))

@@ -142,12 +142,12 @@ object ProcessChequeXml {
 
     useCase("Cheques that are for a different bank should be rejected").
     scenario((world, cheque("1", richRogerAtHsbcId, richRogerId, today, 1000)), "One thousand pounds from rich roger at HSBC to rich roger at this bank. But the 'FromBank' isn't this bank").
-    expected(ProcessChequeResult(false, "processCheque.reject.fromBankNotThisBank")).
+    expectedAndCode(ProcessChequeResult(false, "processCheque.reject.fromBankNotThisBank")).
     because((s: ChequeSituation) => s.chequeFromBank() != s.world.thisBank).
 
     useCase("Cheques that are to a bank not on the white list should be rejected").
     scenario((world, cheque("1", dodgyDaveId, dodgyDaveAtDodgyBankId, today, 50)), "Dodgy Dave is moving half his funds to a bank that isn't on the accepted list").
-    expected(ProcessChequeResult(false, ("processCheque.reject.toBank.notInWhiteList", BankId.dodgyBank))).
+    expectedAndCode(ProcessChequeResult(false, ("processCheque.reject.toBank.notInWhiteList", BankId.dodgyBank))).
     because((s: ChequeSituation) => {
       val c = s.chequeToBank()
       !s.world.acceptedBanks.contains(c)
@@ -156,15 +156,15 @@ object ProcessChequeXml {
     //
     useCase("Cheques that will take the customer over the overdraft limit will should be rejected").
     scenario((world, cheque("1", dodgyDaveId, richRogerId, today, 110)), "Dodgy Dave sending more money than he has").
-    expected(ProcessChequeResult(false, "processCheque.reject.noOverdraft")).
+    expectedAndCode(ProcessChequeResult(false, "processCheque.reject.noOverdraft")).
     because((s: ChequeSituation) => s.customerWouldBeOverDrawn && s.customerHasNoOverdraftLimit).
     //
     scenario((world, cheque("1", richRogerId, richRogerAtHsbcId, today, 15000)), "Rich Roger sending more money than he has, taking him over his limit").
-    expected(ProcessChequeResult(false, "processCheque.reject.exceedsOverdraftLimit")).
+    expectedAndCode(ProcessChequeResult(false, "processCheque.reject.exceedsOverdraftLimit")).
     because((s: ChequeSituation) => s.customerWouldExceedOverdraftLimit).
     //
     useCase("Cheques that are to to customers in an accepted bank, when the cheque writer has sufficient funds, should be allowed").
-    expected(ProcessChequeResult(true, "processCheque.accept")).
+    expectedAndCode(ProcessChequeResult(true, "processCheque.accept")).
     scenario((world, cheque("1", dodgyDaveId, richRogerId, today, 50)), "Dodgy Dave sending an OK cheque to someone in this bank").
     because((s: ChequeSituation) => s.world.acceptedBanks.contains(s.chequeToBank())).
 

@@ -66,24 +66,24 @@ object ProcessCheque {
 
     useCase("Cheques that are for a different bank should be rejected").
     scenario(world, Cheque("1", richRogerAtHsbcId, richRogerId, today, 1000), "One thousand pounds from rich roger at HSBC to rich roger at this bank. But the 'FromBank' isn't this bank").
-    expected(ProcessChequeResult(false, "processCheque.reject.fromBankNotThisBank")).
+    expectedAndCode(ProcessChequeResult(false, "processCheque.reject.fromBankNotThisBank")).
     because((w: World, c: Cheque) => c.from.bank != w.thisBank).
 
     useCase("Cheques that are to a bank not on the white list should be rejected").
     scenario(world, Cheque("1", dodgyDaveId, dodgyDaveAtDodgyBankId, today, 50), "Dodgy Dave is moving half his funds to a bank that isn't on the accepted list").
-    expected(ProcessChequeResult(false, ("processCheque.reject.toBank.notInWhiteList", BankId.dodgyBank))).
+    expectedAndCode(ProcessChequeResult(false, ("processCheque.reject.toBank.notInWhiteList", BankId.dodgyBank))).
     because((w: World, c: Cheque) => !w.acceptedBanks.contains(c.to.bank)).
     //
     useCase("Cheques that will take the customer over the overdraft limit will should be rejected").
     scenario(world, Cheque("1", dodgyDaveId, richRogerId, today, 110), "Dodgy Dave sending more money than he has").
-    expected(ProcessChequeResult(false, "processCheque.reject.noOverdraft")).
+    expectedAndCode(ProcessChequeResult(false, "processCheque.reject.noOverdraft")).
     because((w: World, c: Cheque) => {
       val customer = w.customerIdToCustomer(c.from)
       c.amount >= customer.balance && customer.overdraftLimit == GBP(0, 0)
     }).
     //
     scenario(world, Cheque("1", richRogerId, richRogerAtHsbcId, today, 15000), "Rich Roger sending more money than he has, taking him over his limit").
-    expected(ProcessChequeResult(false, "processCheque.reject.exceedsOverdraftLimit")).
+    expectedAndCode(ProcessChequeResult(false, "processCheque.reject.exceedsOverdraftLimit")).
     because((w: World, c: Cheque) => {
       val customer = w.customerIdToCustomer(c.from)
       c.amount >= customer.balance + customer.overdraftLimit
@@ -91,11 +91,11 @@ object ProcessCheque {
     //
     useCase("Cheques that are to to customers in an accepted bank, when the cheque writer has sufficient funds, should be allowed").
     scenario(world, Cheque("1", dodgyDaveId, richRogerId, today, 50), "Dodgy Dave sending an OK cheque to someone in this bank").
-    expected(ProcessChequeResult(true, "processCheque.accept")).
+    expectedAndCode(ProcessChequeResult(true, "processCheque.accept")).
     because((w: World, c: Cheque) => w.acceptedBanks.contains(c.to.bank)).
 
     scenario(world, Cheque("1", dodgyDaveId, richRogerAtHsbcId, today, 50), "Dodgy Dave sending an OK cheque to someone in an accepted bank").
-    expected(ProcessChequeResult(true, "processCheque.accept")).
+    expectedAndCode(ProcessChequeResult(true, "processCheque.accept")).
 
     build
 

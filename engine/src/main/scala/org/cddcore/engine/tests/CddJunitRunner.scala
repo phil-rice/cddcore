@@ -64,22 +64,7 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
   var exceptionMap: Map[Test, Throwable] = Map()
   var biMap: BiMap = (Map(), Map())
   var allEngines = List[Engine]()
-  var names = Set[String]()
-
-  def addEngineForTest(name: String, engine: Any) = addEngine(name, engine.asInstanceOf[Engine])
-
-  /** this code is here for a truely hideous Eclipse interop bug that I wasn't able to duplicate in a test :( Basically if you have two tests with the same name, and one passes and one failes, then the Eclipse JUnit plugin I was using didn't work well */
-  def descriptionfor(r: Reportable): Description = {
-    var name = descriptionfor(r, "")
-    var i = 0
-    while (names.contains(name)) {
-      i += 1
-      name = descriptionfor(r, i.toString)
-    }
-    name
-  }
-
-  def descriptionfor(r: Reportable, postFix: String): Description = {
+  var names = new MapToUniqueName[Reportable]((r: Reportable, count: Int) => {
     val name = Strings.clean(r match {
       case t: Test =>
         val result = t.titleString + " => " + logger(t.expected.getOrElse(""))
@@ -87,6 +72,16 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
       case r: Requirement => r.title.getOrElse("")
       case _ => throw new IllegalStateException(r.getClass() + "/" + r)
     })
+    val result = count match { case 1 => name; case _ => name + "_" + count }
+    result
+  })
+
+  def addEngineForTest(name: String, engine: Any) = addEngine(name, engine.asInstanceOf[Engine])
+
+  /** this code is here for a truely hideous Eclipse interop bug that I wasn't able to duplicate in a test :( Basically if you have two tests with the same name, and one passes and one failes, then the Eclipse JUnit plugin I was using didn't work well */
+  def descriptionfor(r: Reportable): Description = {
+    names = names.add(r)
+    val name = names(r)
     Description.createSuiteDescription(name)
   }
 
@@ -260,17 +255,15 @@ trait CddRunner extends Runner with EngineUniverse[Any, Any] with NotActuallyFac
   //  }
 }
 
-class CddJunitRunner(val clazz: Class[Any]) extends CddRunner {
+class CddJunitRunner(val clazz: Class[_]) extends CddRunner {
   import org.cddcore.engine.Engine._
 
   def title = "CDD: " + clazz.getName
   val instance = test { instantiate(clazz) };
 
-  val rootEnginesAndNames =
-    test {
-      clazz.getDeclaredMethods().filter((m) => returnTypeIsEngine(m)).map((m) => (m.invoke(instance).asInstanceOf[Engine], m.getName)) ++
-        clazz.getFields().filter((f) => typeIsEngine(f)).map((f) => (f.get(instance).asInstanceOf[Engine], f.getName)).sortBy(_._2)
-    }
+  val methodRootEnginesAndNames = clazz.getDeclaredMethods().filter((m) => returnTypeIsEngine(m)).map((m) => (m.invoke(instance).asInstanceOf[Engine], m.getName))
+  val variableRootEnginesAndNames = clazz.getFields().filter((f) => typeIsEngine(f)).map((f) => (f.get(instance).asInstanceOf[Engine], f.getName)).sortBy(_._2)
+  val rootEnginesAndNames = test { methodRootEnginesAndNames ++ variableRootEnginesAndNames }
 
   val enginesToNameMap = Map(rootEnginesAndNames: _*)
   if (logging) {

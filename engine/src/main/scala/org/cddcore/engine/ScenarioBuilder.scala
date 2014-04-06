@@ -365,7 +365,7 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         case u: UseCaseDescription => u.copy(children = modifyChildrenForBuild(u.children, path))
         case s: Scenario => {
           val expected = firstExpected(path)
-          s.copy(priority = PathUtils.maxPriority(path), expected = expected)
+          s.copy(priority = PathUtils.maxPriority(path), expected = expected, optCode = firstCode(path))
         }
       }
     protected def modifyChildrenForBuild(children: List[Reportable], path: ReportableList): ReportableList =
@@ -527,6 +527,23 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
         (u, newExpected) => u.copy(expected = newExpected),
         (s, newExpected) => s.copy(expected = newExpected),
         (n, newExpected) => if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newExpected.get))
+
+    /**
+     * Set the 'expected' of the 'last thing to be mentioned' to be this value. i.e. the builder/usecase/scenario. Throws CannotDefineExpectedTwiceException if expected or code already set. This will override any default codes.
+     *
+     *  This is only normally used when you have a 'default code' and just want this expected to be the equivalent of code
+     */
+    def expectedAndCode(e: R): RealScenarioBuilder =
+      set[(Option[ROrException[R]], Option[Code])]((Some(ROrException[R](e)), Some(CodeHolder[RFn](rfnMaker(Right(e)), e.toString))),
+        { case (b, (newExpected, newCode)) => b.copy(expected = newExpected, optCode = newCode) },
+        { case (ce, (newExpected, newCode)) => ce.copy(expected = newExpected, optCode = newCode) },
+        { case (u, (newExpected, newCode)) => u.copy(expected = newExpected, optCode = newCode) },
+        { case (s, (newExpected, newCode)) => s.copy(expected = newExpected, optCode = newCode) },
+        {
+          case (n, (newExpected, newCode)) =>
+            if (n.expected.isDefined) throw CannotDefineExpectedTwiceException(n.expected.get, newExpected.get)
+            if (n.optCode.isDefined) throw CannotDefineCodeTwiceException(n.optCode.get, newCode.get)
+        })
 
     /**
      * This is optional, as it defaults to returning 'expected'. The code is the code that you would use to generate the expected.
@@ -1145,13 +1162,13 @@ trait EngineUniverse[R, FullR] extends EngineTypes[R, FullR] {
 
     def logResult(fn: => (Conclusion, R)): R = {
       val (conclusion, result) = fn;
-      endCall(this,conclusion, result)
+      endCall(this, conclusion, result)
       logger.result(result)
       result
     }
     def logFailed(fn: => (Conclusion, Throwable)) {
       val (conclusion, exception) = fn;
-      failedCall(this,conclusion, exception)
+      failedCall(this, conclusion, exception)
     }
 
     def applyParams(root: RorN, params: List[Any], log: Boolean): R = {

@@ -64,8 +64,8 @@ class EngineDefaultTests extends EngineStringStringTests {
   it should "Allow a default value to be specified with scenarios" in {
     val e = builder.code((s: String) => "default").
       useCase("UC1").
-      scenario("A").expected("X").because("A").
-      scenario("AB").because("B").expected("Y").
+      scenario("A").expectedAndCode("X").because("A").
+      scenario("AB").because("B").expectedAndCode("Y").
       build
     assertEquals("default", e("X"))
     assertEquals("X", e("A"))

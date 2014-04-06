@@ -4,6 +4,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import java.util.concurrent.atomic._
 import java.util.concurrent._
+import scala.language.implicitConversions
 
 @RunWith(classOf[JUnitRunner])
 class MapsTests extends AbstractTest {
@@ -48,4 +49,27 @@ class MapsTests extends AbstractTest {
     for (i <- 1 to 10)
       assertEquals(1, Maps.getOrCreate(cache, "1", count.incrementAndGet()))
   }
+}
+@RunWith(classOf[JUnitRunner])
+class UniqueNameHolderTest extends AbstractTest {
+  class UniqueNameHolder(val name: String)
+  object UniqueNameHolder { def apply(name: String) = new UniqueNameHolder(name) }
+  implicit def toUNH(s: String) = UniqueNameHolder(s)
+  val m = new MapToUniqueName[UniqueNameHolder]((x: UniqueNameHolder, i: Int) => i match { case 1 => x.name; case _ => x.name + i })
+  val u1a = UniqueNameHolder("one")
+  val u1b = UniqueNameHolder("one")
+  val u2a = UniqueNameHolder("two")
+  val u2b = UniqueNameHolder("two")
+
+  "The MapToUniqueName" should "allow names to be created and fetched for objects" in {
+    val m1 = m.add(u1a)
+    val m2 = m1.add(u1b)
+    val m3 = m2.add(u2a)
+    val m4 = m3.add(u2b)
+    assertEquals("one", m4(u1a))
+    assertEquals("one2", m4(u1b))
+    assertEquals("two", m4(u2a))
+    assertEquals("two2", m4(u2b))
+  }
+
 }
