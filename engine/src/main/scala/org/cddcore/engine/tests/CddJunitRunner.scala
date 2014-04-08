@@ -1,24 +1,27 @@
 package org.cddcore.engine.tests
 
-import org.junit.runner.Description
-import scala.collection.JavaConversions._
-import org.junit.runner.Runner
-import org.junit.runner.notification.RunNotifier
-import org.cddcore.engine._
-import scala.reflect.runtime.{ universe => ru }
-import java.lang.reflect.Method
-import junit.framework.Assert
-import org.junit.runner.notification.Failure
 import java.io.File
-import scala.collection.mutable.StringBuilder
-import sys.process._
 import java.lang.reflect.Field
-import junit.framework.AssertionFailedError
-import org.cddcore.engine.ReportableWithTemplate
+import java.lang.reflect.Method
 import java.util.concurrent.atomic.AtomicBoolean
-import org.junit.runner.notification.RunListener
-import org.junit.runner.Result
 import java.util.concurrent.atomic.AtomicReference
+
+import scala.collection.JavaConversions._
+import scala.reflect.runtime.{universe => ru}
+import scala.sys.process._
+
+import org.cddcore.engine._
+import org.cddcore.engine.reporting._
+import org.cddcore.engine.utilities._
+import org.junit.runner.Description
+import org.junit.runner.Result
+import org.junit.runner.Runner
+import org.junit.runner.notification.Failure
+import org.junit.runner.notification.RunListener
+import org.junit.runner.notification.RunNotifier
+
+
+import junit.framework.AssertionFailedError
 
 object CddRunner {
   val separator = "\n#########\n"

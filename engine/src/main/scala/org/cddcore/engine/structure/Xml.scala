@@ -1,4 +1,4 @@
-package org.cddcore.engine
+package org.cddcore.engine.structure
 
 import scala.xml.NodeSeq
 import scala.xml.Elem

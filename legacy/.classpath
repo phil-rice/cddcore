@@ -91,6 +91,7 @@
   <classpathentry path="C:\Users\Phil\.ivy2\cache\asm\asm-analysis\jars\asm-analysis-3.3.1.jar" kind="lib"></classpathentry>
   <classpathentry exported="true" path="/constraint" kind="src" combineaccessrules="false"></classpathentry>
   <classpathentry exported="true" path="/engine" kind="src" combineaccessrules="false"></classpathentry>
+  <classpathentry exported="true" path="/reports" kind="src" combineaccessrules="false"></classpathentry>
   <classpathentry path="org.eclipse.jdt.launching.JRE_CONTAINER" kind="con"></classpathentry>
   <classpathentry path="bin" kind="output"></classpathentry>
 </classpath>

@@ -1,6 +1,7 @@
-package org.cddcore.engine
+package org.cddcore.engine.utilities
 
 import java.util.ArrayList
+import org.cddcore.engine._
 import java.util.HashMap
 import scala.collection.JavaConversions._
 

@@ -3,6 +3,9 @@ package org.cddcore.engine
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import scala.xml.Elem
+import org.cddcore.engine.structure.Fold
+import org.cddcore.engine.structure.XmlSituation
+import org.cddcore.engine.structure.Xml
 
 class TestXmlSituation(val xml: Elem) extends XmlSituation {
 

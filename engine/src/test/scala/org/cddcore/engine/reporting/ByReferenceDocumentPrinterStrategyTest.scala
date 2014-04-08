@@ -1,8 +1,11 @@
-package org.cddcore.engine
+package org.cddcore.engine.reporting
 
-import scala.language.implicitConversions
 import org.junit.runner.RunWith
+import org.cddcore.engine._
+import org.cddcore.engine.utilities._
 import org.scalatest.junit.JUnitRunner
+import org.cddcore.engine.utilities.SimpleKeyStrategy
+import scala.language.implicitConversions
 
 trait DocumentPrinterTestFramework {
   implicit def reqToRequirementAndNone(r: RequirementAndHolder) = new RequirementAndEngine(r, None)

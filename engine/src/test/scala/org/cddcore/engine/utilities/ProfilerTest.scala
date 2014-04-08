@@ -1,8 +1,10 @@
-package org.cddcore.engine
+package org.cddcore.engine.utilities
 
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import java.util.concurrent.CountDownLatch
+import org.cddcore.engine.AbstractTest
+import org.cddcore.engine.Engine
+import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class ProfilerTest extends AbstractTest {

@@ -1,6 +1,10 @@
-package org.cddcore.engine
+package org.cddcore.engine.reporting
 
 import org.junit.runner.RunWith
+
+import org.cddcore.engine._
+import org.cddcore.engine.reporting._
+import Reportable.ReportableList
 import org.scalatest.junit.JUnitRunner
 import scala.language.implicitConversions
 
@@ -124,8 +128,8 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
   it should "make a url out of the path fragments" in {
     val toUrl = new FileSystemReportableToUrl
     val url = toUrl.url(List(rep1, rep2, rep3)).get
-    assert (url.startsWith("file:///"))
-    assert (url.endsWith("\\.cdd\\rep3\\rep2\\rep1.Req.html"))
+    assert(url.startsWith("file:///"))
+    assert(url.endsWith("\\.cdd\\rep3\\rep2\\rep1.Req.html"))
   }
 
   "A ReportWalker.childWalker" should "fold with paths with startEnd over itself and all it's descendants" in {
@@ -181,7 +185,7 @@ class ReportableTests extends AbstractTest with ReportableTestFramework {
       (acc: Acc, list) => acc :+ (list, "child"),
       (acc: Acc, list) => acc :+ (list, "end"))
     val docHolder = DocumentHolder(List(d1, d2))
-    val eHolder = EngineHolder(List(e1,e2))
+    val eHolder = EngineHolder(List(e1, e2))
     assertEquals((List(p), "start"), called(0))
     assertEquals((List(docHolder, p), "start"), called(1))
     assertEquals((List(d1, docHolder, p), "child"), called(2))

@@ -1,13 +1,13 @@
-package org.cddcore.engine
+package org.cddcore.engine.reporting
 
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import scala.xml.XML
-import scala.xml.Node
-import scala.xml.Elem
-import scala.xml.NodeSeq
+import org.cddcore.engine._
 import Reportable._
-import org.junit.Assert
+import org.cddcore.engine.AbstractTest
+import org.cddcore.engine.EnginePageChecker
+import org.cddcore.engine.ProjectPageChecker
+import org.cddcore.engine.UseCasePageChecker
+import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class ReportCreatorTests extends AbstractTest {

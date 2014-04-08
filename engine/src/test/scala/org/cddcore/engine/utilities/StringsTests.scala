@@ -1,8 +1,6 @@
-package org.cddcore.engine
-
-import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.FlatSpec
+package org.cddcore.engine.utilities
 import org.junit.runner.RunWith
+import org.cddcore.engine.AbstractTest
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])

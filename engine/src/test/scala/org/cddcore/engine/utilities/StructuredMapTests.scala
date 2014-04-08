@@ -1,7 +1,11 @@
+package org.cddcore.engine.utilities
 
-
-package org.cddcore.engine
 import org.junit.runner.RunWith
+import Key.defaultKeyStrategy
+import Key.defaultStringToKey
+import org.cddcore.engine._
+import scala.Option.option2Iterable
+import scala.language.implicitConversions
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])

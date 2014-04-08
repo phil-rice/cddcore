@@ -1,10 +1,12 @@
-package org.cddcore.engine
+package org.cddcore.engine.utilities
 
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import java.util.concurrent.atomic._
 import java.util.concurrent._
+import org.cddcore.engine.AbstractTest
+import org.scalatest.junit.JUnitRunner
 import scala.language.implicitConversions
+
 
 @RunWith(classOf[JUnitRunner])
 class MapsTests extends AbstractTest {

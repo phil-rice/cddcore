@@ -106,6 +106,7 @@
   <classpathentry exported="true" path="/engine" kind="src" combineaccessrules="false"></classpathentry>
   <classpathentry exported="true" path="/website" kind="src" combineaccessrules="false"></classpathentry>
   <classpathentry exported="true" path="/legacy" kind="src" combineaccessrules="false"></classpathentry>
+  <classpathentry exported="true" path="/reports" kind="src" combineaccessrules="false"></classpathentry>
   <classpathentry path="org.eclipse.jdt.launching.JRE_CONTAINER" kind="con"></classpathentry>
   <classpathentry path="bin" kind="output"></classpathentry>
 </classpath>

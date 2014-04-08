@@ -2,10 +2,10 @@ package org.cddcore.example.legacy
 
 import org.cddcore.engine.Engine
 
+
 import scala.language.implicitConversions
 
 import org.legacycdd.legacy.Legacy
-import org.cddcore.engine.Files
 import scala.io.Source
 import org.legacycdd.legacy.MemoryReporter
 import org.cddcore.engine.ROrException

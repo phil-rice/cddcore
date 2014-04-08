@@ -1,12 +1,14 @@
 package org.cddcore.engine
 
 import scala.xml.Elem
+
 import scala.language.implicitConversions
 import scala.xml.NodeSeq
 import scala.xml.XML
 import scala.xml.Node
 import Reportable._
 import scala.language.postfixOps
+import org.cddcore.engine.reporting._
 
 trait WebPageChecker extends AssertEquals {
   import PathUtils._

@@ -106,11 +106,16 @@ object HelloBuild extends Build {
   
   lazy val engine = Project(id = "engine", settings = buildSettings, base = file("engine")) dependsOn (constraint)
   
-  lazy val website = Project(id = "website", settings = websiteSettings, base = file("website")) dependsOn (constraint, engine % "compile->compile;test->test")
+  lazy val reports = Project(id = "reports", settings = buildSettings, base = file("reports"))
   
-  lazy val legacy = Project(id = "legacy", settings = buildSettings, base = file("legacy")) dependsOn (constraint, engine % "compile->compile;test->test")
-  lazy val examples = Project(id = "examples", settings = exampleSettings, base = file("examples")) dependsOn (constraint, engine % "compile->compile;test->test", website % "compile->compile;test->test", legacy)
-  lazy val root = Project(id = "root", settings = buildSettings ++ Seq(copyTask, copyDepTask), base = file(".")) aggregate (constraint, engine, examples, website, legacy)
+  
+  lazy val website = Project(id = "website", settings = websiteSettings, base = file("website")) dependsOn (constraint, engine % "compile->compile;test->test", reports)
+  
+  lazy val legacy = Project(id = "legacy", settings = buildSettings, base = file("legacy")) dependsOn (constraint, engine % "compile->compile;test->test", reports)
+  
+  lazy val examples = Project(id = "examples", settings = exampleSettings, base = file("examples")) dependsOn (constraint, engine % "compile->compile;test->test", website % "compile->compile;test->test", legacy, reports)
+  
+  lazy val root = Project(id = "root", settings = buildSettings ++ Seq(copyTask, copyDepTask), base = file(".")) aggregate (constraint, engine, reports, examples, website, legacy)
 
   import java.io.File
 

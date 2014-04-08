@@ -2,19 +2,9 @@ package org.corecdd.website
 
 import java.util.concurrent.locks.ReentrantLock
 import scala.xml.NodeSeq.seqToNodeSeq
-import org.cddcore.engine.AbstractTest
-import org.cddcore.engine.Engine
-import org.cddcore.engine.EnginePageChecker
-import org.cddcore.engine.ParamDetail
-import org.cddcore.engine.ParamDetails.toParamDetails
-import org.cddcore.engine.PathUtils
-import org.cddcore.engine.Project
-import org.cddcore.engine.ProjectPageChecker
-import org.cddcore.engine.Report
-import org.cddcore.engine.Reportable.ReportableList
-import org.cddcore.engine.ReportableToUrl
-import org.cddcore.engine.ScenarioPageChecker
-import org.cddcore.engine.Strings
+import org.cddcore.engine._
+import org.cddcore.engine.utilities._
+import org.cddcore.engine.utilities.Strings
 import org.cddcore.engine.UseCasePageChecker
 import org.cddcore.engine.WebPageChecker
 import org.openqa.selenium.WebDriver
@@ -23,6 +13,8 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.selenium.WebBrowser
 import org.cddcore.engine.Reportable
 import org.cddcore.engine.ParamDetails
+import org.cddcore.engine.reporting.ReportableToUrl
+import org.cddcore.engine.utilities.Strings
 
 object AbstractWebsiteTest {
   val lock = new ReentrantLock();

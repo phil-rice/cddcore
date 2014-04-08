@@ -6,6 +6,7 @@ import org.junit.runner.notification.RunNotifier
 import org.junit.runner.Description
 import org.junit.runner.RunWith
 import org.cddcore.engine._
+import org.cddcore.engine.reporting.ReportCreator
 
 trait HasEngines {
   def engines: List[Engine]

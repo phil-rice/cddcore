@@ -2,6 +2,8 @@ package org.cddcore.engine
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import org.cddcore.engine.reporting.SimpleRequirementAndHolder
+import org.cddcore.engine.reporting.SimpleDocumentPrinterStrategy
 
 trait DocumentReportTestFixture {
   val eMain = Engine[Int, String]().title("Main Engine").

@@ -1,8 +1,10 @@
-package org.cddcore.engine
-
-import scala.language.implicitConversions
+package org.cddcore.engine.reporting
 import org.junit.runner.RunWith
+import org.cddcore.engine._
+import org.cddcore.engine.UseCase
+import org.cddcore.engine.utilities._
 import org.scalatest.junit.JUnitRunner
+
 trait SomeEngines {
   val document = new Document(Some("Private Pensions Document"))
   val mainCarers = Engine[Int, String]().title("Main Carers").

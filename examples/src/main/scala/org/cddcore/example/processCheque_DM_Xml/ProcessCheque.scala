@@ -10,6 +10,8 @@ import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.DateTimeFormat
 import scala.xml.Elem
 import scala.xml.NodeSeq
+import org.cddcore.engine.structure.XmlSituation
+import org.cddcore.engine.structure.Xml
 
 //This is compatible with 
 //	<dependency>

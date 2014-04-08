@@ -1,9 +1,12 @@
-package org.cddcore.engine
+package org.cddcore.engine.structure
 
 import scala.concurrent.stm._
 import java.lang.reflect.Field
 import java.lang.annotation.Annotation
 import java.lang.reflect.Method
+import org.cddcore.engine.Display
+import org.cddcore.engine.HtmlDisplay
+import org.cddcore.engine.utilities._
 
 case class Fold[T, A](initial: A, fn: (A, T) => A)
 

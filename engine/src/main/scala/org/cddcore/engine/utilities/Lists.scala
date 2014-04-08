@@ -1,4 +1,4 @@
-package org.cddcore.engine
+package org.cddcore.engine.utilities
 
 import scala.collection.generic.CanBuildFrom
 import scala.language.implicitConversions

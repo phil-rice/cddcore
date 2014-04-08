@@ -1,7 +1,10 @@
 package org.legacycdd.legacy
 
 import org.cddcore.engine._
-import org.cddcore.engine.ReportWalker
+import org.cddcore.engine.reporting._
+import org.cddcore.engine.utilities.Files
+import org.cddcore.engine.reporting.HtmlForIfThenPrinter
+import org.cddcore.engine.utilities.Strings
 
 trait ReporterToHtml {
   type Rep <: LegacyReporter[_, _]

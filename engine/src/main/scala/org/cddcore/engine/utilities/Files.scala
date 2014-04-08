@@ -1,4 +1,4 @@
-package org.cddcore.engine
+package org.cddcore.engine.utilities
 
 import java.io.FileOutputStream
 import scala.io.Source

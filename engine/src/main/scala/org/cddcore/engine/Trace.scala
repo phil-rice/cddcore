@@ -2,6 +2,10 @@ package org.cddcore.engine
 
 import scala.language.implicitConversions
 
+import org.cddcore.engine.reporting.HtmlRenderer
+import org.cddcore.engine.reporting.SimpleReportableToUrl
+import org.cddcore.engine.utilities.Strings
+
 object ConclusionOrResult {
   type ConclusionOrResult = Option[Conclusion]
   implicit def liftConclusion(c: Conclusion): ConclusionOrResult = Some(c)

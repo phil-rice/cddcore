@@ -1,7 +1,8 @@
-package org.cddcore.engine
+package org.cddcore.engine.utilities
 
 import scala.language.higherKinds
 import scala.language.implicitConversions
+import org.cddcore.engine.Reportable
 
 class DuplicateKeyException(key: Key) extends Exception(key.toString)
 

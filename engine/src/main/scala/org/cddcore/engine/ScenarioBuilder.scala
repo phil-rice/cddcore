@@ -18,8 +18,12 @@ class CannotHaveFolderWithoutChildEnginesException extends Exception
 class CannotFindDocumentException(msg: String) extends Exception(msg)
 class ExceptionAddingScenario(msg: String, t: Throwable) extends EngineException(msg, t)
 class BecauseClauseException(msg: String, t: Throwable) extends EngineException(msg, t)
+import org.cddcore.engine.utilities._
+import org.cddcore.engine.reporting._
 import Reportable._
 import Lists._
+
+
 /** R is the type returned by the child engines, or the engine if there are no child enginers. FullR is the result of the engine: which is the fold of the childEngine results if they exist */
 trait EngineTypes[R, FullR] {
   /** A is a function from the parameters of the engine, and the result to a boolean. It checks that some property is true */

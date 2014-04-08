@@ -1,14 +1,9 @@
 package org.cddcore.example
 
-import org.cddcore.engine.ByReferenceDocumentPrinterStrategy
-import org.cddcore.engine.EngineWithLogger
-import org.cddcore.engine.HtmlRenderer
-import org.cddcore.engine.Report
-import org.cddcore.engine.ReportableHolder
-import org.cddcore.engine.ReportableToUrl
-import org.cddcore.engine.SimpleKeyStrategy
-import org.cddcore.engine.SimpleReportableToUrl
+import org.cddcore.engine._
 import org.cddcore.example.tennisScore.TennisScorer
+import org.cddcore.engine.reporting._
+import org.cddcore.engine.utilities.SimpleKeyStrategy
 
 object DocumentExample {
 

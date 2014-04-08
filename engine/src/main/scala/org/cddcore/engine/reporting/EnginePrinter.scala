@@ -1,6 +1,9 @@
-package org.cddcore.engine
+package org.cddcore.engine.reporting
 
+import org.cddcore.engine._
+import org.cddcore.engine.utilities._
 import org.cddcore.engine.tests.CddRunner
+
 
 trait IfThenPrinter {
   type ReqList = List[Reportable]

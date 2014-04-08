@@ -1,8 +1,14 @@
-package org.cddcore.engine
+package org.cddcore.engine.reporting
 
 import org.junit.runner.RunWith
-import scala.language.implicitConversions
+import org.cddcore.engine.AbstractTest
+import org.cddcore.engine.Engine
+import org.cddcore.engine.EngineBuiltFromTests
+import org.cddcore.engine.Reportable
+import org.cddcore.engine.UseCase
 import org.scalatest.junit.JUnitRunner
+import scala.language.implicitConversions
+
 @RunWith(classOf[JUnitRunner])
 class ReportableToUrlTests extends AbstractTest with ReportableTestFramework {
   implicit def toEngineFromTests[R](e: Engine) = e.asInstanceOf[EngineBuiltFromTests[String]]
