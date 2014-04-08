@@ -2,6 +2,8 @@ package org.cddcore.engine
 
 import scala.concurrent.stm._
 import java.lang.reflect.Field
+import java.lang.annotation.Annotation
+import java.lang.reflect.Method
 
 case class Fold[T, A](initial: A, fn: (A, T) => A)
 
@@ -79,31 +81,53 @@ case class IndentAndString(indent: String, string: String) {
   def indentedBlank = IndentAndString(indent + "  ", "")
 }
 
-class FieldSet[T](instance: Any, clazz: Class[T]) {
+trait Fields[T] {
+  def instance: Any
+  def filter: (Field) => Boolean
+  protected def instantiateLazyVals: Unit
+  lazy val fields = instance.getClass.getDeclaredFields.filter(filter).toList
 
-  private def instantiateLazyVals(clazz: Class[_]): Unit = {
-    val methods = instance.getClass.getDeclaredMethods().filter((m) => m.getParameterTypes().length == 0 && clazz.isAssignableFrom(m.getReturnType()))
+  lazy val fieldMap = { instantiateLazyVals; Map[Field, T]() ++ fields.map((f) => (f -> value[T](f))) }
+  protected def instantiateLazyVals(filter: (Method) => Boolean): Unit = {
+    val methods = instance.getClass.getDeclaredMethods().filter(filter)
     for (m <- methods) {
       m.setAccessible(true)
       m.invoke(instance)
     }
   }
 
-  private def value(f: Field) = {
+  protected def instantiateLazyVals(clazz: Class[_]): Unit = instantiateLazyVals((m: Method) => m.getParameterTypes().length == 0 && clazz.isAssignableFrom(m.getReturnType()))
+
+  protected def value[T](f: Field) = {
     f.setAccessible(true);
     val value = f.get(instance).asInstanceOf[T];
     value
   }
-  private lazy val instantiateLazyVals: Unit = instantiateLazyVals(clazz)
-
-  lazy val fields = instance.getClass.getDeclaredFields.filter((f) => clazz.isAssignableFrom(f.getType())).toList
-  lazy val fieldMap = { instantiateLazyVals; Map[Field, T]() ++ fields.map((f) => (f -> value(f))) }
   lazy val values = fields.map(fieldMap)
   def findFieldWithValue(x: Any) = fields.find((f) => fieldMap(f) == x)
+}
 
+class ClassFieldSet[T](val instance: Any, clazz: Class[T]) extends Fields[T] {
+  protected lazy val instantiateLazyVals: Unit = instantiateLazyVals(clazz)
+  val filter = (f: Field) => clazz.isAssignableFrom(f.getType())
+}
+
+class AnnotatedFieldSet[T <: Annotation](val instance: Any, annotation: Class[T]) extends Fields[Any] {
+  protected lazy val instantiateLazyVals: Unit = instantiateLazyVals((m: Method) => m.getAnnotation(annotation) != null)
+  val filter = (f: Field) => f.getAnnotation(annotation) != null
+}
+
+object FieldSetPrinter {
+  def printLine(printer: (Field, Any) => String, fieldSets: Fields[_]*): Seq[String] = {
+    val attributeValuePairs = fieldSets.flatMap((fs)=> fs.fieldMap).sortBy{case (f,value) => f.getName().toUpperCase()}
+    attributeValuePairs.map { case (field, value) => printer(field, value) }
+  }
 }
 
 trait Structure[S, Result] extends HtmlDisplay {
+  val annotatedFields = new AnnotatedFieldSet(this, classOf[Display])
+  
+  
 
   protected def findFragmentsToString(fragmentFieldMap: Map[Field, Fragment[S, Result, _, _]], endToString: (Result) => String, toStringFn: (Field, Any) => String = (f, a) => raw"${f.getName} = $a") =
     fragmentFieldMap.keys.toList.sortBy(_.getName).map(((f) => {
@@ -116,6 +140,13 @@ trait Structure[S, Result] extends HtmlDisplay {
       } catch { case e: Throwable => e.getClass.getSimpleName() + " " + e.getMessage }
       toStringFn(f, resultString)
     })).mkString("\n  ")
+
+  protected def annotatedFieldsToString(toStringFn: (String, Any) => String) = {
+    annotatedFields.fieldMap.keys.toList.sortBy(_.getName()).foldLeft("")((acc, f) => {
+      val value = annotatedFields.fieldMap(f)
+      acc + toStringFn(f.getName, value)
+    })
+  }
 
   protected def selfAndChildren(s: S, pathMap: PathMap[S, Result], separator: String = "\n"): (IndentAndString, List[Path]) => IndentAndString = (acc, p) => {
     val fragments = pathMap.fullPaths(s).filter(_.paths.reverse == p)

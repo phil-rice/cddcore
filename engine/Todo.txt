@@ -18,7 +18,8 @@ From the Blackpool trial
 Bug
 Is it a feature, is it a bug?
 * The 'undecided exception' should include information about the scenario, and which engine it is in. It's quite hard to debug when an engine calls another engine
-* Engines that are 'defs' instead of 'vars' should throw an exception if there isn't an annotation stopping it. In most scenarios I am aware of this would be a defect
+
+
 Features
 * Allow more variables to be added to the XmlSituation. Perhaps using an annotation
 * The JsonSituation would be very simple and very useful.
@@ -29,6 +30,11 @@ Bugs
 * the 'redundant becauses' bug 
 * The 'default code' is not being used for engines/childengines. Exact recreation unknown yet. Work around is to have that code on the first scenario
 * Junit names need to be unique
+
+Not doing
+* Engines that are 'defs' instead of 'vars' should throw an exception if there isn't an annotation stopping it. In most scenarios I am aware of this would be a defect
+              ---> So I had a look at this, and through Java Reflection I couldn't see how to spot the difference between a val and a def
+
 
 Medium term
 ==========

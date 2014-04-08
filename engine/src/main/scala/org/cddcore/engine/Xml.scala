@@ -28,8 +28,8 @@ object Xml {
   def xml(x: Elem): Fragment[Elem, NodeSeq, _, _] = Fragment(xmlFragStrategy, x, List(), None)
 
   def optionDate: (NodeSeq) => Option[Option[DateTime]] = optionDate("yyyy-MM-dd")
-  def optionDate(pattern: String):(NodeSeq) =>  Option[Option[DateTime]] = (n: NodeSeq) =>
-    try { Some(Some(DateTimeFormat.forPattern(pattern).parseDateTime(n.text)))  } catch {
+  def optionDate(pattern: String): (NodeSeq) => Option[Option[DateTime]] = (n: NodeSeq) =>
+    try { Some(Some(DateTimeFormat.forPattern(pattern).parseDateTime(n.text))) } catch {
       case e: Throwable => Some(None)
     };
   def date: (NodeSeq) => Option[DateTime] = date("yyyy-MM-dd")
@@ -78,8 +78,8 @@ object Xml {
 trait XmlSituation extends Structure[Elem, NodeSeq] {
   type XmlFragment = Fragment[Elem, NodeSeq, _, _]
 
-  private lazy val fragmentFields = new FieldSet[XmlFragment](this, classOf[XmlFragment])
-  private lazy val xmlFields = new FieldSet[Elem](this, classOf[Elem])
+  private lazy val fragmentFields = new ClassFieldSet[XmlFragment](this, classOf[XmlFragment])
+  private lazy val xmlFields = new ClassFieldSet[Elem](this, classOf[Elem])
   lazy val pathMap = PathMap[Elem, NodeSeq](fragmentFields.values)
 
   protected lazy val fragmentsToString = findFragmentsToString(fragmentFields.fieldMap, (e) => e.mkString(","))
@@ -99,16 +99,17 @@ trait XmlSituation extends Structure[Elem, NodeSeq] {
     "<div class='xmlSituationBody'>" +
     "<div class='xmlFound'><table>" +
     findFragmentsToString(fragmentFields.fieldMap, (e) => e.mkString(","), (f, a) => raw"<tr><td>${f.getName}</td><td> $a</td></tr>") +
+    annotatedFieldsToString((name, value) => raw"<tr><td>$name</td><td> $value</td></tr>") +
     "</table></div><!--xmlFound -->\n" +
-    "<div class='xmlFields'>" +
-//    structuresToString(pathMap, (s) => {
-//      val f = xmlFields.findFieldWithValue(s) match {
-//        case Some(f) => f.getName
-//        case _ => ""
-//      }
-//      "<div class='XmlTitle' title='" + Strings.htmlTooltipEscape(s.toString) + "'>" + Strings.htmlEscape(f) + "</div><!--XmlTitle'-->\n"
-//    }, separator = "<br />") +
-    "</div><!--xmlFields -->\n" +
+    //    "<div class='xmlFields'>" +
+    //    structuresToString(pathMap, (s) => {
+    //      val f = xmlFields.findFieldWithValue(s) match {
+    //        case Some(f) => f.getName
+    //        case _ => ""
+    //      }
+    //      "<div class='XmlTitle' title='" + Strings.htmlTooltipEscape(s.toString) + "'>" + Strings.htmlEscape(f) + "</div><!--XmlTitle'-->\n"
+    //    }, separator = "<br />") +
+    //    "</div><!--xmlFields -->\n" +
     "</div><!--xmlSituationBody -->\n" +
     "</div><!--xmlSituation -->\n"
 

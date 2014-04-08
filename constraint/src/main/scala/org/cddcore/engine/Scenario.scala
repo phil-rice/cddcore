@@ -1,6 +1,7 @@
 package org.cddcore.engine
 
 import scala.Option.option2Iterable
+
 import scala.reflect.macros.Context
 import scala.language.implicitConversions
 import scala.language.experimental.macros

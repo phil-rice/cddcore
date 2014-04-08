@@ -36,7 +36,7 @@ object CddRunner {
   }
 }
 trait NotActuallyFactory[R, FullR] extends EngineUniverse[R, FullR] {
-  def builder: RealScenarioBuilder = ???
+  def builder= ???
   def logger: org.cddcore.engine.TddLogger = TddLogger.noLogger
   def rfnMaker: scala.util.Either[() => Exception, Any] => RFn = ???
   def makeClosureForBecause(params: List[Any]) = ???
