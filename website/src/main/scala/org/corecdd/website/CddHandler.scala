@@ -11,10 +11,8 @@ import org.eclipse.jetty.servlet._
 import scala.xml.Elem
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletRequest
-import org.cddcore.engine.reporting.HtmlRenderer
-import org.cddcore.engine.reporting.ReportCreator
-import org.cddcore.engine.utilities.Strings
-import org.cddcore.engine.reporting.SimpleReportableToUrl
+import org.cddcore.reporting._
+import org.cddcore.utilities.Strings
 
 class HandlerContext(val loggerDisplayProcessor: LoggerDisplayProcessor, val root: RequirementAndHolder, val reportCreator: ReportCreator[SimpleReportableToUrl], val method: String, val fullUri: String, val uriPath: String) {
   import PathUtils._

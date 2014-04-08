@@ -2,7 +2,7 @@ package org.legacycdd.legacy
 
 import org.cddcore.engine._
 
-import org.cddcore.engine.utilities.Maps
+import org.cddcore.utilities.Maps
 
 trait LegacyReporter[ID, R] {
   type L = LegacyItem[ID, R]

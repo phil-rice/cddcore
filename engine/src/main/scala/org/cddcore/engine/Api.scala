@@ -5,8 +5,8 @@ import scala.language.implicitConversions
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.Future
-import org.cddcore.engine.reporting._
-import org.cddcore.engine.utilities._
+import org.cddcore.reporting._
+import org.cddcore.utilities._
 
 object Reportable {
   type ReportableList = List[Reportable]

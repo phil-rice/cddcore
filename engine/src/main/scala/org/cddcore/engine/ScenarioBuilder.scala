@@ -7,6 +7,10 @@ import scala.concurrent.stm._
 import java.text.MessageFormat
 import scala.xml.NodeSeq
 import java.lang.IllegalStateException
+import org.cddcore.utilities._
+import org.cddcore.reporting._
+import Reportable._
+import Lists._
 
 class NeedUseCaseException extends Exception
 class NeedScenarioException extends Exception
@@ -18,10 +22,6 @@ class CannotHaveFolderWithoutChildEnginesException extends Exception
 class CannotFindDocumentException(msg: String) extends Exception(msg)
 class ExceptionAddingScenario(msg: String, t: Throwable) extends EngineException(msg, t)
 class BecauseClauseException(msg: String, t: Throwable) extends EngineException(msg, t)
-import org.cddcore.engine.utilities._
-import org.cddcore.engine.reporting._
-import Reportable._
-import Lists._
 
 
 /** R is the type returned by the child engines, or the engine if there are no child enginers. FullR is the result of the engine: which is the fold of the childEngine results if they exist */

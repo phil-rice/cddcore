@@ -5,14 +5,10 @@ import org.cddcore.engine.Engine
 
 import scala.language.implicitConversions
 
-import org.legacycdd.legacy.Legacy
+import org.legacycdd.legacy._
 import scala.io.Source
-import org.legacycdd.legacy.MemoryReporter
 import org.cddcore.engine.ROrException
-import org.legacycdd.legacy.MemoryReporterToHtml
 import java.io.File
-import org.legacycdd.legacy.LegacyItem
-import org.legacycdd.legacy.LegacyData
 
 object TennisExample {
 

@@ -1,10 +1,8 @@
 package org.legacycdd.legacy
 
 import org.cddcore.engine._
-import org.cddcore.engine.reporting._
-import org.cddcore.engine.utilities.Files
-import org.cddcore.engine.reporting.HtmlForIfThenPrinter
-import org.cddcore.engine.utilities.Strings
+import org.cddcore.reporting._
+import org.cddcore.utilities._
 
 trait ReporterToHtml {
   type Rep <: LegacyReporter[_, _]
@@ -15,16 +13,17 @@ trait ReporterToHtml {
 
 class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyData[ID, R], String], replacementEngine: Engine, rep: MemoryReporter[ID, R], maxItems: Int = 5) {
   type Rep = MemoryReporter[ID, _]
+
   import Reportable._
-  import EngineWithLogger._
-  import Renderer._
-  import HtmlRenderer._
-  import PathUtils._
+import EngineWithLogger._
+import Renderer._
+import HtmlRenderer._
+import PathUtils._
   implicit val loggerDisplayProcessor: LoggerDisplayProcessor = replacementEngine.logger
 
   class LegacyIfThenHtmlPrinter(e: EngineBuiltFromTests[_], conclusions: Set[Conclusion], val reportableToUrl: ReportableToUrl, val urlMap: UrlMap, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
     import HtmlForIfThenPrinter._
-    import Strings._
+import Strings._
     def isSelected(c: Conclusion) = conclusions.contains(c)
 
     def holdsOneOf(c: Set[Conclusion]) = (conclusions & c).size > 0
@@ -105,8 +104,8 @@ class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyDat
 
   def legacyItemConfig = RenderAttributeConfigurer[LegacyItem[ID, R]](Set("LegacyItem"), (rendererContext) => {
     import EngineWithLogger._
-    import rendererContext._
-    import r._
+import rendererContext._
+import r._
     stringTemplate.setAttribute("legacyItemId", id)
     addParams(stringTemplate, "params", replacementEngine.logger, params)
     stringTemplate.setAttribute("expected", expected)
@@ -161,7 +160,7 @@ class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyDat
     }))
 
   def createReport(reportableToUrl: FileSystemReportableToUrl = new FileSystemReportableToUrl) {
-    import PathUtils._
+import PathUtils._
     val categorisationReportableHolder = categorisationEngine.asInstanceOf[ReportableHolder]
     val project = new Project("Legacy Run", categorisationReportableHolder, replacementEngine)
     val report = new Report("Legacy run", project)

@@ -2,8 +2,8 @@ package org.cddcore.example
 
 import org.cddcore.engine._
 import org.cddcore.example.tennisScore.TennisScorer
-import org.cddcore.engine.reporting._
-import org.cddcore.engine.utilities.SimpleKeyStrategy
+import org.cddcore.reporting._
+import org.cddcore.utilities.SimpleKeyStrategy
 
 object DocumentExample {
 

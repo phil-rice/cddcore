@@ -2,7 +2,7 @@ package org.cddcore.example
 
 import org.cddcore.engine.Engine
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests._
+import org.cddcore.tests._
 
 case class TrafficLight(red: Boolean = false, orange: Boolean = false, green: Boolean = false)
 @RunWith(classOf[CddJunitRunner])

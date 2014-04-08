@@ -5,7 +5,7 @@ import org.cddcore.engine.Engine
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests.CddJunitRunner
+import org.cddcore.tests.CddJunitRunner
 
 case class Award(code: String, comment: String, claimStatus: String, awardStartDate: DateTime)
 

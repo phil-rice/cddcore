@@ -3,7 +3,7 @@ import scala.language.implicitConversions
 import org.joda.time.DateTime
 import org.cddcore.engine._
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests._
+import org.cddcore.tests._
 import org.cddcore.engine.LoggerDisplay
 import org.joda.time.format.DateTimeFormat
 

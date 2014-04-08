@@ -1,7 +1,7 @@
 package org.cddcore.engine
 
 import org.junit.runner.RunWith
-import org.cddcore.engine.utilities._
+import org.cddcore.utilities._
 import Lists.toLists
 import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])

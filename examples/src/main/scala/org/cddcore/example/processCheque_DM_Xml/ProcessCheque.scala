@@ -4,14 +4,13 @@ import scala.language.implicitConversions
 import org.joda.time.DateTime
 import org.cddcore.engine._
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests._
+import org.cddcore.tests._
 import org.cddcore.engine.LoggerDisplay
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.DateTimeFormat
 import scala.xml.Elem
 import scala.xml.NodeSeq
-import org.cddcore.engine.structure.XmlSituation
-import org.cddcore.engine.structure.Xml
+import org.cddcore.structure._
 
 //This is compatible with 
 //	<dependency>

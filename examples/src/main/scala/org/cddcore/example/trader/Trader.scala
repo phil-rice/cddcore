@@ -1,7 +1,7 @@
 package org.cddcore.example.trader
 
 import org.cddcore.engine._
-import org.cddcore.engine.tests.CddJunitRunner
+import org.cddcore.tests.CddJunitRunner
 import org.junit.runner.RunWith
 
 @RunWith(classOf[CddJunitRunner])

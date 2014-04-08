@@ -4,7 +4,7 @@ import java.util.Date
 import org.cddcore.engine.Engine
 import java.text.SimpleDateFormat
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests._
+import org.cddcore.tests._
 
 case class Person(name: String, income: Float, dateOfBirth: Date)
 

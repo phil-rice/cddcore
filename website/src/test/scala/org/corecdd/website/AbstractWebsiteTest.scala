@@ -3,8 +3,7 @@ package org.corecdd.website
 import java.util.concurrent.locks.ReentrantLock
 import scala.xml.NodeSeq.seqToNodeSeq
 import org.cddcore.engine._
-import org.cddcore.engine.utilities._
-import org.cddcore.engine.utilities.Strings
+import org.cddcore.utilities._
 import org.cddcore.engine.UseCasePageChecker
 import org.cddcore.engine.WebPageChecker
 import org.openqa.selenium.WebDriver
@@ -13,8 +12,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.selenium.WebBrowser
 import org.cddcore.engine.Reportable
 import org.cddcore.engine.ParamDetails
-import org.cddcore.engine.reporting.ReportableToUrl
-import org.cddcore.engine.utilities.Strings
+import org.cddcore.reporting.ReportableToUrl
 
 object AbstractWebsiteTest {
   val lock = new ReentrantLock();

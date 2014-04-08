@@ -1,6 +1,6 @@
 package org.corecdd.example
 
-import org.cddcore.engine.tests._
+import org.cddcore.tests._
 import org.junit.runner.RunWith
 import org.cddcore.example.customerCategorisation.CategorisePerson
 import org.junit.runner.RunWith

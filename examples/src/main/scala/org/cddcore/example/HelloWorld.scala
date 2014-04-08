@@ -2,7 +2,7 @@ package org.cddcore.example
 
 import org.cddcore.engine.Engine
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests.CddJunitRunner
+import org.cddcore.tests.CddJunitRunner
 @RunWith(classOf[CddJunitRunner])
 object HelloWorld {
 

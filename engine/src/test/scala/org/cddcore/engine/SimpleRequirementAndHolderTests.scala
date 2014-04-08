@@ -1,7 +1,7 @@
 package org.cddcore.engine
 
 import org.junit.runner.RunWith
-import org.cddcore.engine.reporting._
+import org.cddcore.reporting._
 import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class SimpleRequirementAndHolderTests extends AbstractTest {

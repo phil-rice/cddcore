@@ -2,7 +2,7 @@ package org.cddcore.example.folding
 
 import org.cddcore.engine.Engine
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests.CddJunitRunner
+import org.cddcore.tests.CddJunitRunner
 import org.cddcore.engine.Reportable
 
 case class Person(hasPet: Boolean = false, hasWife: Boolean = false, isRich: Boolean = false, isInTrouble: Boolean = false, hasWorkIssues: Boolean = false)

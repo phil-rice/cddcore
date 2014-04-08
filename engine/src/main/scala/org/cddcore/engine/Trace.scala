@@ -2,9 +2,9 @@ package org.cddcore.engine
 
 import scala.language.implicitConversions
 
-import org.cddcore.engine.reporting.HtmlRenderer
-import org.cddcore.engine.reporting.SimpleReportableToUrl
-import org.cddcore.engine.utilities.Strings
+import org.cddcore.reporting.HtmlRenderer
+import org.cddcore.reporting.SimpleReportableToUrl
+import org.cddcore.utilities.Strings
 
 object ConclusionOrResult {
   type ConclusionOrResult = Option[Conclusion]

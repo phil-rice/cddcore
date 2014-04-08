@@ -8,7 +8,7 @@ import scala.xml.XML
 import scala.xml.Node
 import Reportable._
 import scala.language.postfixOps
-import org.cddcore.engine.reporting._
+import org.cddcore.reporting._
 
 trait WebPageChecker extends AssertEquals {
   import PathUtils._

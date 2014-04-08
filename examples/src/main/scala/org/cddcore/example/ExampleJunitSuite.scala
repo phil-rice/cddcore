@@ -1,7 +1,7 @@
 package org.cddcore.example
 
 import org.junit.runner.RunWith
-import org.cddcore.engine.tests._
+import org.cddcore.tests._
 import org.cddcore.example.tennisScore.TennisScorer
 
 /**

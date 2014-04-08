@@ -3,7 +3,7 @@ package org.cddcore.example
 import org.junit.runner.RunWith
 
 import org.cddcore.engine._
-import org.cddcore.engine.tests._
+import org.cddcore.tests._
 
 @RunWith(classOf[CddJunitRunner])
 object Bowling {

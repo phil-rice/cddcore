@@ -1,11 +1,12 @@
 package org.cddcore.engine
 
-import org.scalatest.FlatSpecLike
-import scala.xml.Node
-import org.scalatest.Matchers
-import scala.runtime.ZippedTraversable2.zippedTraversable2ToTraversable
-import org.scalatest.Finders
 import scala.language.implicitConversions
+import scala.runtime.ZippedTraversable2.zippedTraversable2ToTraversable
+import scala.xml.Node
+import org.cddcore.tests._
+import org.scalatest.FlatSpecLike
+import org.scalatest.Matchers
+
 
 trait AssertEquals {
   def assertEquals[T1, T2](expected: T1, actual: T2, prefix: String = "") {
