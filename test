@@ -1,0 +1,33 @@
+Loading /c/Program Files (x86)/sbt/bin/sbt-launch-lib.bash
+[warn] The global sbt directory is now versioned and is located at C:\Users\Phil\.sbt\0.13.
+[warn]   You are seeing this warning because there is global configuration in C:\Users\Phil\.sbt but not in C:\Users\Phil\.sbt\0.13.
+[warn]   The global sbt directory may be changed via the sbt.global.base system property.
+[info] Loading project definition from C:\Users\Phil\git\NewEngine\project
+[info] Set current project to root (in build file:/C:/Users/Phil/git/NewEngine/)
+[error] Modules were resolved with conflicting cross-version suffixes in {file:/C:/Users/Phil/git/NewEngine/}examples:
+[error]    junit:junit _2.10, <none>
+java.lang.RuntimeException: Conflicting cross-version suffixes in: junit:junit
+	at scala.sys.package$.error(package.scala:27)
+	at sbt.ConflictWarning$.processCrossVersioned(ConflictWarning.scala:47)
+	at sbt.ConflictWarning$.apply(ConflictWarning.scala:30)
+	at sbt.Classpaths$$anonfun$61.apply(Defaults.scala:1044)
+	at sbt.Classpaths$$anonfun$61.apply(Defaults.scala:1044)
+	at scala.Function1$$anonfun$compose$1.apply(Function1.scala:47)
+	at sbt.$tilde$greater$$anonfun$$u2219$1.apply(TypeFunctions.scala:42)
+	at sbt.std.Transform$$anon$4.work(System.scala:64)
+	at sbt.Execute$$anonfun$submit$1$$anonfun$apply$1.apply(Execute.scala:237)
+	at sbt.Execute$$anonfun$submit$1$$anonfun$apply$1.apply(Execute.scala:237)
+	at sbt.ErrorHandling$.wideConvert(ErrorHandling.scala:18)
+	at sbt.Execute.work(Execute.scala:244)
+	at sbt.Execute$$anonfun$submit$1.apply(Execute.scala:237)
+	at sbt.Execute$$anonfun$submit$1.apply(Execute.scala:237)
+	at sbt.ConcurrentRestrictions$$anon$4$$anonfun$1.apply(ConcurrentRestrictions.scala:160)
+	at sbt.CompletionService$$anon$2.call(CompletionService.scala:30)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:262)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:262)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)
+	at java.lang.Thread.run(Thread.java:744)
+[error] (examples/*:update) Conflicting cross-version suffixes in: junit:junit
+[error] Total time: 0 s, completed 18-Apr-2014 20:30:43

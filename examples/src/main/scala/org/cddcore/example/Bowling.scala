@@ -1,9 +1,8 @@
 package org.cddcore.example
 
 import org.junit.runner.RunWith
-
 import org.cddcore.engine._
-import org.cddcore.tests._
+import org.cddcore.tests.CddJunitRunner
 
 @RunWith(classOf[CddJunitRunner])
 object Bowling {
@@ -11,11 +10,11 @@ object Bowling {
   //get returns the ith ball or zero   
   val get = Engine[List[Int], Int, Int]().
     useCase("If index in range of list (i.e. the ball has been rolled, return ith item").
-    scenario(List(7, 10, 4, 3), 0, "Start of legal range").expected(7).code((rolls: List[Int], i: Int) => rolls(i), "Returns the ith item from the list").
+    scenario(List(7, 10, 4, 3), 0, "Start of legal range").expected(7).code((rolls: List[Int], i: Int) => rolls(i)).
     scenario(List(7, 10, 4, 3), 3, "End of legal range").expected(3).
 
     useCase("If index is negative return zero").
-    scenario(List(7, 10, 4, 3), -1, "First value below legal range").expected(0).code((rolls: List[Any], i: Int) => 0).because((rolls: List[Any], i: Int) => i < 0, "Anything below zero").
+    scenario(List(7, 10, 4, 3), -1, "First value below legal range").expected(0).code((rolls: List[Any], i: Int) => 0).because((rolls: List[Any], i: Int) => i < 0).
     scenario(List(7, 10, 4, 3), -100, "Quite a lot below legal range").expected(0).
 
     useCase("If index is too high return zero").
@@ -61,11 +60,11 @@ object Bowling {
   //          byCalling((rolls: List[Int], i: Int) => SpareFrame(get(rolls, i), get(rolls, i + 1), get(rolls, i + 2)): Frame),
   //        Scenario(List(5, 5), 0).produces(SpareFrame(5, 5, 0)))));
 
-  def main(args: Array[String]) {
-//    println(get.toString)
-//    println(makeFrame.toString)
-    val (r, pr) = Engine.profile(makeFrame(List(7, 2, 5, 5, 3, 0, 10, 2, 4), 2))
-    println(r)
-    println(pr.prettyString)   
-  }
+//  def main(args: Array[String]) {
+////    println(get.toString)
+////    println(makeFrame.toString)
+//    val (r, pr) = Engine.profile(makeFrame(List(7, 2, 5, 5, 3, 0, 10, 2, 4), 2))
+//    println(r)
+//    println(pr.prettyString)   
+//  }
 }

@@ -13,13 +13,9 @@ object TennisScorer {
 
   val lookup = Map(0 -> "love", 1 -> "fifteen", 2 -> "thirty", 3 -> "forty")
 
-  val scorer = Engine[Int, Int, String]().title("Tennis Kata").reference("", wikipedia).reference("", definition). reference("", None).
-    param((s: String) => Integer.parseInt(s), "Left Player's Score", "1").
-    param((s: String) => Integer.parseInt(s), "Right Player's Score", "2").
-
+  val scorer = Engine[Int, Int, String]().title("Tennis Kata").reference("", wikipedia).reference("", definition).reference("").
     useCase("Winning", "A game is won by the first player to have won at least four points in total and at least two points more than the opponent.").
     reference("2", definition).
-   
 
     useCase("Server Winning").reference("3.8", changeRequest).
     reference("2.1", definition).
@@ -27,7 +23,7 @@ object TennisScorer {
     scenario(4, 0).expected("left won").because((l: Int, r: Int) => (l - r) >= 2 && l >= 4).
     scenario(4, 1).expected("left won").
     scenario(4, 2).expected("left won").
-    scenario(5, 3).expected("left won"). 
+    scenario(5, 3).expected("left won").
 
     useCase("Receiver winning", "here are some words about that").
     reference("2.1", definition).
@@ -57,7 +53,7 @@ object TennisScorer {
     useCase("Advantage").description("If at least three points have been scored by each side and a player has one more point than his opponent, the score of the game is 'advantage' for the player in the lead.").
     reference("3", definition).
     scenario(5, 4).expected("advantage left").because((l: Int, r: Int) => l >= 3 && r >= 3 && l == r + 1).
-    scenario(6, 5).expected("advantage left").reference("2", None).
+    scenario(6, 5).expected("advantage left").reference("2").
     scenario(4, 3).expected("advantage left").
 
     scenario(4, 5).expected("advantage right").because((l: Int, r: Int) => l >= 3 && r >= 3 && r == l + 1).
@@ -66,9 +62,5 @@ object TennisScorer {
 
     build
 
-  def main(args: Array[String]) {
-    val e = scorer.references
-    //    println(Report("Tennis Scorer", scorer).html())
-  }
 }
 

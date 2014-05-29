@@ -20,9 +20,9 @@ object Strings {
   def bracketsToKvs(left: String, right: String) = left.zip(right).toList
 
   def oneLine(s: String) = s.replace('\n', ' ').replaceAll("\r", " ")
-  def htmlEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace("&gt;", ">").replace("\n", "<br />")
+  def htmlEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br />")
   def htmlTooltipEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace("&gt;", ">")
-  def url(s: String*) = s.mkString("/")
+  def url(s: String*) = s.map(_ match { case s if s.endsWith("/") => s.substring(0, s.length - 1); case s => s }).mkString("/")
   def safeToInt(s: String) =
     try {
       Some(s.toInt)
@@ -40,8 +40,6 @@ object Strings {
 
   def firstCharacters(raw: String) = raw.split("\\s").filter(_.length > 0).map(_(0)).mkString("")
 }
-
-
 
 class StringCleaner(map: Map[Char, Char] = Map()) {
   def clean(raw: String): String = {

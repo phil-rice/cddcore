@@ -4,8 +4,9 @@ import org.joda.time.DateTime
 import org.cddcore.engine._
 import org.junit.runner.RunWith
 import org.cddcore.tests._
-import org.cddcore.engine.LoggerDisplay
 import org.joda.time.format.DateTimeFormat
+import org.cddcore.utilities.CddDisplayProcessor
+import org.cddcore.utilities.CddDisplay
 
 //This is compatible with 
 //	<dependency>
@@ -14,8 +15,8 @@ import org.joda.time.format.DateTimeFormat
 //		<version>1.2.0</version>
 //	</dependency>
 
-case class World(date: DateTime, thisBank: BankId, customerIdToCustomer: (CustomerId) => Customer, acceptedBanks: List[BankId] = List(BankId.hsbc, BankId.rbs, BankId.thisBank)) extends LoggerDisplay {
-  def loggerDisplay(dp: LoggerDisplayProcessor) = s"World(${Dates.dateToString(date)}"
+case class World(date: DateTime, thisBank: BankId, customerIdToCustomer: (CustomerId) => Customer, acceptedBanks: List[BankId] = List(BankId.hsbc, BankId.rbs, BankId.thisBank)) extends CddDisplay {
+  def plain(dp: CddDisplayProcessor) = s"World(${Dates.dateToString(date)}"
 }
 
 case class BankId(id: String)
@@ -33,21 +34,21 @@ object GBP {
 }
 case class GBP(pounds: Integer, pence: Integer)
 
-case class CustomerId(id: String, bank: BankId) extends LoggerDisplay {
-  def loggerDisplay(dp: LoggerDisplayProcessor) = s"CustomerId(${bank.id}/$id)"
+case class CustomerId(id: String, bank: BankId) extends CddDisplay {
+  def plain(dp: CddDisplayProcessor) = s"CustomerId(${bank.id}/$id)"
 }
 case class Customer(id: CustomerId, balance: GBP, overdraftLimit: GBP, premiumCustomer: Boolean)
 
-case class Cheque(refNo: String, from: CustomerId, to: CustomerId, date: DateTime, amount: GBP) extends LoggerDisplay {
-  def loggerDisplay(dp: LoggerDisplayProcessor) = s"Cheque(${refNo}, from=${dp(from)}, to=${dp(to)}, ${Dates.dateToString(date)}, amount=$amount"
+case class Cheque(refNo: String, from: CustomerId, to: CustomerId, date: DateTime, amount: GBP) extends CddDisplay {
+  def plain(dp: CddDisplayProcessor) = s"Cheque(${refNo}, from=${dp(from)}, to=${dp(to)}, ${Dates.dateToString(date)}, amount=$amount"
 }
 
 object Message {
   implicit def stringToMessage(s: String) = Message(s)
   implicit def tupleToMessage(t: Tuple2[String, _]) = Message(t._1, t._2)
 }
-case class Message(pattern: String, keys: Any*)extends LoggerDisplay {
-	def loggerDisplay(dp: LoggerDisplayProcessor) = s"Message($pattern${keys.mkString(" ", ", ", "")})"
+case class Message(pattern: String, keys: Any*)extends CddDisplay {
+	def plain(dp: CddDisplayProcessor) = s"Message($pattern${keys.mkString(" ", ", ", "")})"
 }
 case class ProcessChequeResult(pay: Boolean, message: Message)
 object Dates {
@@ -70,7 +71,7 @@ object ProcessChequeTestMother {
 
 }
 
-case class ChequeSituation(world: World, cheque: Cheque) extends LoggerDisplay {
+case class ChequeSituation(world: World, cheque: Cheque) extends CddDisplay {
   import GBP._
 
   lazy val customer = world.customerIdToCustomer(cheque.from)
@@ -78,7 +79,7 @@ case class ChequeSituation(world: World, cheque: Cheque) extends LoggerDisplay {
   lazy val customerHasNoOverdraftLimit = customer.overdraftLimit == GBP(0, 0)
   lazy val customerWouldExceedOverdraftLimit = cheque.amount >= customer.balance + customer.overdraftLimit
 
-  def loggerDisplay(dp: LoggerDisplayProcessor) = s"(${ dp(world)}, ${dp(cheque)})"
+  def plain(dp: CddDisplayProcessor) = s"(${ dp(world)}, ${dp(cheque)})"
 
 }
 

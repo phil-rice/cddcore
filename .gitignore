@@ -8,3 +8,6 @@ report/
 *.jar
 .cache
 *.swp
+.classpath
+.project
+*/.settings/*

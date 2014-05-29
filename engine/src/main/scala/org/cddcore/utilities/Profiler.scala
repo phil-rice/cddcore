@@ -6,11 +6,11 @@ import java.util.HashMap
 import scala.collection.JavaConversions._
 
 object Profiler {
-  def prettifyFn[T] = (t:T ) => t match {case r: Requirement => r.titleString ; case _ => t.toString} 
+  def prettifyFn[T] = (t: T) => t match { case h: Titled => h.titleString; case _ => t.toString }
 }
 
 trait Profiler[T] {
-  def prettifyFn: (T) => String =Profiler.prettifyFn[T]
+  def prettifyFn: (T) => String = Profiler.prettifyFn[T]
   def get(e: T): ProfilerRecord
   def results: Map[T, ProfilerRecord]
   def start(e: T) = startWithTime(System.nanoTime(), e)

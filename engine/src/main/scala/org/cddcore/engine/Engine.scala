@@ -1,125 +1,264 @@
 package org.cddcore.engine
 
-trait Engine1Types[P, R, FullR] extends EngineTypes[R, FullR] {
-  type A = (P, ROrException[R]) => Boolean
-  type B = (P) => Boolean
-  type RFn = (P) => R
-  type PF = PartialFunction[P, R]
-  type CfgFn = (P) => Unit
-  def rfnMaker = RfnMaker.rfn1ConstantMaker[P, R]
-  def makeClosureForBecause(params: List[Any]) = (b: B) => b(params(0).asInstanceOf[P])
-  def makeClosureForResult(params: List[Any]) = (r: RFn) => r(params(0).asInstanceOf[P])
-  def makeClosureForCfg(params: List[Any]) = (c: CfgFn) => c(params(0).asInstanceOf[P])
-  def makeClosureForAssertion(params: List[Any], r: ROrException[R]) = (a: A) => a(params(0).asInstanceOf[P], r);
+import java.util.concurrent.atomic.AtomicInteger
+import scala.language.implicitConversions
+import org.cddcore.utilities.Strings
+import org.cddcore.utilities.TraceBuilder
+import org.cddcore.utilities.CodeHolder
+import org.cddcore.engine.builder._
+import org.cddcore.utilities.CddDisplayProcessor
+import org.cddcore.utilities.ExceptionMap
+import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.Future
+import org.cddcore.utilities.AnyTraceItem
+import org.cddcore.utilities.TraceItem
+import org.cddcore.utilities.Profiler
+import org.cddcore.utilities.SimpleProfiler
+import org.cddcore.utilities.ProfilerRecord
+
+object TemplateLike {
+  implicit object ReportableTemplateLike extends TemplateLike[Reportable] {
+    def apply(r: Reportable) = r match {
+      case rt: ReportableWithTemplate => rt.template
+      case r => r.getClass().getSimpleName
+    }
+  }
+}
+trait TemplateLike[T] {
+  def apply(t: T): String
 }
 
-trait Engine2Types[P1, P2, R, FullR] extends EngineTypes[R, FullR] {
-  type A = (P1, P2, ROrException[R]) => Boolean
-  type B = (P1, P2) => Boolean
-  type RFn = (P1, P2) => R
-  type PF = PartialFunction[(P1, P2), R]
-  type CfgFn = (P1, P2) => Unit
-  def rfnMaker = RfnMaker.rfn2ConstantMaker[P1, P2, R]
-  def makeClosureForBecause(params: List[Any]) = (b: B) => b(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2])
-  def makeClosureForResult(params: List[Any]) = (r: RFn) => r(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2])
-  def makeClosureForCfg(params: List[Any]) = (c: CfgFn) => c(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2])
-  def makeClosureForAssertion(params: List[Any], r: ROrException[R]) = (a: A) => a(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2], r);
+trait Engine extends Reportable with Titled{
+  def titleString: String
 }
 
-trait Engine3Types[P1, P2, P3, R, FullR] extends EngineTypes[R, FullR] {
-  type A = (P1, P2, P3, ROrException[R]) => Boolean
-  type B = (P1, P2, P3) => Boolean
-  type RFn = (P1, P2, P3) => R
-  type PF = PartialFunction[(P1, P2, P3), R]
-  type CfgFn = (P1, P2, P3) => Unit
-  def rfnMaker = RfnMaker.rfn3ConstantMaker[P1, P2, P3, R]
-  def makeClosureForBecause(params: List[Any]) = (b: B) => b(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2], params(2).asInstanceOf[P3])
-  def makeClosureForResult(params: List[Any]) = (r: RFn) => r(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2], params(2).asInstanceOf[P3])
-  def makeClosureForCfg(params: List[Any]) = (c: CfgFn) => c(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2], params(2).asInstanceOf[P3])
-  def makeClosureForAssertion(params: List[Any], r: ROrException[R]) = (a: A) => a(params(0).asInstanceOf[P1], params(1).asInstanceOf[P2], params(2).asInstanceOf[P3], r);
+object EngineTools {
+  implicit def toEngineTools[Params, BFn, R, RFn](e: Engine) = e.asInstanceOf[EngineTools[Params, BFn, R, RFn]]
 }
 
-trait ABuilderFactory1[P, R, FullR] extends EngineUniverse[R, FullR] with Engine1Types[P, R, FullR] {
+trait EngineTools[Params, BFn, R, RFn] extends Engine with TypedReportable[Params, BFn, R, RFn] with WithCddDisplayProcessor {
+  def title = asRequirement.title
+  def asRequirement: EngineRequirement[Params, BFn, R, RFn]
+  def evaluator: EvaluateTree[Params, BFn, R, RFn]
+  def buildExceptions: ExceptionMap
+  import ReportableHelper._
+  lazy val exceptionsItCanThrow = asRequirement.scenarios.flatMap {
+    (s: Scenario[Params, BFn, R, RFn]) =>
+      s.expected match {
+        case Some(Left(e)) => List[Class[_ <: Exception]](e.getClass())
+        case _ => List[Class[_ <: Exception]]()
+      }
+  }.toSet
+}
 
-  trait ABuilder1 extends ScenarioBuilder {
-    def scenario(p: P, title: String = null, description: String = null) = newScenario(title, description, List(p))
-    def build: Engine1[P, FullR] = (builderData.folder, builderData.childEngines.size) match {
-      case (Some(_), 0) => throw new CannotHaveFolderWithoutChildEnginesException
-      case (None, 0) => new EngineFromTestsImpl(builderData) with Engine1[P, FullR] {
-        protected def executeChildEngine(e: ChildEngineDescription, p: P): FullR = {
-          throw new IllegalStateException
+trait DelegatedEngine[Params, BFn, R, RFn] extends EngineTools[Params, BFn, R, RFn] {
+  val delegate: EngineTools[Params, BFn, R, RFn]
+  def asRequirement = delegate.asRequirement
+  def evaluator = delegate.evaluator
+  def buildExceptions = delegate.buildExceptions
+  def ldp: CddDisplayProcessor = delegate.ldp
+}
+
+trait CachedEngine[Params, BFn, R, RFn, FullR] extends DelegatedEngine[Params, BFn, R, RFn] {
+  protected val cache = new AtomicReference[Map[Params, Future[FullR]]](Map())
+}
+
+trait EngineRequirement[Params, BFn, R, RFn] extends BuilderNodeAndHolder[Params, BFn, R, RFn] with Requirement with TypedReportable[Params, BFn, R, RFn] {
+  def requirementsIncludingTree(pathNotIncludingThis: List[Reportable]): List[List[Reportable]]
+  def pathsIncludingTreeAndEngine(pathNotIncludingThis: List[Reportable]): List[List[Reportable]]
+}
+
+trait FoldingEngine[Params, BFn, R, RFn, FullR] extends HasExceptionMap[R, RFn] with EngineTools[Params, BFn, R, RFn] {
+  def engines: List[EngineFromTests[Params, BFn, R, RFn]]
+  def initialValue: CodeHolder[() => FullR]
+  def foldingFn: (FullR, R) => FullR
+  def applyParams(params: Params): FullR = {
+    val monitor = Engine.currentMonitor
+    monitor.call(this, params)
+    try {
+      val result = engines.foldLeft(initialValue.fn())((acc, e) => foldingFn(acc, e.applyParams(params)))
+      monitor.finished[FullR](this, None, result)
+      result
+    } catch { case e: Exception => monitor.failed(this, None, e); throw e }
+  }
+}
+
+trait EngineFromTests[Params, BFn, R, RFn] extends EngineTools[Params, BFn, R, RFn] {
+  def tree: DecisionTree[Params, BFn, R, RFn]
+
+  def applyParams(params: Params): R = {
+    val monitor = Engine.currentMonitor
+    monitor.call(this, params)
+    val makeClosures = evaluator.makeClosures
+    import makeClosures._
+    val c = try {
+      val bc = makeBecauseClosure(params)
+      evaluator.findConclusion(tree, bc)
+    } catch {
+      case e: Exception =>
+        monitor.failed(this, None, e)
+        throw e
+    }
+    try {
+      val result: R = makeResultClosure(params).apply(c.code.fn)
+      monitor.finished[R](this, Some(c), result)
+      result
+    } catch {
+      case e: Exception =>
+        monitor.failed(this, Some(c), e)
+        e match {
+          case u: UndecidedException => throw new UndecidedException(u.getMessage(), u.params, this)
+          case _ if exceptionsItCanThrow.find((ex) => ex.isAssignableFrom(e.getClass)).isDefined => throw e
+          case _ => throw FailedToExecuteException(this, params, e)
         }
-        def apply(p: P): FullR = applyParams(root, List(p), true).asInstanceOf[FullR];
-        override def toString() = toStringWithScenarios
-      }
-      case _ => new EngineWithChildrenImpl(builderData) with EngineFull[R, FullR] with Engine1[P, FullR] {
-        def apply(p1: P): FullR = applyParams(List(p1));
-        override def toString =  "EngineWithChildren(" + children.collect { case e: Engine => e }.map(_.titleString).mkString(",") + ")"
-      }
     }
   }
-}
-
-class BuilderFactory1[P, R, FullR](folder: Option[(FullR, R) => FullR], initialFoldValue: () => FullR, override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory1[P, R, FullR] {
-  type RealScenarioBuilder = Builder1
-  def builder = new Builder1
-
-  class Builder1(val builderData: ScenarioBuilderData = ScenarioBuilderData(logger, arity = 1, folder = folder, initialFoldValue = initialFoldValue)) extends ABuilder1 {
-    protected def thisAsBuilder = this
-    def copy(builderData: ScenarioBuilderData) = new Builder1(builderData)
-  }
-}
-
-trait ABuilderFactory2[P1, P2, R, FullR] extends EngineUniverse[R, FullR] with Engine2Types[P1, P2, R, FullR] {
-
-  trait ABuilder2 extends ScenarioBuilder {
-    def scenario(p1: P1, p2: P2, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2))
-    def build: Engine2[P1, P2, FullR] = (builderData.folder, builderData.childEngines.size) match {
-      case (Some(_), 0) => throw new CannotHaveFolderWithoutChildEnginesException
-      case (None, 0) => new EngineFromTestsImpl(builderData) with Engine2[P1, P2, FullR] {
-        def apply(p1: P1, p2: P2): FullR = applyParams(root, List(p1, p2), true).asInstanceOf[FullR];
-        override def toString() = toStringWithScenarios
-      }
-      case _ => new EngineWithChildrenImpl(builderData) with EngineFull[R, FullR] with Engine2[P1, P2, FullR] {
-        def apply(p1: P1, p2: P2): FullR = applyParams(List(p1, p2));
-      }
+  def toString(indent: String, root: DecisionTreeNode[Params, BFn, R, RFn]): String = {
+    root match {
+      case d: Decision[Params, BFn, R, RFn] =>
+        indent + "if(" + d.prettyString + ")\n" +
+          toString(indent + " ", d.yes) +
+          indent + "else\n" +
+          toString(indent + " ", d.no)
+      case c: Conclusion[Params, BFn, R, RFn] => indent + c.code.pretty + "\n";
     }
   }
+  override def toString(): String = toString("", tree.root)
+
 }
 
-class BuilderFactory2[P1, P2, R, FullR](folder: Option[(FullR, R) => FullR], initialFoldValue: () => FullR, override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory2[P1, P2, R, FullR] {
-  type RealScenarioBuilder = Builder2
-  def builder = new Builder2
+object EngineMonitor {
+  def apply() = new NoEngineMonitor
 
-  class Builder2(val builderData: ScenarioBuilderData = ScenarioBuilderData(logger, arity = 2, folder = folder, initialFoldValue = initialFoldValue)) extends ABuilder2 {
-    protected def thisAsBuilder = this
-    def copy(builderData: ScenarioBuilderData) = new Builder2(builderData)
+}
+trait EngineMonitor {
+  def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor)
+  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor)
+  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor)
+}
+
+class NoEngineMonitor extends EngineMonitor {
+  def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) {}
+  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor) {}
+  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor) {}
+}
+
+class PrintlnEngineMonitor extends EngineMonitor {
+  var depth = new AtomicInteger(0)
+  private val indent = Strings.blanks(depth.get * 2)
+  def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) {
+    println(Strings.oneLine(s"Calling:  $indent${e.titleString} with ${ldp(params)}"))
+    depth.incrementAndGet()
+  }
+  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor) {
+    depth.decrementAndGet()
+    println(s"Finished:  $indent ---> ${ldp(result)}")
+  }
+  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor) {
+    depth.decrementAndGet()
+    println(Strings.oneLine(s"Failed:  $indent ---> ${ldp(exception)}"))
   }
 }
-trait ABuilderFactory3[P1, P2, P3, R, FullR] extends EngineUniverse[R, FullR] with Engine3Types[P1, P2, P3, R, FullR] {
 
-  trait ABuilder3 extends ScenarioBuilder {
-    def scenario(p1: P1, p2: P2, p3: P3, title: String = null, description: String = null) = newScenario(title, description, List(p1, p2, p3))
-    def build: Engine3[P1, P2, P3, FullR] = (builderData.folder, builderData.childEngines.size) match {
-      case (Some(_), 0) => throw new CannotHaveFolderWithoutChildEnginesException
-      case (None, 0) => new EngineFromTestsImpl(builderData) with Engine3[P1, P2, P3, FullR] {
-        def apply(p1: P1, p2: P2, p3: P3): FullR = applyParams(root, List(p1, p2, p3), true).asInstanceOf[FullR];
-        override def toString() = toStringWithScenarios
-      }
-      case _ => new EngineWithChildrenImpl(builderData) with EngineFull[R, FullR] with Engine3[P1, P2, P3, FullR] {
-        def apply(p1: P1, p2: P2, p3: P3): FullR = applyParams(List(p1, p2, p3));
-      }
+class TraceEngineMonitor(implicit ldp: CddDisplayProcessor) extends EngineMonitor {
+  var logging = true
+  var traceBuilder = TraceBuilder[Engine, Any, Any, Conclusion[_, _, _, _]]()
+  def log(prefix: String, stuff: => {}) = { stuff; if (logging) println(prefix + " " + Strings.oneLine(traceBuilder.shortToString)) }
+  def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) =
+    log("call", traceBuilder = traceBuilder.nest(e.asInstanceOf[Engine], params))
+  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor) =
+    log("finished", traceBuilder = traceBuilder.finished(result, conclusion))
+  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor) =
+    log("failed", traceBuilder = traceBuilder.failed(exception, conclusion))
+  def trace = traceBuilder.children
+}
+
+class ProfileEngineMonitor extends EngineMonitor {
+  val profiler = new SimpleProfiler[Engine]
+  def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) = profiler.start(e)
+  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor) = profiler.end(e)
+  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor) = profiler.end(e)
+}
+
+class MultipleEngineMonitors(monitors: List[EngineMonitor]) extends EngineMonitor {
+  def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) = for (m <- monitors) m.call(e, params)
+  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor) = for (m <- monitors) m.finished(e, conclusion, result)
+  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor) = for (m <- monitors) m.failed(e, conclusion, exception)
+}
+
+object Engine {
+  var logging = ("true" == System.getenv("cdd.junit.log")) || false
+  /** returns a builder for an engine that implements Function[P,R] */
+  def apply[P, R]()(implicit ldp: CddDisplayProcessor) = Builder1[P, R, R](BuildEngine.initialNodes, ExceptionMap(), BuildEngine.builderEngine1)(ldp)
+  /** returns a builder for an engine that implements Function2[P1,P2,R] */
+  def apply[P1, P2, R]()(implicit ldp: CddDisplayProcessor) = Builder2[P1, P2, R, R](BuildEngine.initialNodes, ExceptionMap(), BuildEngine.builderEngine2)(ldp)
+  /** returns a builder for an engine that implements Function3[P1,P2,P3,R] */
+  def apply[P1, P2, P3, R]()(implicit ldp: CddDisplayProcessor) = Builder3[P1, P2, P3, R, R](BuildEngine.initialNodes, ExceptionMap(), BuildEngine.builderEngine3)(ldp)
+
+  def folding[P, R, FullR](foldingFn: (FullR, R) => FullR, initialValue: FullR)(implicit ldp: CddDisplayProcessor) =
+    Builder1[P, R, FullR](BuildEngine.initialNodes[P, (P) => Boolean, R, (P) => R, FullR](initialValue, foldingFn), ExceptionMap(), BuildEngine.folderBuilderEngine1[P, R, FullR])(ldp)
+  def foldList[P, R] = folding[P, R, List[R]]((acc: List[R], v: R) => acc :+ v, List())
+  def foldSet[P, R] = folding[P, R, Set[R]]({ _ + _ }, Set())
+
+  def folding[P1, P2, R, FullR](foldingFn: (FullR, R) => FullR, initialValue: FullR)(implicit ldp: CddDisplayProcessor) =
+    Builder2[P1, P2, R, FullR](BuildEngine.initialNodes(initialValue, foldingFn), ExceptionMap(), BuildEngine.folderBuilderEngine2[P1, P2, R, FullR])(ldp)
+  def foldList[P1, P2, R] = folding[P1, P2, R, List[R]]((acc: List[R], v: R) => acc :+ v, List())
+  def foldSet[P1, P2, R] = folding[P1, P2, R, Set[R]]({ _ + _ }, Set())
+
+  def folding[P1, P2, P3, R, FullR](foldingFn: (FullR, R) => FullR, initialValue: FullR)(implicit ldp: CddDisplayProcessor) =
+    Builder3[P1, P2, P3, R, FullR](BuildEngine.initialNodes(initialValue, foldingFn), ExceptionMap(), BuildEngine.folderBuilderEngine3[P1, P2, P3, R, FullR])(ldp)
+  def foldList[P1, P2, P3, R] = folding[P1, P2, P3, R, List[R]]((acc: List[R], v: R) => acc :+ v, List())
+  def foldSet[P1, P2, P3, R] = folding[P1, P2, P3, R, Set[R]]({ _ + _ }, Set())
+
+  def testing = _testing.get
+  private var _testing = new ThreadLocal[Boolean] {
+    override def initialValue = false;
+  }
+  def test[X](x: => X) = {
+    _testing.set(true)
+    try {
+      x
+    } finally
+      _testing.set(false)
+  }
+  protected val defaultMonitor = new ThreadLocal[EngineMonitor] {
+    override def initialValue = EngineMonitor()
+  }
+
+  def currentMonitor = defaultMonitor.get
+
+  def withMonitor[X](m: EngineMonitor, fn: => X) = {
+    val oldMonitor = defaultMonitor.get
+    val newMonitor = new MultipleEngineMonitors(List(m, oldMonitor))
+    defaultMonitor.set(newMonitor)
+    try {
+      fn
+    } finally {
+      defaultMonitor.set(oldMonitor)
     }
   }
-}
-
-class BuilderFactory3[P1, P2, P3, R, FullR](folder: Option[(FullR, R) => FullR], initialFoldValue: () => FullR, override val logger: TddLogger = TddLogger.defaultLogger) extends ABuilderFactory3[P1, P2, P3, R, FullR] {
-  type RealScenarioBuilder = Builder3
-  def builder = new Builder3
-
-  class Builder3(val builderData: ScenarioBuilderData = ScenarioBuilderData(logger, arity = 3, folder = folder, initialFoldValue = initialFoldValue)) extends ABuilder3 {
-    protected def thisAsBuilder = this
-    def copy(builderData: ScenarioBuilderData) = new Builder3(builderData)
+  def trace[X](fn: => X)(implicit ldp: CddDisplayProcessor) = {
+    val tm = new TraceEngineMonitor
+    val result = try { Right(withMonitor(tm, fn)) } catch { case e: Exception => Left(e) }
+    (result, tm.trace)
   }
+  def traceNoException[X](fn: => X)(implicit ldp: CddDisplayProcessor) = {
+    trace(fn) match {
+      case (Left(e), _) => throw new RuntimeException("Exception in trace", e)
+      case (Right(r), trace) => (r, trace)
+    }
+  }
+  def profile[X](fn: => X) = {
+    val pm = new ProfileEngineMonitor
+    val result = try { Right(withMonitor(pm, fn)) } catch { case e: Exception => Left(e) }
+    (result, pm.profiler)
+  }
+  def profileNoException[X](fn: => X) = {
+    profile(fn) match {
+      case (Left(e), _) => throw new RuntimeException("Exception in profile", e)
+      case (Right(r), profiler) => (r, profiler)
+    }
+  }
+
 }
 

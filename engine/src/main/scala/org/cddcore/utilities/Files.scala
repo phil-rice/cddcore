@@ -3,6 +3,8 @@ package org.cddcore.utilities
 import java.io.FileOutputStream
 import scala.io.Source
 import java.io.FileNotFoundException
+import java.net.URL
+import java.io.OutputStreamWriter
 
 object Files {
 
@@ -10,6 +12,19 @@ object Files {
     f.delete
     f.getParentFile().mkdirs()
     appendToFile(f)(op)
+  } 
+
+  def printToUrl(url: String, text: String, encoding: String = "UTF-8") = {
+    try {
+      val connection = new URL(url).openConnection();
+      connection.setDoOutput(true);
+      val out = new OutputStreamWriter(connection.getOutputStream(), encoding);
+      try {
+        out.write(text);
+      } finally {
+        out.close();
+      }
+    } catch { case e: Exception => throw new RuntimeException(s"Url: $url Encoding: $encoding",e) }
   }
   def appendToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
     val p = new java.io.PrintWriter(new FileOutputStream(f, true))

@@ -1,0 +1,30 @@
+Known:
+* The red/green  <--- DONE
+* amber
+* HtmlDisplay<--- DONE
+* Traceitems
+* Traces<--- DONE
+* Web tests<--- DONE
+* Live display
+* Legacy
+
+From Carers
+* Assertions
+* CDDJunit package name... is it a big deal?
+* Cached
+* TraceItem print/html
+
+
+Quality of life
+* Improve the toString of the matchOn
+* allow because to have a partial function to boolean (and ensure that has a nice toString)
+
+
+Go to Carers and some of the others, and make sure they work 
+(expecting issues with titles / descriptions and stuff)
+
+
+CodeCoverage
+Equals/hashcode tests (and these are actually worth doing...)
+Junit stuff
+

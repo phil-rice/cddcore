@@ -1,8 +1,9 @@
 package org.cddcore.example
 
 import org.junit.runner.RunWith
-import org.cddcore.tests._
 import org.cddcore.example.tennisScore.TennisScorer
+import org.cddcore.tests.CddContinuousIntegrationRunner
+import org.cddcore.tests.CddContinuousIntegrationTest
 
 /**
  * This class will be swept up by JUnit. It should access all the engines that you want to check
@@ -11,6 +12,6 @@ import org.cddcore.example.tennisScore.TennisScorer
 @RunWith(classOf[CddContinuousIntegrationRunner])
 class ExampleJunitSuite extends CddContinuousIntegrationTest {
 
-  def engines =     List(TennisScorer.scorer)
+  def engines = List(TennisScorer.scorer)
 
 }

@@ -4,9 +4,6 @@ import org.junit.runner.RunWith
 import org.cddcore.engine.Engine
 import org.cddcore.tests.CddJunitRunner
 import scala.language.implicitConversions
-import org.cddcore.engine.EngineBuiltFromTests
-import org.cddcore.engine.EngineWithConstructionString
-import org.cddcore.engine.EngineWithScenarioExceptionMap
 
 @RunWith(classOf[CddJunitRunner])
 object RulesWithLotsOfBecauses {
@@ -23,10 +20,10 @@ case class FourBooleans(a: Boolean, b: Boolean, c: Boolean, d: Boolean)
   val engine = Engine.test(builder.build)
 //  val engine = builder.build
 
-  def main(args: Array[String]) {
-    println(engine.asInstanceOf[EngineWithConstructionString].constructionString)
-    println("================== Exceptions ================ ")
-    println(engine.asInstanceOf[EngineWithScenarioExceptionMap].scenarioExceptionMap)
-  }
+//  def main(args: Array[String]) {
+//    println(engine.asInstanceOf[EngineWithConstructionString].constructionString)
+//    println("================== Exceptions ================ ")
+//    println(engine.asInstanceOf[EngineWithScenarioExceptionMap].scenarioExceptionMap)
+//  }
 
 }

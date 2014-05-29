@@ -1,7 +1,7 @@
 package org.cddcore.example.awards
 
 import scala.language.implicitConversions
-import org.cddcore.engine.Engine
+import org.cddcore.engine._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.junit.runner.RunWith

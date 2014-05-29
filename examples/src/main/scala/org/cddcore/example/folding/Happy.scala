@@ -31,8 +31,4 @@ object Happy {
     scenario(Person(hasWorkIssues = false)).expected(true).because((p: Person) => !p.hasWorkIssues).
     build;
 
-  def main(args: Array[String]) {
-    println("Template: " + Reportable.templateName(engine))
-    println(engine)
-  }
 }

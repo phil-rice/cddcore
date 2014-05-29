@@ -2,11 +2,11 @@ package org.cddcore.example.customerCategorisation
 
 import scala.language.implicitConversions
 
+
 import org.cddcore.engine._
 import org.junit.runner.RunWith
 import org.cddcore.tests._
 import org.cddcore.example.processCheque_DM_1.GBP
-import org.corecdd.website.WebServer
 
 case class Person(savings: GBP, ageInYears: Int) {
   lazy val hasEnoughSavings = savings >= 1000
