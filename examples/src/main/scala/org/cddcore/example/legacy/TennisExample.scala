@@ -16,34 +16,34 @@ object TennisExample {
 
   val tennis = Engine[Int, Int, String]().title("Tennis scorer").
     useCase("Winning", "A game is won by the first player to have won at least four points in total and at least two points more than the opponent.").
-    scenario(4, 0).expected("left won").
-    because((l: Int, r: Int) => (l - r) >= 2 && l >= 4).
+//    scenario(4, 0).expected("left won").
+//    because((l: Int, r: Int) => (l - r) >= 2 && l >= 4).
     //    scenario(4, 1).expected("left won").
     //    scenario(4, 2).expected("left won").
     //    scenario(5, 3).expected("left won").
 
-    scenario(0, 4).expected("right won").
-    because((l: Int, r: Int) => (r - l) >= 2 && r >= 4).
+//    scenario(0, 4).expected("right won").
+//    because((l: Int, r: Int) => (r - l) >= 2 && r >= 4).
     //    scenario(1, 4).expected("right won").
     //    scenario(2, 4).expected("right won").
     //    scenario(3, 5).expected("right won").
     //    scenario(40, 42).expected("right won").
 
     useCase("Running score").description("The running score of each game is described in a manner peculiar to tennis: scores from zero to three points are described as 'love', 'fifteen', 'thirty', and 'forty' respectively.").
-    scenario(2, 3).expected("thirty - forty").
-    because((l: Int, r: Int) => l < 4 && r < 4).
-    code((l: Int, r: Int) => lookup(l) + " - " + lookup(r)).
+//    scenario(2, 3).expected("thirty - forty").
+//    because((l: Int, r: Int) => l < 4 && r < 4).
+//    code((l: Int, r: Int) => lookup(l) + " - " + lookup(r)).
     //    scenario(2, 1).expected("thirty - fifteen").
     //
     useCase("When both have the same running score").description("The running score, if both scores are the same, is called xx all").
-    scenario(0, 0).expected("love all").
-    code((l: Int, r: Int) => lookup(l) + " all").
-    because((l: Int, r: Int) => l == r).
+//    scenario(0, 0).expected("love all").
+//    code((l: Int, r: Int) => lookup(l) + " all").
+//    because((l: Int, r: Int) => l == r).
     //    scenario(2, 2).expected("thirty all").
     //
-    useCase("Deuce").description("If at least three points have been scored by each player, and the scores are equal, the score is 'deuce'.").expected("deuce").
-    scenario(3, 3).because((l: Int, r: Int) => l >= 3 && r >= 3 && l == r).
-    priority(1).
+//    useCase("Deuce").description("If at least three points have been scored by each player, and the scores are equal, the score is 'deuce'.").expected("deuce").
+//    scenario(3, 3).because((l: Int, r: Int) => l >= 3 && r >= 3 && l == r).
+//    priority(1).
     //    scenario(4, 4).
     //    scenario(6, 6).
     //

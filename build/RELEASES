@@ -36,3 +36,5 @@
 1.8.5.15 Allowed Cached Engines to work in the Junit tests
 1.8.5.16 Execution Profiler added
 1.8.5.17 Bug fixes: Junit descriptions now have unique names. Default code now works with scenarios
+
+2.0.0 Rebuilt core. HTML Renderer uses 'cdd' now. Syntax easier (no need to specify types in because/code and matchWith syntax added)

@@ -42,11 +42,11 @@ object BuildSettings {
       </developers>),
     unmanagedClasspath in Runtime <+= (baseDirectory) map { bd => Attributed.blank(bd / "src/main/resources") },
     organization := "org.cddcore",
-    //version := "1.6.4-SNAPSHOT",
-    version := "1.8.5.17",
+   
+    version := "1.8.5.17.test",
     scalacOptions ++= Seq(),
     retrieveManaged := false,
-    scalaVersion := "2.10.1",
+    scalaVersion := "2.10.4",
     EclipseKeys.withSource := true,
     resolvers += Classpaths.typesafeResolver,
 
