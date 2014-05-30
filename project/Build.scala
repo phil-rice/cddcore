@@ -52,7 +52,7 @@ object CddBuild extends Build {
 	resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/")
 	
 	
-
+  lazy val build = Project(id = "build", settings = buildSettings, base = file("build"))
   lazy val engine = Project(id = "engine", settings = buildSettings, base = file("engine"))
   lazy val structure =Project(id = "structure", settings = buildSettings, base = file("structure")).dependsOn(engine)
   lazy val htmlRendering = Project(id = "htmlRendering", settings = buildSettings, base = file("htmlRendering")).dependsOn(engine)
@@ -61,5 +61,5 @@ object CddBuild extends Build {
   lazy val examples = Project(id = "examples",settings = buildSettings,  base = file("examples")).dependsOn(engine,cddjunit, structure,website)
   lazy val tests = Project(id = "tests", settings = buildSettings, base = file("tests")).dependsOn( engine, htmlRendering,cddjunit, structure,website, examples)
 //  lazy val root = Project(id = "root",settings = buildSettings,  base = file(".")).aggregate( engine, tests,cddjunit)
-  lazy val root = Project(id = "root", settings = buildSettings, base = file(".")).aggregate( engine, tests, htmlRendering, structure, cddjunit,website, examples)
+  lazy val root = Project(id = "root", settings = buildSettings, base = file(".")).aggregate( engine, tests, htmlRendering, structure, cddjunit,website, examples, build)
 }

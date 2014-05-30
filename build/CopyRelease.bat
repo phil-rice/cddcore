@@ -1,8 +1,8 @@
-cp RELEASES ../carers
-cp RELEASES ../constraint
-cp RELEASES ../eclipse
+cp RELEASES ../cddjunit
 cp RELEASES ../engine
-cp RELEASES ../../carers
 cp RELEASES ../examples
-cp RELEASES ../ParentPom
-cp RELEASES ../timing
+cp RELEASES ../htmlRendering
+cp RELEASES ../legacy
+cp RELEASES ../structure
+cp RELEASES ../tests
+cp RELEASES ../website
