@@ -43,7 +43,7 @@ object CddBuild extends Build {
     unmanagedClasspath in Runtime <+= (baseDirectory) map { bd => Attributed.blank(bd / "src/main/resources") },
     organization := "org.cddcore",
    
-    version := "2.0.0",
+    version := "2.0.1",
     scalacOptions ++= Seq(),
     retrieveManaged := false,
     scalaVersion := "2.10.4",
@@ -53,6 +53,7 @@ object CddBuild extends Build {
 	
 	
   lazy val build = Project(id = "build", settings = buildSettings, base = file("build"))
+  lazy val cddcore = Project(id = "cddcore", settings = buildSettings, base = file("cddcore")).dependsOn(engine, htmlRendering,cddjunit, structure)
   lazy val engine = Project(id = "engine", settings = buildSettings, base = file("engine"))
   lazy val structure =Project(id = "structure", settings = buildSettings, base = file("structure")).dependsOn(engine)
   lazy val htmlRendering = Project(id = "htmlRendering", settings = buildSettings, base = file("htmlRendering")).dependsOn(engine)

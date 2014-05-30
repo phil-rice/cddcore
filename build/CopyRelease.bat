@@ -1,3 +1,4 @@
+cp RELEASES ../cddcore
 cp RELEASES ../cddjunit
 cp RELEASES ../engine
 cp RELEASES ../examples
