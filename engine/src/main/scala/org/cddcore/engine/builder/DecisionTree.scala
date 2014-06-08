@@ -5,6 +5,7 @@ import org.cddcore.utilities.Lens
 import org.cddcore.utilities.CodeHolder
 import org.cddcore.engine._
 import org.cddcore.utilities.NestedHolder
+import org.cddcore.utilities.Exceptions
 
 class DecisionTreeLens[Params, BFn, R, RFn](val creator: (DecisionTreeNode[Params, BFn, R, RFn]) => DecisionTree[Params, BFn, R, RFn] = (root: DecisionTreeNode[Params, BFn, R, RFn]) => new SimpleDecisionTree(root, false)) {
   val rootL = Lens[DecisionTree[Params, BFn, R, RFn], DecisionTreeNode[Params, BFn, R, RFn]](
@@ -73,6 +74,7 @@ case class SimpleDecisionTree[Params, BFn, R, RFn](root: DecisionTreeNode[Params
 trait AnyDecisionTreeNode extends Reportable {
   def toDecisionTreeNode[Params, BFn, R, RFn] = this.asInstanceOf[DecisionTreeNode[Params, BFn, R, RFn]]
   def containsConclusion(c: AnyConclusion): Boolean
+  val conclusions: List[AnyConclusion]
 }
 
 sealed trait DecisionTreeNode[Params, BFn, R, RFn] extends Reportable with AnyDecisionTreeNode {
@@ -83,6 +85,8 @@ sealed trait DecisionTreeNode[Params, BFn, R, RFn] extends Reportable with AnyDe
 
 trait AnyConclusion extends AnyDecisionTreeNode {
   def toConclusion[Params, BFn, R, RFn] = this.asInstanceOf[Conclusion[Params, BFn, R, RFn]]
+  lazy val conclusions = List(this)
+
 }
 
 case class Conclusion[Params, BFn, R, RFn](code: CodeHolder[RFn], scenarios: List[Scenario[Params, BFn, R, RFn]], textOrder: Int = Reportable.nextTextOrder) extends DecisionTreeNode[Params, BFn, R, RFn] with AnyConclusion {
@@ -99,6 +103,7 @@ trait AnyDecision extends AnyDecisionTreeNode {
   def toYes[Params, BFn, R, RFn] = toDecision[Params, BFn, R, RFn].yes
   def toNo[Params, BFn, R, RFn] = toDecision[Params, BFn, R, RFn].no
   def toPrettyString[Params, BFn, R, RFn] = toDecision[Params, BFn, R, RFn].prettyString
+  lazy val conclusions = toYes.conclusions ::: toNo.conclusions
 }
 
 case class Decision[Params, BFn, R, RFn](because: List[CodeHolder[BFn]], yes: DecisionTreeNode[Params, BFn, R, RFn], no: DecisionTreeNode[Params, BFn, R, RFn], scenarioThatCausedNode: Scenario[Params, BFn, R, RFn], textOrder: Int = Reportable.nextTextOrder)
@@ -121,8 +126,6 @@ trait MakeClosures[Params, BFn, R, RFn] {
   type BecauseClosure = (BFn) => Boolean
   type ResultClosure = (RFn) => R
 
-  def safe[T](block: => T): Either[Exception, T] = try Right(block) catch { case e: Exception => Left(e) }
-
   def makeBecauseClosure(params: Params): BecauseClosure
   def makeBecauseClosure(scenarioWithParams: Scenario[Params, BFn, R, RFn]): BecauseClosure
 
@@ -136,7 +139,7 @@ trait MakeClosures[Params, BFn, R, RFn] {
     makeBecauseClosure(scenarioWithParams)(scenarioWithbecause.
       because.getOrElse(throw new IllegalArgumentException(s"Scenario doesn't have because\scenarioWithbecause")).fn)
   def evaluateResult(rfn: RFn, scenarioWithParams: Scenario[Params, BFn, R, RFn]) = makeResultClosure(scenarioWithParams)(rfn)
-  def safeEvaluateResult(rfn: RFn, scenarioWithParams: Scenario[Params, BFn, R, RFn]) = safe(makeResultClosure(scenarioWithParams)(rfn))
+  def safeEvaluateResult(rfn: RFn, scenarioWithParams: Scenario[Params, BFn, R, RFn]) = Exceptions(makeResultClosure(scenarioWithParams)(rfn))
 }
 
 case class SimpleEvaluateTree[Params, BFn, R, RFn](
@@ -178,7 +181,7 @@ trait EvaluateTree[Params, BFn, R, RFn] {
       case c: Conclusion[Params, BFn, R, RFn] => c :: path
     }
   }
-  def safeEvaluate(tree: DT, scenarioWithParams: S) = safe(evaluate(tree, scenarioWithParams))
+  def safeEvaluate(tree: DT, scenarioWithParams: S) = Exceptions(evaluate(tree, scenarioWithParams))
 
   def evaluate(tree: DT, scenarioWithParams: S): R = {
     val bc = makeBecauseClosure(scenarioWithParams)

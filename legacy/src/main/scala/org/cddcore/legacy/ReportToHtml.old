@@ -1,25 +1,33 @@
-package org.legacycdd.legacy
+package org.cddcore.legacy
 
 import org.cddcore.engine._
-import org.cddcore.reporting._
 import org.cddcore.utilities._
+import org.cddcore.htmlRendering.ReportableToUrl
+import org.cddcore.engine.builder.Decision
+import org.cddcore.engine.builder.Conclusion
+import org.cddcore.htmlRendering.SimpleReportableToUrl
+import org.cddcore.htmlRendering._
+import org.cddcore.legacy.LegacyItem;
+import org.cddcore.engine.builder.Engine1
 
-trait ReporterToHtml {
-  type Rep <: LegacyReporter[_, _]
-  def categorisationEngine: EngineFull[_, _]
-  def replacementEngine: EngineFull[_, _]
-  def apply(rep: Rep): String
+object MemoryReporterToHtml {
+
 }
 
-class MemoryReporterToHtml[ID, R, FullR](categorisationEngine: Engine1[LegacyData[ID, R], String], replacementEngine: Engine, rep: MemoryReporter[ID, R], maxItems: Int = 5) {
-  type Rep = MemoryReporter[ID, _]
+class MemoryReporterReport[ID, Params, R](titleString: String, val memoryReporter: MemoryReporter[ID, Params, R]) extends Report {
+  def title = Some(titleString)
+  def description = None
+  def reportPaths: List[List[Reportable]] = ???
+}
+
+class MemoryReporterToHtml[ID, Params, R, FullR](categorisationEngine: Engine1[LegacyData[ID, Params, R], String, String],
+  replacementEngine: Engine, rep: MemoryReporter[ID, Params, R], maxItems: Int = 5) {
+  type Rep = MemoryReporter[ID, _, _]
+
 
   import Reportable._
-import EngineWithLogger._
-import Renderer._
 import HtmlRenderer._
 import PathUtils._
-  implicit val loggerDisplayProcessor: LoggerDisplayProcessor = replacementEngine.logger
 
   class LegacyIfThenHtmlPrinter(e: EngineBuiltFromTests[_], conclusions: Set[Conclusion], val reportableToUrl: ReportableToUrl, val urlMap: UrlMap, val scenarioPrefix: Option[Any] = None) extends HtmlForIfThenPrinter {
     import HtmlForIfThenPrinter._

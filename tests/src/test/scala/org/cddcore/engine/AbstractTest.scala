@@ -7,31 +7,43 @@ import org.cddcore.utilities.CddDisplayProcessor
 import org.scalatest._
 import org.scalatest.FlatSpecLike
 import scala.xml.Node
+import org.cddcore.utilities.Strings
 
 trait AssertEquals {
   def assertEquals[T1, T2](expected: T1, actual: T2, prefix: String = "") {
     def msg = prefix + "\nExpected\n" + expected + "\nActual\n" + actual
-    if (expected.isInstanceOf[String] & actual.isInstanceOf[String]) {
-      val expectedString = expected.asInstanceOf[String];
-      val actualString = actual.asInstanceOf[String];
-      if (expectedString == actualString)
-        return ;
-      val s: Traversable[Tuple2[Char, Char]] = for ((ce, ca) <- (expectedString, actualString).zipped) yield (ce, ca)
-      for ((t, i) <- s.toList.zipWithIndex) {
-        if (t._1 != t._2) {
-          val expectedMax = Math.min(i + 10, expectedString.length() - 1)
-          val actualMax = Math.min(i + 10, actualString.length() - 1)
-          Matchers.fail("First fail at " + i + " Expected: [" + expectedString.substring(i, expectedMax) + "] Actual: [ " + actualString.substring(i, actualMax) + "]\n" + msg)
+    (expected, actual) match {
+      case (expectedString: String, actualString: String) =>
+        if (expectedString == actualString)
+          return ;
+        val s: Traversable[Tuple2[Char, Char]] = for ((ce, ca) <- (expectedString, actualString).zipped) yield (ce, ca)
+        for ((t, i) <- s.toList.zipWithIndex) {
+          if (t._1 != t._2) {
+            val expectedMax = Math.min(i + 10, expectedString.length() - 1)
+            val actualMax = Math.min(i + 10, actualString.length() - 1)
+            Matchers.fail("First fail at " + i + " Expected: [" + expectedString.substring(i, expectedMax) + "] Actual: [ " + actualString.substring(i, actualMax) + "]\n" + msg)
+          }
         }
+        expectedString.length() - actualString.length() match {
+          case x if x < 0 => Matchers.fail(s"Actual ran over end at ${expectedString.length}\n" + msg)
+          case x if x > 0 => Matchers.fail(s"Actual fell short end at ${actualString.length}\n" + msg)
+        }
+      case (expected: List[_], actual: List[_]) => {
+        var i = 0
+        val zipped = expected.zipAll(actual, null, null)
+        for ((e, a) <- zipped)
+          try {
+            assertEquals(e, a)
+            i += 1
+          } catch {
+            case ex: Throwable => {
+              val classesMsg = "\nExpected classes: " + expected.map((e) => Strings.safeToClassString(e)) + "\nActual classes: " + actual.map((a) => Strings.safeToClassString(a))
+              throw new RuntimeException("Item: " + i + "\n" + msg + classesMsg, ex)
+            }
+          }
       }
-      expectedString.length() - actualString.length() match {
-        case x if x < 0 => Matchers.fail(s"Actual ran over end at ${expectedString.length}\n" + msg)
-        case x if x > 0 => Matchers.fail(s"Actual fell short end at ${actualString.length}\n" + msg)
-      }
-
+      case _ => assert(expected == actual, msg)
     }
-    if (expected != actual)
-      assert(expected == actual, msg)
   }
   def assertTextEquals(expected: String, actual: Node) {
     assertEquals(expected, actual.text.trim)

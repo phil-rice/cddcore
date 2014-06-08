@@ -23,6 +23,15 @@ object Strings {
   def htmlEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br />")
   def htmlTooltipEscape(raw: String) = raw.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace("&gt;", ">")
   def url(s: String*) = s.map(_ match { case s if s.endsWith("/") => s.substring(0, s.length - 1); case s => s }).mkString("/")
+  def safeToString(x: String) = x match { case null => "null"; case a => a.toString() }
+  def safeToClassString(x: Any): String = x match {
+    case null => "null";
+    case _ => x.getClass().getSimpleName() match {
+      case "" => x.getClass().getName()
+      case s => s
+    }
+  }
+
   def safeToInt(s: String) =
     try {
       Some(s.toInt)

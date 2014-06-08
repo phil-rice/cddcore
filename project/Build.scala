@@ -60,7 +60,8 @@ object CddBuild extends Build {
   lazy val cddjunit = Project(id = "cddjunit", settings = buildSettings, base = file("cddjunit")).dependsOn( engine,htmlRendering)
   lazy val website = Project(id = "website",settings = buildSettings,  base = file("website")).dependsOn( engine,htmlRendering)
   lazy val examples = Project(id = "examples",settings = buildSettings,  base = file("examples")).dependsOn(engine,cddjunit, structure,website)
-  lazy val tests = Project(id = "tests", settings = buildSettings, base = file("tests")).dependsOn( engine, htmlRendering,cddjunit, structure,website, examples)
+  lazy val legacy = Project(id = "legacy",settings = buildSettings,  base = file("legacy")).dependsOn(engine,cddjunit, structure,website)
+  lazy val tests = Project(id = "tests", settings = buildSettings, base = file("tests")).dependsOn( engine, htmlRendering,cddjunit, structure,website, examples, legacy)
 //  lazy val root = Project(id = "root",settings = buildSettings,  base = file(".")).aggregate( engine, tests,cddjunit)
-  lazy val root = Project(id = "root", settings = buildSettings, base = file(".")).aggregate( engine, tests, htmlRendering, structure, cddjunit,website, examples, build)
+  lazy val root = Project(id = "root", settings = buildSettings, base = file(".")).aggregate( engine, tests, htmlRendering, structure, cddjunit,website, examples, build,legacy)
 }

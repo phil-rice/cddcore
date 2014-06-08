@@ -28,7 +28,7 @@ trait TemplateLike[T] {
   def apply(t: T): String
 }
 
-trait Engine extends Reportable with Titled{
+trait Engine extends Reportable with Titled {
   def titleString: String
 }
 
@@ -41,6 +41,7 @@ trait EngineTools[Params, BFn, R, RFn] extends Engine with TypedReportable[Param
   def asRequirement: EngineRequirement[Params, BFn, R, RFn]
   def evaluator: EvaluateTree[Params, BFn, R, RFn]
   def buildExceptions: ExceptionMap
+  def trees: List[DecisionTree[Params, BFn, R, RFn]]
   import ReportableHelper._
   lazy val exceptionsItCanThrow = asRequirement.scenarios.flatMap {
     (s: Scenario[Params, BFn, R, RFn]) =>
@@ -57,6 +58,7 @@ trait DelegatedEngine[Params, BFn, R, RFn] extends EngineTools[Params, BFn, R, R
   def evaluator = delegate.evaluator
   def buildExceptions = delegate.buildExceptions
   def ldp: CddDisplayProcessor = delegate.ldp
+  def trees = delegate.trees
 }
 
 trait CachedEngine[Params, BFn, R, RFn, FullR] extends DelegatedEngine[Params, BFn, R, RFn] {
@@ -68,8 +70,19 @@ trait EngineRequirement[Params, BFn, R, RFn] extends BuilderNodeAndHolder[Params
   def pathsIncludingTreeAndEngine(pathNotIncludingThis: List[Reportable]): List[List[Reportable]]
 }
 
-trait FoldingEngine[Params, BFn, R, RFn, FullR] extends HasExceptionMap[R, RFn] with EngineTools[Params, BFn, R, RFn] {
+trait AnyEngine[Params, FullR] extends Engine {
+  def applyParams(params: Params): FullR
+  def findConclusionsFor(params: Params): List[AnyConclusion]
+}
+
+trait AnySingleConclusionEngine[Params, R] extends AnyEngine[Params, R] {
+  def findConclusionFor(params: Params): AnyConclusion = findConclusionsFor(params) match { case head :: Nil => head }
+  def evaluateConclusion(conclusion: AnyConclusion, params: Params): R
+}
+
+trait FoldingEngine[Params, BFn, R, RFn, FullR] extends HasExceptionMap[R, RFn] with EngineTools[Params, BFn, R, RFn] with AnyEngine[Params, FullR] {
   def engines: List[EngineFromTests[Params, BFn, R, RFn]]
+  val trees = engines.flatMap(_.trees)
   def initialValue: CodeHolder[() => FullR]
   def foldingFn: (FullR, R) => FullR
   def applyParams(params: Params): FullR = {
@@ -81,10 +94,26 @@ trait FoldingEngine[Params, BFn, R, RFn, FullR] extends HasExceptionMap[R, RFn] 
       result
     } catch { case e: Exception => monitor.failed(this, None, e); throw e }
   }
+  def findConclusionsFor(params: Params) = engines.flatMap(_.findConclusionsFor(params))
 }
 
-trait EngineFromTests[Params, BFn, R, RFn] extends EngineTools[Params, BFn, R, RFn] {
+trait EngineFromTests[Params, BFn, R, RFn] extends EngineTools[Params, BFn, R, RFn] with AnySingleConclusionEngine[Params, R] {
   def tree: DecisionTree[Params, BFn, R, RFn]
+  def trees = List(tree)
+  def findConclusionsFor(params: Params) = {
+    val makeClosures = evaluator.makeClosures
+    import makeClosures._
+    val bc = makeBecauseClosure(params)
+    val c = evaluator.findConclusion(tree, bc)
+    List(c)
+  }
+
+  def evaluateConclusion(conclusion: AnyConclusion, params: Params): R = {
+    val makeClosures = evaluator.makeClosures
+    import makeClosures._
+    val result: R = makeResultClosure(params).apply(conclusion.toConclusion[Params, BFn, R, RFn].code.fn)
+    result
+  }
 
   def applyParams(params: Params): R = {
     val monitor = Engine.currentMonitor
