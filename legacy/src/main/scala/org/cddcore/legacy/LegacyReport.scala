@@ -35,7 +35,7 @@ case class SingleConclusionLegacyReport[ID, Params, R](title: Option[String], le
     val ed = e.asRequirement
     val conclusionsInEngine = e.trees.flatMap(_.root.conclusions)
     val conclusions = conclusion match { case Some(c) if conclusionsInEngine.contains(c) => List(c); case _ => e.trees.flatMap(_.root.conclusions) }
-    val tail: List[List[Reportable]] = conclusions.flatMap((c) => {
+    val middle: List[List[Reportable]] = conclusions.flatMap((c) => {
       val h: List[Reportable] = List(ConclusionAsTitle(c), ed, this)
       val m: List[List[Reportable]] = (conclusionToItems.get(c) match {
         case Some(list) => {
@@ -49,7 +49,8 @@ case class SingleConclusionLegacyReport[ID, Params, R](title: Option[String], le
         case _ => h :: m
       }
     })
-    List[Reportable](ed, this) :: tail
+    val tail = e.trees.flatMap(_.treePathsWithElseClause(List(e.asRequirement, this)))
+    List[Reportable](ed, this) :: middle ::: tail
   }
   def reportPaths: List[List[org.cddcore.engine.Reportable]] =
     List(this) ::
