@@ -9,8 +9,8 @@ import org.cddcore.engine.builder._
 class DecisionTreeSmokeTest extends AbstractTest {
   import scala.language.implicitConversions
   implicit def toEngineFromTests(e: Engine1[String, String, String]) = e.asInstanceOf[Engine1FromTests[String, String]]
-  implicit def todecision[Params, BFn, R, RFn](x: DecisionTreeNode[Params, BFn, R, RFn]) = x.asInstanceOf[Decision[Params, BFn, R, RFn]]
-  implicit def toConclusion[Params, BFn, R, RFn](x: DecisionTreeNode[Params, BFn, R, RFn]) = x.asInstanceOf[Conclusion[Params, BFn, R, RFn]]
+  implicit def todecision[Params, R](x: DecisionTreeNode[Params, R]) = x.asInstanceOf[Decision[Params, R]]
+  implicit def toConclusion[Params, R](x: DecisionTreeNode[Params, R]) = x.asInstanceOf[Conclusion[Params, R]]
   val e = Engine[String, String]().
     scenario("A").expected("X").because { _.contains("A") }.
     scenario("AB").expected("Y").because { _.contains("B") }.

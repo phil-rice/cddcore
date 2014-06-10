@@ -85,7 +85,7 @@ trait ReportableToUrl[RU <: ReportableToUrl[RU]] extends UrlMap {
     val calculatedName = Strings.urlClean(r match {
       case report: Report => { val result = report.titleOrDescription(""); if (result.length > 120) "" else result }
       //      case project: Project => { val result = project.titleOrDescription(""); if (result.length > 120) "" else result }
-      case ed: EngineRequirement[_, _, _, _] => { val result = ed.titleOrDescription(""); if (result.length > 120) "" else result }
+      case ed: EngineRequirement[_, _] => { val result = ed.titleOrDescription(""); if (result.length > 120) "" else result }
       case req: Requirement => { val result = req.titleOrDescription(""); if (result.length > 40) "" else result }
       case _ => "";
     }).replace(" ", "_")

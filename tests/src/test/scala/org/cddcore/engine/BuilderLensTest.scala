@@ -5,26 +5,26 @@ import org.cddcore.engine.builder._
 import scala.language.implicitConversions
 import org.scalatest.junit.JUnitRunner
 
-abstract class BuilderLensTest[Params, BFn, R, RFn, B <: Builder[Params, BFn, R, RFn, R, B, E], E <: EngineTools[Params, BFn, R, RFn]]
-  extends DecisionTreeBuilderAndBuilderBeingTested[Params, BFn, R, RFn, R, B, E] {
+abstract class BuilderLensTest[Params, R, B <: Builder[Params, R, R, B, E], E <: EngineTools[Params, R]]
+  extends DecisionTreeBuilderAndBuilderBeingTested[Params, R, R, B, E] {
   implicit def toSome[X](x: X) = Some(x)
 
   val s0 = s("0")
   val s1 = s("1")
 
-  val uc = UseCase[Params, BFn, R, RFn]()
-  val ucS0 = UseCase[Params, BFn, R, RFn](nodes = List(s0))
-  val ucS1 = UseCase[Params, BFn, R, RFn](nodes = List(s1))
-  val uc1 = UseCase[Params, BFn, R, RFn](title = Some("UC1"))
+  val uc = UseCase[Params, R]()
+  val ucS0 = UseCase[Params, R](nodes = List(s0))
+  val ucS1 = UseCase[Params, R](nodes = List(s1))
+  val uc1 = UseCase[Params, R](title = Some("UC1"))
 
-  val ed = EngineDescription[Params, BFn, R, RFn]()
-  val ed1 = EngineDescription[Params, BFn, R, RFn](title = Some("ED1"))
-  val edUc = EngineDescription[Params, BFn, R, RFn](nodes = List(uc))
-  val edUc1 = EngineDescription[Params, BFn, R, RFn](nodes = List(uc1))
-  val edUcS0 = EngineDescription[Params, BFn, R, RFn](nodes = List(ucS0))
-  val edUcS1 = EngineDescription[Params, BFn, R, RFn](nodes = List(ucS1))
-  val edUc1UcS0 = EngineDescription[Params, BFn, R, RFn](nodes = List(ucS0, uc))
-  val edUc1UcS1 = EngineDescription[Params, BFn, R, RFn](nodes = List(ucS1, uc))
+  val ed = EngineDescription[Params, R]()
+  val ed1 = EngineDescription[Params, R](title = Some("ED1"))
+  val edUc = EngineDescription[Params, R](nodes = List(uc))
+  val edUc1 = EngineDescription[Params, R](nodes = List(uc1))
+  val edUcS0 = EngineDescription[Params, R](nodes = List(ucS0))
+  val edUcS1 = EngineDescription[Params, R](nodes = List(ucS1))
+  val edUc1UcS0 = EngineDescription[Params, R](nodes = List(ucS0, uc))
+  val edUc1UcS1 = EngineDescription[Params, R](nodes = List(ucS1, uc))
 
   val builderEd = initializeBuilder(List(ed))
   val builderEd1 = initializeBuilder(List(ed1))
@@ -100,9 +100,9 @@ abstract class BuilderLensTest[Params, BFn, R, RFn, B <: Builder[Params, BFn, R,
 
 }
 
-abstract class Lens1Test[P, R] extends BuilderLensTest[P, (P) => Boolean, R, (P) => R, Builder1[P, R, R], Engine1[P, R, R]] with SimpleBuilder1Test[P, R]
-abstract class Lens2Test[P1, P2, R] extends BuilderLensTest[(P1, P2), (P1, P2) => Boolean, R, (P1, P2) => R, Builder2[P1, P2, R, R], Engine2[P1, P2, R, R]] with SimpleBuilder2Test[P1, P2, R]
-abstract class Lens3Test[P1, P2, P3, R] extends BuilderLensTest[(P1, P2, P3), (P1, P2, P3) => Boolean, R, (P1, P2, P3) => R, Builder3[P1, P2, P3, R, R], Engine3[P1, P2, P3, R, R]] with SimpleBuilder3Test[P1, P2, P3, R]
+abstract class Lens1Test[P, R] extends BuilderLensTest[P, R,  Builder1[P, R, R], Engine1[P, R, R]] with SimpleBuilder1Test[P, R]
+abstract class Lens2Test[P1, P2, R] extends BuilderLensTest[(P1, P2),  R, Builder2[P1, P2, R, R], Engine2[P1, P2, R, R]] with SimpleBuilder2Test[P1, P2, R]
+abstract class Lens3Test[P1, P2, P3, R] extends BuilderLensTest[(P1, P2, P3),  R,  Builder3[P1, P2, P3, R, R], Engine3[P1, P2, P3, R, R]] with SimpleBuilder3Test[P1, P2, P3, R]
 
 @RunWith(classOf[JUnitRunner])
 class LensStringStringTest extends Lens1Test[String, String] with StringStringTest

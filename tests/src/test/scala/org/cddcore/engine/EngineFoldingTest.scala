@@ -5,16 +5,16 @@ import org.scalatest.junit.JUnitRunner
 import scala.language.implicitConversions
 import org.cddcore.engine.builder._
 import ReportableHelper._
-abstract class EngineFoldingTest[Params, BFn, R, RFn, FullR, B <: Builder[Params, BFn, R, RFn, FullR, B, E], E <: EngineTools[Params, BFn, R, RFn]]
-  extends DecisionTreeBuilderAndBuilderBeingTested[Params, BFn, R, RFn, FullR, B, E] with FoldingBuilderTest[R, FullR] {
+abstract class EngineFoldingTest[Params, R, FullR, B <: Builder[Params, R, FullR, B, E], E <: EngineTools[Params, R]]
+  extends DecisionTreeBuilderAndBuilderBeingTested[Params, R, FullR, B, E] with FoldingBuilderTest[R, FullR] {
   implicit def toSome[X](x: X) = Some(x)
-  implicit def toFoldingEngine(e: EngineTools[Params, BFn, R, RFn]) = e.asInstanceOf[FoldingEngine[Params, BFn, R, RFn, FullR]]
-  type FD = FoldingEngineDescription[Params, BFn, R, RFn, FullR]
-  type ED = EngineDescription[Params, BFn, R, RFn]
+  implicit def toFoldingEngine(e: EngineTools[Params, R]) = e.asInstanceOf[FoldingEngine[Params, R, FullR]]
+  type FD = FoldingEngineDescription[Params, R, FullR]
+  type ED = EngineDescription[Params, R]
   implicit def toFullR(seed: String): FullR
   implicit def toR(seed: String): R = result(seed)
 
-  def compareFoldingEngineDescriptions(left: FD, nodes: List[BuilderNode[Params, BFn, R, RFn]]) = {
+  def compareFoldingEngineDescriptions(left: FD, nodes: List[BuilderNode[Params, R]]) = {
     assertEquals(nodes.size, 1)
     val right = nodes.head.asInstanceOf[FD]
     val withDifferentFoldingStuff = left.copy(foldingFn = right.foldingFn, initialValue = right.initialValue)
@@ -32,15 +32,15 @@ abstract class EngineFoldingTest[Params, BFn, R, RFn, FullR, B <: Builder[Params
     update(_.childEngine("ce2").useCase("uc21").useCase("uc22"))
     update(_.childEngine("ce3").useCase("uc31").useCase("uc32"))
 
-    val ce1 = EngineDescription[Params, BFn, R, RFn](title = "ce1", nodes = List(UseCase(title = "uc12"), UseCase(title = "uc11")))
-    val ce2 = EngineDescription[Params, BFn, R, RFn](title = "ce2", nodes = List(UseCase(title = "uc22"), UseCase(title = "uc21")))
-    val ce3 = EngineDescription[Params, BFn, R, RFn](title = "ce3", nodes = List(UseCase(title = "uc32"), UseCase(title = "uc31")))
-    val fe = FoldingEngineDescription[Params, BFn, R, RFn, FullR](nodes = List(ce3, ce2, ce1), foldingFn = foldingFn, initialValue = () => initialValue)
-    val actualFr = currentBuilder.nodes.head.asInstanceOf[FoldingEngineDescription[Params, BFn, R, RFn, FullR]]
-    val actualCe3 = actualFr.nodes.head.asInstanceOf[EngineDescription[Params, BFn, R, RFn]]
+    val ce1 = EngineDescription[Params, R](title = "ce1", nodes = List(UseCase(title = "uc12"), UseCase(title = "uc11")))
+    val ce2 = EngineDescription[Params, R](title = "ce2", nodes = List(UseCase(title = "uc22"), UseCase(title = "uc21")))
+    val ce3 = EngineDescription[Params, R](title = "ce3", nodes = List(UseCase(title = "uc32"), UseCase(title = "uc31")))
+    val fe = FoldingEngineDescription[Params, R, FullR](nodes = List(ce3, ce2, ce1), foldingFn = foldingFn, initialValue = () => initialValue)
+    val actualFr = currentBuilder.nodes.head.asInstanceOf[FoldingEngineDescription[Params, R, FullR]]
+    val actualCe3 = actualFr.nodes.head.asInstanceOf[EngineDescription[Params, R]]
     val actualUC32 = actualCe3.nodes.head
     val withDifferentFoldingStuff = actualFr.copy(foldingFn = fe.foldingFn, initialValue = fe.initialValue)
-    assertEquals(UseCase[Params, BFn, R, RFn](title = "uc32"), actualUC32)
+    assertEquals(UseCase[Params, R](title = "uc32"), actualUC32)
     assertEquals(ce3, actualCe3)
     assertEquals(fe.nodes, withDifferentFoldingStuff.nodes)
     assertEquals(fe, withDifferentFoldingStuff)
@@ -86,7 +86,7 @@ abstract class EngineFoldingTest[Params, BFn, R, RFn, FullR, B <: Builder[Params
     scenario("A"); expected("X"); code("X"); because("A")
     scenario("B"); expected("Q")
 
-    val scenarios = currentBuilder.all(classOf[Scenario[_, _, _, _]])
+    val scenarios = currentBuilder.all(classOf[Scenario[_, _]])
     val sb = scenarios(0)
     val sa = scenarios(1)
     assertEquals(s("A", code = resultCodeHolder("X"), expected = "X", because = "A"), sa)
@@ -122,7 +122,7 @@ abstract class EngineFoldingTest[Params, BFn, R, RFn, FullR, B <: Builder[Params
     val ref1 = Reference("ref1")
     val ref2 = Reference("ref2", doc)
     update(_.childEngine("").reference("ref1").reference("ref2", doc))
-    val e = build.asInstanceOf[FoldingEngine[Params, BFn, R, RFn, FullR]]
+    val e = build.asInstanceOf[FoldingEngine[Params, R, FullR]]
     val ce = e.engines.head
     import ReportableHelper._
     assertEquals(Set(ref1, ref2), ce.asRequirement.references)
@@ -189,17 +189,17 @@ abstract class EngineFoldingTest[Params, BFn, R, RFn, FullR, B <: Builder[Params
 }
 
 abstract class EngineFolding1Test[P, R, FullR]
-  extends EngineFoldingTest[P, (P) => Boolean, R, (P) => R, FullR, Builder1[P, R, FullR], Engine1[P, R, FullR]]
+  extends EngineFoldingTest[P, R,  FullR, Builder1[P, R, FullR], Engine1[P, R, FullR]]
   with FoldingBuilder1Test[P, R, FullR] {
   def initialiseAsFoldingEngine = update { (x) => Engine.folding[P, R, FullR](foldingFn, initialValue) }
 }
-abstract class EngineFolding2Test[P1, P2, R, FullR] extends EngineFoldingTest[(P1, P2), (P1, P2) => Boolean, R, (P1, P2) => R, FullR, Builder2[P1, P2, R, FullR], Engine2[P1, P2, R, FullR]]
+abstract class EngineFolding2Test[P1, P2, R, FullR] extends EngineFoldingTest[(P1, P2),  R, FullR, Builder2[P1, P2, R, FullR], Engine2[P1, P2, R, FullR]]
   with Builder2Test[P1, P2, R, FullR]
   with FoldingBuilder2Test[P1, P2, R, FullR] {
   def initialiseAsFoldingEngine = update { (x) => Engine.folding[P1, P2, R, FullR](foldingFn, initialValue) }
 
 }
-abstract class EngineFolding3Test[P1, P2, P3, R, FullR] extends EngineFoldingTest[(P1, P2, P3), (P1, P2, P3) => Boolean, R, (P1, P2, P3) => R, FullR, Builder3[P1, P2, P3, R, FullR], Engine3[P1, P2, P3, R, FullR]]
+abstract class EngineFolding3Test[P1, P2, P3, R, FullR] extends EngineFoldingTest[(P1, P2, P3),  R,  FullR, Builder3[P1, P2, P3, R, FullR], Engine3[P1, P2, P3, R, FullR]]
   with Builder3Test[P1, P2, P3, R, FullR]
   with FoldingBuilder3Test[P1, P2, P3, R, FullR] {
   def initialiseAsFoldingEngine = update { (x) => Engine.folding[P1, P2, P3, R, FullR](foldingFn, initialValue) }

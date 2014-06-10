@@ -7,18 +7,18 @@ import org.cddcore.engine.builder._
 import org.cddcore.utilities.NestedHolder
 import ReportableHelper._
 
-abstract class EngineInTestModeTest[Params, BFn, R, RFn, B <: Builder[Params, BFn, R, RFn, R, B, E], E <: EngineTools[Params, BFn, R, RFn]] extends DecisionTreeBuilderAndBuilderBeingTested[Params, BFn, R, RFn, R, B, E] with ConflictMessages {
+abstract class EngineInTestModeTest[Params, R, B <: Builder[Params, R, R, B, E], E <: EngineTools[Params, R]] extends DecisionTreeBuilderAndBuilderBeingTested[Params, R, R, B, E] with ConflictMessages {
   implicit def toSome[X](x: X) = Some(x)
 
-  def checkExceptions(doIt: => Unit, scenarioClassMessage: (Scenario[Params, BFn, R, RFn], List[(Class[_], Option[String])])*) = {
+  def checkExceptions(doIt: => Unit, scenarioClassMessage: (Scenario[Params, R], List[(Class[_], Option[String])])*) = {
     val messages = scenarioClassMessage.toList
     val e = Engine.test {
       doIt
       build
     }
     val s = e.asRequirement.scenarios
-    val n : NestedHolder[BuilderNode[Params,BFn, R, RFn]] = e.asRequirement.asInstanceOf[BuilderNodeAndHolder[Params, BFn,R, RFn] ]
-    val exceptions = e.buildExceptions.toMap[BuilderNode[Params,BFn, R, RFn]](n)
+    val n: NestedHolder[BuilderNode[Params, R]] = e.asRequirement.asInstanceOf[BuilderNodeAndHolder[Params, R]]
+    val exceptions = e.buildExceptions.toMap[BuilderNode[Params, R]](n)
     assertEquals(messages.size, exceptions.size)
     for ((s, list) <- messages) {
       val actual = exceptions(s)
@@ -126,9 +126,9 @@ abstract class EngineInTestModeTest[Params, BFn, R, RFn, B <: Builder[Params, BF
 
 }
 
-abstract class EngineInTestMode1Test[P, R] extends EngineInTestModeTest[P, (P) => Boolean, R, (P) => R, Builder1[P, R, R], Engine1[P, R, R]] with SimpleBuilder1Test[P, R]
-abstract class EngineInTestMode2Test[P1, P2, R] extends EngineInTestModeTest[(P1, P2), (P1, P2) => Boolean, R, (P1, P2) => R, Builder2[P1, P2, R, R], Engine2[P1, P2, R, R]] with SimpleBuilder2Test[P1, P2, R]
-abstract class EngineInTestMode3Test[P1, P2, P3, R] extends EngineInTestModeTest[(P1, P2, P3), (P1, P2, P3) => Boolean, R, (P1, P2, P3) => R, Builder3[P1, P2, P3, R, R], Engine3[P1, P2, P3, R, R]] with SimpleBuilder3Test[P1, P2, P3, R]
+abstract class EngineInTestMode1Test[P, R] extends EngineInTestModeTest[P, R, Builder1[P, R, R], Engine1[P, R, R]] with SimpleBuilder1Test[P, R]
+abstract class EngineInTestMode2Test[P1, P2, R] extends EngineInTestModeTest[(P1, P2), R, Builder2[P1, P2, R, R], Engine2[P1, P2, R, R]] with SimpleBuilder2Test[P1, P2, R]
+abstract class EngineInTestMode3Test[P1, P2, P3, R] extends EngineInTestModeTest[(P1, P2, P3), R, Builder3[P1, P2, P3, R, R], Engine3[P1, P2, P3, R, R]] with SimpleBuilder3Test[P1, P2, P3, R]
 
 @RunWith(classOf[JUnitRunner])
 class EngineInTestModeStringStringTest extends EngineInTestMode1Test[String, String] with StringStringTest with ConflictMessages1

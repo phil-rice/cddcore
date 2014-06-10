@@ -33,18 +33,18 @@ trait Engine extends Reportable with Titled {
 }
 
 object EngineTools {
-  implicit def toEngineTools[Params, BFn, R, RFn](e: Engine) = e.asInstanceOf[EngineTools[Params, BFn, R, RFn]]
+  implicit def toEngineTools[Params, R](e: Engine) = e.asInstanceOf[EngineTools[Params, R]]
 }
 
-trait EngineTools[Params, BFn, R, RFn] extends Engine with TypedReportable[Params, BFn, R, RFn] with WithCddDisplayProcessor {
+trait EngineTools[Params, R] extends Engine with TypedReportable[Params, R] with WithCddDisplayProcessor {
   def title = asRequirement.title
-  def asRequirement: EngineRequirement[Params, BFn, R, RFn]
-  def evaluator: EvaluateTree[Params, BFn, R, RFn]
+  def asRequirement: EngineRequirement[Params, R]
+  def evaluator: EvaluateTree[Params, R]
   def buildExceptions: ExceptionMap
-  def trees: List[DecisionTree[Params, BFn, R, RFn]]
+  def trees: List[DecisionTree[Params, R]]
   import ReportableHelper._
   lazy val exceptionsItCanThrow = asRequirement.scenarios.flatMap {
-    (s: Scenario[Params, BFn, R, RFn]) =>
+    (s: Scenario[Params, R]) =>
       s.expected match {
         case Some(Left(e)) => List[Class[_ <: Exception]](e.getClass())
         case _ => List[Class[_ <: Exception]]()
@@ -52,8 +52,8 @@ trait EngineTools[Params, BFn, R, RFn] extends Engine with TypedReportable[Param
   }.toSet
 }
 
-trait DelegatedEngine[Params, BFn, R, RFn] extends EngineTools[Params, BFn, R, RFn] {
-  val delegate: EngineTools[Params, BFn, R, RFn]
+trait DelegatedEngine[Params, R] extends EngineTools[Params, R] {
+  val delegate: EngineTools[Params, R]
   def asRequirement = delegate.asRequirement
   def evaluator = delegate.evaluator
   def buildExceptions = delegate.buildExceptions
@@ -61,11 +61,11 @@ trait DelegatedEngine[Params, BFn, R, RFn] extends EngineTools[Params, BFn, R, R
   def trees = delegate.trees
 }
 
-trait CachedEngine[Params, BFn, R, RFn, FullR] extends DelegatedEngine[Params, BFn, R, RFn] {
+trait CachedEngine[Params, R, FullR] extends DelegatedEngine[Params, R] {
   protected val cache = new AtomicReference[Map[Params, Future[FullR]]](Map())
 }
 
-trait EngineRequirement[Params, BFn, R, RFn] extends BuilderNodeAndHolder[Params, BFn, R, RFn] with Requirement with TypedReportable[Params, BFn, R, RFn] {
+trait EngineRequirement[Params, R] extends BuilderNodeAndHolder[Params, R] with Requirement with TypedReportable[Params, R] {
   def requirementsIncludingTree(pathNotIncludingThis: List[Reportable]): List[List[Reportable]]
   def pathsIncludingTreeAndEngine(pathNotIncludingThis: List[Reportable]): List[List[Reportable]]
 }
@@ -80,8 +80,8 @@ trait AnySingleConclusionEngine[Params, R] extends AnyEngine[Params, R] {
   def evaluateConclusion(conclusion: AnyConclusion, params: Params): R
 }
 
-trait FoldingEngine[Params, BFn, R, RFn, FullR] extends HasExceptionMap[R, RFn] with EngineTools[Params, BFn, R, RFn] with AnyEngine[Params, FullR] {
-  def engines: List[EngineFromTests[Params, BFn, R, RFn]]
+trait FoldingEngine[Params, R, FullR] extends HasExceptionMap[R] with EngineTools[Params, R] with AnyEngine[Params, FullR] {
+  def engines: List[EngineFromTests[Params, R]]
   val trees = engines.flatMap(_.trees)
   def initialValue: CodeHolder[() => FullR]
   def foldingFn: (FullR, R) => FullR
@@ -97,8 +97,8 @@ trait FoldingEngine[Params, BFn, R, RFn, FullR] extends HasExceptionMap[R, RFn] 
   def findConclusionsFor(params: Params) = engines.flatMap(_.findConclusionsFor(params))
 }
 
-trait EngineFromTests[Params, BFn, R, RFn] extends EngineTools[Params, BFn, R, RFn] with AnySingleConclusionEngine[Params, R] {
-  def tree: DecisionTree[Params, BFn, R, RFn]
+trait EngineFromTests[Params, R] extends EngineTools[Params, R] with AnySingleConclusionEngine[Params, R] {
+  def tree: DecisionTree[Params, R]
   def trees = List(tree)
   def findConclusionsFor(params: Params) = {
     val makeClosures = evaluator.makeClosures
@@ -111,7 +111,7 @@ trait EngineFromTests[Params, BFn, R, RFn] extends EngineTools[Params, BFn, R, R
   def evaluateConclusion(conclusion: AnyConclusion, params: Params): R = {
     val makeClosures = evaluator.makeClosures
     import makeClosures._
-    val result: R = makeResultClosure(params).apply(conclusion.toConclusion[Params, BFn, R, RFn].code.fn)
+    val result: R = makeResultClosure(params).apply(conclusion.toConclusion[Params, R].code.fn)
     result
   }
 
@@ -142,14 +142,14 @@ trait EngineFromTests[Params, BFn, R, RFn] extends EngineTools[Params, BFn, R, R
         }
     }
   }
-  def toString(indent: String, root: DecisionTreeNode[Params, BFn, R, RFn]): String = {
+  def toString(indent: String, root: DecisionTreeNode[Params, R]): String = {
     root match {
-      case d: Decision[Params, BFn, R, RFn] =>
+      case d: Decision[Params, R] =>
         indent + "if(" + d.prettyString + ")\n" +
           toString(indent + " ", d.yes) +
           indent + "else\n" +
           toString(indent + " ", d.no)
-      case c: Conclusion[Params, BFn, R, RFn] => indent + c.code.pretty + "\n";
+      case c: Conclusion[Params, R] => indent + c.code.pretty + "\n";
     }
   }
   override def toString(): String = toString("", tree.root)
@@ -162,14 +162,14 @@ object EngineMonitor {
 }
 trait EngineMonitor {
   def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor)
-  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor)
-  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor)
+  def finished[R](e: Engine, conclusion: Option[AnyConclusion], result: R)(implicit ldp: CddDisplayProcessor)
+  def failed(e: Engine, conclusion: Option[AnyConclusion], exception: Exception)(implicit ldp: CddDisplayProcessor)
 }
 
 class NoEngineMonitor extends EngineMonitor {
   def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) {}
-  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor) {}
-  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor) {}
+  def finished[R](e: Engine, conclusion: Option[AnyConclusion], result: R)(implicit ldp: CddDisplayProcessor) {}
+  def failed(e: Engine, conclusion: Option[AnyConclusion], exception: Exception)(implicit ldp: CddDisplayProcessor) {}
 }
 
 class PrintlnEngineMonitor extends EngineMonitor {
@@ -179,11 +179,11 @@ class PrintlnEngineMonitor extends EngineMonitor {
     println(Strings.oneLine(s"Calling:  $indent${e.titleString} with ${ldp(params)}"))
     depth.incrementAndGet()
   }
-  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor) {
+  def finished[R](e: Engine, conclusion: Option[AnyConclusion], result: R)(implicit ldp: CddDisplayProcessor) {
     depth.decrementAndGet()
     println(s"Finished:  $indent ---> ${ldp(result)}")
   }
-  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor) {
+  def failed(e: Engine, conclusion: Option[AnyConclusion], exception: Exception)(implicit ldp: CddDisplayProcessor) {
     depth.decrementAndGet()
     println(Strings.oneLine(s"Failed:  $indent ---> ${ldp(exception)}"))
   }
@@ -191,13 +191,13 @@ class PrintlnEngineMonitor extends EngineMonitor {
 
 class TraceEngineMonitor(implicit ldp: CddDisplayProcessor) extends EngineMonitor {
   var logging = true
-  var traceBuilder = TraceBuilder[Engine, Any, Any, Conclusion[_, _, _, _]]()
+  var traceBuilder = TraceBuilder[Engine, Any, Any,AnyConclusion]()
   def log(prefix: String, stuff: => {}) = { stuff; if (logging) println(prefix + " " + Strings.oneLine(traceBuilder.shortToString)) }
   def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) =
     log("call", traceBuilder = traceBuilder.nest(e.asInstanceOf[Engine], params))
-  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor) =
+  def finished[R](e: Engine, conclusion: Option[AnyConclusion], result: R)(implicit ldp: CddDisplayProcessor) =
     log("finished", traceBuilder = traceBuilder.finished(result, conclusion))
-  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor) =
+  def failed(e: Engine, conclusion: Option[AnyConclusion], exception: Exception)(implicit ldp: CddDisplayProcessor) =
     log("failed", traceBuilder = traceBuilder.failed(exception, conclusion))
   def trace = traceBuilder.children
 }
@@ -205,14 +205,14 @@ class TraceEngineMonitor(implicit ldp: CddDisplayProcessor) extends EngineMonito
 class ProfileEngineMonitor extends EngineMonitor {
   val profiler = new SimpleProfiler[Engine]
   def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) = profiler.start(e)
-  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor) = profiler.end(e)
-  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor) = profiler.end(e)
+  def finished[R](e: Engine, conclusion: Option[AnyConclusion], result: R)(implicit ldp: CddDisplayProcessor) = profiler.end(e)
+  def failed(e: Engine, conclusion: Option[AnyConclusion], exception: Exception)(implicit ldp: CddDisplayProcessor) = profiler.end(e)
 }
 
 class MultipleEngineMonitors(monitors: List[EngineMonitor]) extends EngineMonitor {
   def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) = for (m <- monitors) m.call(e, params)
-  def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor) = for (m <- monitors) m.finished(e, conclusion, result)
-  def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor) = for (m <- monitors) m.failed(e, conclusion, exception)
+  def finished[R](e: Engine, conclusion: Option[AnyConclusion], result: R)(implicit ldp: CddDisplayProcessor) = for (m <- monitors) m.finished(e, conclusion, result)
+  def failed(e: Engine, conclusion: Option[AnyConclusion], exception: Exception)(implicit ldp: CddDisplayProcessor) = for (m <- monitors) m.failed(e, conclusion, exception)
 }
 
 object Engine {
@@ -225,7 +225,7 @@ object Engine {
   def apply[P1, P2, P3, R]()(implicit ldp: CddDisplayProcessor) = Builder3[P1, P2, P3, R, R](BuildEngine.initialNodes, ExceptionMap(), BuildEngine.builderEngine3)(ldp)
 
   def folding[P, R, FullR](foldingFn: (FullR, R) => FullR, initialValue: FullR)(implicit ldp: CddDisplayProcessor) =
-    Builder1[P, R, FullR](BuildEngine.initialNodes[P, (P) => Boolean, R, (P) => R, FullR](initialValue, foldingFn), ExceptionMap(), BuildEngine.folderBuilderEngine1[P, R, FullR])(ldp)
+    Builder1[P, R, FullR](BuildEngine.initialNodes[P, R, FullR](initialValue, foldingFn), ExceptionMap(), BuildEngine.folderBuilderEngine1[P, R, FullR])(ldp)
   def foldList[P, R] = folding[P, R, List[R]]((acc: List[R], v: R) => acc :+ v, List())
   def foldSet[P, R] = folding[P, R, Set[R]]({ _ + _ }, Set())
 

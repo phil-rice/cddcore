@@ -13,9 +13,9 @@ import org.cddcore.utilities.CddDisplay
 class FewSmokeTest extends AbstractTest {
   val m = Map(0 -> "love", 1 -> "fifteen", 2 -> "thirty", 3 -> "fourty")
 
-  def addTree[Params, BFn, R, RFn](ed: Reportable, engine: Engine) = {
+  def addTree[Params, R](ed: Reportable, engine: Engine) = {
     (ed, engine) match {
-      case (ed: EngineDescription[Params, BFn, R, RFn], et: EngineFromTests[Params, BFn, R, RFn]) => ed.copy(tree = Some(et.tree))
+      case (ed: EngineDescription[Params, R], et: EngineFromTests[Params, R]) => ed.copy(tree = Some(et.tree))
     }
   }
   "An Engine1" should "be constructable from the Engine object" in {

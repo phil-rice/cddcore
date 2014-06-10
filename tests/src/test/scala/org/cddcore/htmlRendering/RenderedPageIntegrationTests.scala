@@ -32,7 +32,7 @@ class RenderedPageIntegrationTests extends AbstractTest {
   }
 
   "A rendered focus report" should "pass the engine section check for reports with one engine" in {
-    def checkReportWithOneEngine(r: Report, ed: EngineRequirement[_, _, _, _]) {
+    def checkReportWithOneEngine(r: Report, ed: EngineRequirement[_, _]) {
       val htmlAndContext = Report.htmlAndRenderedContext(r)
       val checker = new SimpleHtmlRenderedChecker(htmlAndContext)
       val engineWithTestsDiv = checker.onlyDivWith("engineWithTests")
@@ -62,7 +62,7 @@ class RenderedPageIntegrationTests extends AbstractTest {
     checkReport(eWithUsecasesAndScenarios, uc1, uc1s2)
   }
   it should "pass the engine section test when the focus is lower down for folding engines" in {
-    def checkReport(e: FoldingEngine[_, _, _, _, _], expectedChildEngines: List[Engine], focusPathReversed: Reportable*) {
+    def checkReport(e: FoldingEngine[_, _, _], expectedChildEngines: List[Engine], focusPathReversed: Reportable*) {
       import EngineTools._
       val fed = e.asRequirement
       val focusPath = focusPathReversed.reverse.toList :+ fed
@@ -82,7 +82,7 @@ class RenderedPageIntegrationTests extends AbstractTest {
     checkReport(folding, List(folding.engines(1)), ce1ED, ce1s1)
   }
   it should "pass the usecase section test when scenarios are just icons" in {
-    def checkReport(e: Engine, expectedUsecases: List[UseCase[_, _, _, _]], focusPathReversed: Reportable*) {
+    def checkReport(e: Engine, expectedUsecases: List[UseCase[_, _]], focusPathReversed: Reportable*) {
       import EngineTools._
       val focusPath = focusPathReversed.reverse.toList :+ e.asRequirement
       val report = Report.focusedReport(Some("sort of title"), focusPath)
@@ -97,7 +97,7 @@ class RenderedPageIntegrationTests extends AbstractTest {
     checkReport(eWithUsecasesAndScenarios, List(uc0, uc1))
   }
   it should "pass the usecase section test when scenarios are just details in usecases" in {
-    def checkReport(e: Engine, expectedUsecases: List[UseCase[_, _, _, _]], focusPathReversed: Reportable*) {
+    def checkReport(e: Engine, expectedUsecases: List[UseCase[_, _]], focusPathReversed: Reportable*) {
       import EngineTools._
       val focusPath = focusPathReversed.reverse.toList :+ e.asRequirement
       val report = Report.focusedReport(Some("sort of title"),  focusPath)
@@ -114,7 +114,7 @@ class RenderedPageIntegrationTests extends AbstractTest {
     checkReport(eWithUsecasesAndScenarios, List(uc1), uc1)
   }
   it should "pass the scenario section test " in {
-    def checkReport(e: Engine, expectedScenarios: List[Scenario[_, _, _, _]], focusPathReversed: Reportable*) {
+    def checkReport(e: Engine, expectedScenarios: List[AnyScenario], focusPathReversed: Reportable*) {
       import EngineTools._
       val focusPath = focusPathReversed.reverse.toList :+ e.asRequirement
       val report = Report.focusedReport(Some("sort of title"), focusPath)

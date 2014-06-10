@@ -28,7 +28,7 @@ class HtmlRenderingBugTest extends AbstractTest with ExampleWebSiteEngines {
       useCase("Engines are displayed based on their requirements. Without a name uses template name and text order").
       scenario(eBlankTitleReport, eBlankTitleED).
       expected { s"<a id='EngineDescription_${eBlankTitleED.textOrder}' href='RootUrl/engineReportTitle/EBlankTitle.EngineDescription.html'>EBlankTitle${icon(eBlankTitleReport, eBlankTitleED)}</a>" }.
-      matchOn { case (rc, ed: EngineDescription[_, _, _, _]) => s"<a id='${UrlMap.urlId(ed)}' href='${rc.urlMap(ed)}'>${Strings.htmlEscape(ed.titleString)}${icon(rc, ed)}</a>" }.
+      matchOn { case (rc, ed: EngineDescription[_, _]) => s"<a id='${UrlMap.urlId(ed)}' href='${rc.urlMap(ed)}'>${Strings.htmlEscape(ed.titleString)}${icon(rc, ed)}</a>" }.
 
       build
     val rc = RenderContext(UrlMap() ++ engines, new Date, "")

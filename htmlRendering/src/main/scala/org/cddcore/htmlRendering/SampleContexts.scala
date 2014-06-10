@@ -42,7 +42,7 @@ object SampleContexts {
   val eBlankTitleReport = Report.engineReport(Some("engineReportTitle"), testDate, eBlankTitle)
 
   val eBlankTitleDoc1 = Engine[Int, Int]().title("EBlankTitle").reference("", doc1).build
-  val eBlankTitleDoc1ED = eBlankTitleDoc1.asRequirement.asInstanceOf[EngineDescription[_, _, _, _]]
+  val eBlankTitleDoc1ED = eBlankTitleDoc1.asRequirement.asInstanceOf[EngineDescription[_, _]]
   val eBlankTitleDoc1_DocAndEngineReport = Report.documentAndEngineReport(Some("documentAndEngineReportTitle"), testDate, List(eBlankTitleDoc1))
   val eBlankTitleDoc1_documentHolder = eBlankTitleDoc1_DocAndEngineReport.documentHolder
   val eBlankTitleDoc1_engineHolder = eBlankTitleDoc1_DocAndEngineReport.engineHolder
@@ -73,21 +73,21 @@ object SampleContexts {
     scenario(2).expected(4).
     build.asInstanceOf[FoldingEngine1[Int, Int, List[Int]]]
 
-  val foldingAsFE = folding.asInstanceOf[FoldingEngine[_, _, _, _, _]]
-  val foldingED = folding.asRequirement.asInstanceOf[FoldingEngineDescription[Int, (Int) => Boolean, Int, (Int) => Int, List[Int]]]
+  val foldingAsFE = folding.asInstanceOf[FoldingEngine[_, _, _]]
+  val foldingED = folding.asRequirement.asInstanceOf[FoldingEngineDescription[Int,  Int, List[Int]]]
   val foldingEngineAndDocumentReport = Report.documentAndEngineReport(None, testDate, List(folding))
   val foldingEngineReport = Report.engineReport(Some("engineReportTitle"), testDate, folding)
-  val ce0ED = foldingED.all(classOf[EngineDescription[_, _, _, _]])(0);
-  val ce1ED = foldingED.all(classOf[EngineDescription[_, _, _, _]])(1);
+  val ce0ED = foldingED.all(classOf[EngineDescription[_, _]])(0);
+  val ce1ED = foldingED.all(classOf[EngineDescription[_, _]])(1);
   val ce0s0 = foldingED.scenarios(0)
   val ce1s1 = foldingED.scenarios(1)
   val ce1s2 = foldingED.scenarios(2)
   val ce0Tree = foldingAsFE.engines(0).tree
   val ce1Tree = foldingAsFE.engines(1).tree
   val concCe0 = ce0Tree.root
-  val decisionCe1 = ce1Tree.root.asInstanceOf[Decision[_, _, _, _]]
-  val concYesCe1 = decisionCe1.yes
-  val concNoCe1 = decisionCe1.no
+  val decisionCe1 = ce1Tree.root.asInstanceOf[AnyDecision]
+  val concYesCe1 = decisionCe1.toYes
+  val concNoCe1 = decisionCe1.toNo
 
   type TI = TraceItem[Any, Any, Any, Any]
   implicit def toTraceItem(x: (Any, Any, Any, List[TI])) =

@@ -44,10 +44,9 @@ case class SingleConclusionLegacyReport[ID, Params, R](title: Option[String], le
         }
         case None => List()
       })
-      val t: List[List[Reportable]] = ??? //e.trees.map(_.treePathsWithElseClause(List(ed, this)))
       m match {
         case Nil => Nil
-        case _ => h :: m :: t
+        case _ => h :: m
       }
     })
     List[Reportable](ed, this) :: tail

@@ -38,3 +38,4 @@
 1.8.5.17 Bug fixes: Junit descriptions now have unique names. Default code now works with scenarios
 
 2.0.0 Rebuilt core. HTML Renderer uses 'cdd' now. Syntax easier (no need to specify types in because/code and matchWith syntax added)
+2.1.0 Major refactor of the Generics. Much simpler 

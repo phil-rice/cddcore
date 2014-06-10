@@ -5,15 +5,15 @@ import org.scalatest.junit.JUnitRunner
 import scala.language.implicitConversions
 import org.cddcore.engine.builder._
 
-abstract class EngineConstructionTest[Params, BFn, R, RFn, B <: Builder[Params, BFn, R, RFn, R, B, E], E <: EngineTools[Params, BFn, R, RFn]] extends BuilderTest[Params, BFn, R, RFn, R, B, E] with DecisionTreeBuilderForTests[Params, BFn, R, RFn] {
-  implicit def toBuilderWithModifyChildrenForBuild[R, RFn](b: B) = b.asInstanceOf[BuilderWithModifyChildrenForBuild[Params, BFn, R, RFn]]
-  implicit def toEngineFromTests[Params, BFn, R, RFn](x: EngineTools[Params, BFn, R, RFn]) = x.asInstanceOf[EngineFromTests[Params, BFn, R, RFn]]
+abstract class EngineConstructionTest[Params, R, B <: Builder[Params, R, R, B, E], E <: EngineTools[Params, R]] extends BuilderTest[Params, R, R, B, E] with DecisionTreeBuilderForTests[Params, R] {
+  implicit def toBuilderWithModifyChildrenForBuild[R, RFn](b: B) = b.asInstanceOf[BuilderWithModifyChildrenForBuild[Params, R]]
+  implicit def toEngineFromTests[Params, R](x: EngineTools[Params, R]) = x.asInstanceOf[EngineFromTests[Params, R]]
 
   implicit def toSome[X](x: X) = Some(x)
 
   s"A blank $builderName " should "just have the default root" in {
     val engine = build
-    val root = engine.asInstanceOf[EngineFromTests[Params, BFn, R, RFn]].tree.root
+    val root = engine.asInstanceOf[EngineFromTests[Params, R]].tree.root
     assertEquals(defaultRoot, root)
   }
 
@@ -41,7 +41,7 @@ abstract class EngineConstructionTest[Params, BFn, R, RFn, B <: Builder[Params, 
 
   it should "put the tree into the engine description when built" in {
     val e = build
-    val ed = e.asRequirement.asInstanceOf[EngineDescription[Params, BFn, R, RFn]]
+    val ed = e.asRequirement.asInstanceOf[EngineDescription[Params, R]]
     assertEquals(Some(e.tree), ed.tree)
   }
 
@@ -95,9 +95,9 @@ abstract class EngineConstructionTest[Params, BFn, R, RFn, B <: Builder[Params, 
 
 }
 
-abstract class EngineConstruction1Test[P, R] extends EngineConstructionTest[P, (P) => Boolean, R, (P) => R, Builder1[P, R, R], Engine1[P, R, R]] with SimpleBuilder1Test[P, R]
-abstract class EngineConstruction2Test[P1, P2, R] extends EngineConstructionTest[(P1, P2), (P1, P2) => Boolean, R, (P1, P2) => R, Builder2[P1, P2, R, R], Engine2[P1, P2, R, R]] with SimpleBuilder2Test[P1, P2, R]
-abstract class EngineConstruction3Test[P1, P2, P3, R] extends EngineConstructionTest[(P1, P2, P3), (P1, P2, P3) => Boolean, R, (P1, P2, P3) => R, Builder3[P1, P2, P3, R, R], Engine3[P1, P2, P3, R, R]] with SimpleBuilder3Test[P1, P2, P3, R]
+abstract class EngineConstruction1Test[P, R] extends EngineConstructionTest[P, R,  Builder1[P, R, R], Engine1[P, R, R]] with SimpleBuilder1Test[P, R]
+abstract class EngineConstruction2Test[P1, P2, R] extends EngineConstructionTest[(P1, P2),  R, Builder2[P1, P2, R, R], Engine2[P1, P2, R, R]] with SimpleBuilder2Test[P1, P2, R]
+abstract class EngineConstruction3Test[P1, P2, P3, R] extends EngineConstructionTest[(P1, P2, P3),  R,  Builder3[P1, P2, P3, R, R], Engine3[P1, P2, P3, R, R]] with SimpleBuilder3Test[P1, P2, P3, R]
 
 @RunWith(classOf[JUnitRunner])
 class EngineConstructionStringStringTest extends EngineConstruction1Test[String, String] with StringStringTest

@@ -3,15 +3,15 @@ import org.cddcore.utilities._
 
 object ExceptionScenarioPrinter {
   val fullScenario = false
-  def apply[Params, BFn, R, RFn](s: Scenario[Params, BFn, R, RFn])(implicit ldp: CddDisplayProcessor) = scenario2Str(s)
-  def existingAndBeingAdded[Params, BFn, R, RFn](existing: List[Scenario[Params, BFn, R, RFn]], s: Scenario[Params, BFn, R, RFn])(implicit ldp: CddDisplayProcessor) =
+  def apply(s: AnyScenario)(implicit ldp: CddDisplayProcessor) = scenario2Str(s)
+  def existingAndBeingAdded(existing: List[AnyScenario], s: AnyScenario)(implicit ldp: CddDisplayProcessor) =
     s"Existing: ${existing.map(scenario2Str(_)).mkString(",")}\nBeing Added: ${scenario2Str(s)}\nDetailed existing:\n${existing.map((x) => ldp(x)).mkString("\n")}\nDetailed of being Added:\n${ldp(s)}"
-  def full[Params, BFn, R, RFn](s: Scenario[Params, BFn, R, RFn])(implicit ldp: CddDisplayProcessor) = "Scenario:\n" + s + "\nParameters:\n" + ldp(s.params)
-  def scenario2Str[Params, BFn, R, RFn](s: Scenario[Params, BFn, R, RFn])(implicit ldp: CddDisplayProcessor) =
+  def full(s: AnyScenario)(implicit ldp: CddDisplayProcessor) = "Scenario:\n" + s + "\nParameters:\n" + ldp(s.toParams)
+  def scenario2Str[Params, R](s: AnyScenario)(implicit ldp: CddDisplayProcessor) =
     if (fullScenario)
       s.titleString
     else
-      ldp(s.params)
+      ldp(s.toParams)
 
 }
 
@@ -30,13 +30,13 @@ class CannotHaveChildEnginesWithoutFolderException extends EngineException
 object FailedToExecuteException extends ParamsException {
   import EngineTools._
   def apply[Params](e: Engine, p: Params, cause: Throwable)(implicit ldp: CddDisplayProcessor) = {
-      val paramString = p match {
-        case (p1, p2, p3) => params(p1, p2, p3)
-        case (p1, p2) => params(p1, p2)
-        case p => params(p)
-      }
-      new FailedToExecuteException(s"Failed to execute\nEngine: ${e.titleString}\n$paramString", e, p, cause)
+    val paramString = p match {
+      case (p1, p2, p3) => params(p1, p2, p3)
+      case (p1, p2) => params(p1, p2)
+      case p => params(p)
     }
+    new FailedToExecuteException(s"Failed to execute\nEngine: ${e.titleString}\n$paramString", e, p, cause)
+  }
 }
 
 class FailedToExecuteException(msg: String, val e: Engine, val params: Any, cause: Throwable) extends EngineException(msg, cause)
@@ -55,35 +55,35 @@ object NeedScenarioException {
 }
 class NeedScenarioException(msg: String) extends EngineException(msg)
 
-class ScenarioException(msg: String, val scenario: Scenario[_, _, _, _], cause: Throwable = null) extends EngineException(msg, cause)
+class ScenarioException(msg: String, val scenario: AnyScenario, cause: Throwable = null) extends EngineException(msg, cause)
 
 object DuplicateScenarioException {
-  def apply[Params, BFn, R, RFn](scenario: Scenario[Params, BFn, R, RFn]) = new DuplicateScenarioException(s"Duplicate scenario $scenario", scenario)
+  def apply[Params, R](scenario: Scenario[Params, R]) = new DuplicateScenarioException(s"Duplicate scenario $scenario", scenario)
 }
-class DuplicateScenarioException(msg: String, scenario: Scenario[_, _, _, _]) extends ScenarioException(msg, scenario)
+class DuplicateScenarioException(msg: String, scenario: AnyScenario) extends ScenarioException(msg, scenario)
 
 object ScenarioConflictingWithDefaultAndNoBecauseException {
-  def apply[R](lens: Lens[_, _], actual: Either[Exception, R], expected: Either[Exception, R], s: Scenario[_, _, R, _])(implicit ldp: CddDisplayProcessor) =
+  def apply[R](lens: Lens[_, _], actual: Either[Exception, R], expected: Either[Exception, R], s: AnyScenario)(implicit ldp: CddDisplayProcessor) =
     new ScenarioConflictingWithDefaultAndNoBecauseException(s"\n$lens\nActual Result:\n${actual}\nExpected\n${expected}\n${ExceptionScenarioPrinter.full(s)}", lens, actual, s)
 }
-class ScenarioConflictingWithDefaultAndNoBecauseException(msg: String, val lens: Lens[_, _], val actual: Either[Exception, _], scenario: Scenario[_, _, _, _]) extends ScenarioException(msg, scenario)
+class ScenarioConflictingWithDefaultAndNoBecauseException(msg: String, val lens: Lens[_, _], val actual: Either[Exception, _], scenario: AnyScenario) extends ScenarioException(msg, scenario)
 
 //object ScenarioConflictException {
 //  def apply(CddDisplayProcessor: CddDisplayProcessor, existing: Scenario, beingAdded: Scenario, cause: Throwable = null) =
 //    new ScenarioConflictException(s"Cannot differentiate based on:\n ${beingAdded.becauseString}" +
 //      s"\n${ExceptionScenarioPrinter.existingAndBeingAdded(CddDisplayProcessor, existing, beingAdded)}", existing, beingAdded, cause)
 //}
-class ScenarioConflictException(msg: String, val existing: List[Scenario[_, _, _, _]], val beingAdded: Scenario[_, _, _, _], cause: Throwable = null) extends ScenarioException(msg, beingAdded, cause)
+class ScenarioConflictException(msg: String, val existing: List[AnyScenario], val beingAdded: AnyScenario, cause: Throwable = null) extends ScenarioException(msg, beingAdded, cause)
 //
 object ScenarioConflictingWithoutBecauseException {
-  def apply[Params, BFn, R, RFn](lens: Lens[_, _], expected: Either[Exception, R], actual: Either[Exception, R], existing: List[Scenario[Params, BFn, R, RFn]], beingAdded: Scenario[Params, BFn, R, RFn])(implicit ldp: CddDisplayProcessor) = {
+  def apply[Params, R](lens: Lens[_, _], expected: Either[Exception, R], actual: Either[Exception, R], existing: List[Scenario[Params, R]], beingAdded: Scenario[Params, R])(implicit ldp: CddDisplayProcessor) = {
     new ScenarioConflictingWithoutBecauseException(s"\nCame to wrong conclusion: ${actual}\nInstead of ${expected}\n$lens\n${ExceptionScenarioPrinter.existingAndBeingAdded(existing, beingAdded)}", expected, actual, existing, beingAdded)
   }
 }
-class ScenarioConflictingWithoutBecauseException(msg: String, val expected: Either[Exception, _], val actual: Either[Exception, _], existing: List[Scenario[_, _, _, _]], beingAdded: Scenario[_, _, _, _], cause: Throwable = null) extends ScenarioConflictException(msg, existing, beingAdded, cause)
+class ScenarioConflictingWithoutBecauseException(msg: String, val expected: Either[Exception, _], val actual: Either[Exception, _], existing: List[AnyScenario], beingAdded: AnyScenario, cause: Throwable = null) extends ScenarioConflictException(msg, existing, beingAdded, cause)
 
 object ScenarioConflictAndBecauseNotAdequateException {
-  def apply[Params, BFn, R, RFn](lens: Lens[_, _], expected: Either[Exception, R], actual: Either[Exception, R], existing: List[Scenario[Params, BFn, R, RFn]], beingAdded: Scenario[Params, BFn, R, RFn])(implicit ldp: CddDisplayProcessor) = {
+  def apply[Params, R](lens: Lens[_, _], expected: Either[Exception, R], actual: Either[Exception, R], existing: List[Scenario[Params, R]], beingAdded: Scenario[Params, R])(implicit ldp: CddDisplayProcessor) = {
     val becauseString = "\n" +
       "The because is valid in these other scenarios, which the engine thinks are similar.\n" +
       "The Engine doesn't have enough information to decide what to do\n" +
@@ -93,51 +93,51 @@ object ScenarioConflictAndBecauseNotAdequateException {
     new ScenarioConflictAndBecauseNotAdequateException(s"$becauseString\nCame to wrong conclusion: ${actual}\nInstead of ${expected}\n$lens\n${ExceptionScenarioPrinter.existingAndBeingAdded(existing, beingAdded)}", expected, actual, existing, beingAdded)
   }
 }
-class ScenarioConflictAndBecauseNotAdequateException(msg: String, val expected: Either[Exception, _], val actual: Either[Exception, _], existing: List[Scenario[_, _, _, _]], beingAdded: Scenario[_, _, _, _], cause: Throwable = null)
+class ScenarioConflictAndBecauseNotAdequateException(msg: String, val expected: Either[Exception, _], val actual: Either[Exception, _], existing: List[AnyScenario], beingAdded: AnyScenario, cause: Throwable = null)
   extends ScenarioConflictException(msg, existing, beingAdded, cause)
 
 object NoExpectedException {
-  def apply(scenario: Scenario[_, _, _, _], cause: Throwable = null)(implicit ldp: CddDisplayProcessor) =
+  def apply(scenario: AnyScenario, cause: Throwable = null)(implicit ldp: CddDisplayProcessor) =
     new NoExpectedException(s"No expected in ${ExceptionScenarioPrinter.full(scenario)}", scenario, cause)
 }
-class NoExpectedException(msg: String, scenario: Scenario[_, _, _, _], cause: Throwable) extends ScenarioException(msg, scenario, cause)
+class NoExpectedException(msg: String, scenario: AnyScenario, cause: Throwable) extends ScenarioException(msg, scenario, cause)
 
 object CodeDoesntProduceExpectedException {
-  def apply(scenario: Scenario[_, _, _, _], actual: Either[Exception, _], cause: Throwable = null)(implicit ldp: CddDisplayProcessor) =
-    new CodeDoesntProduceExpectedException(s"Code block doesn't produce expected.\nExpected result: ${scenario.expected.get}\nActual result: $actual\nCode:\n${scenario.code.get}\n${ExceptionScenarioPrinter.full(scenario)}", scenario, actual, cause)
+  def apply(scenario: AnyScenario, actual: Either[Exception, _], cause: Throwable = null)(implicit ldp: CddDisplayProcessor) =
+    new CodeDoesntProduceExpectedException(s"Code block doesn't produce expected.\nExpected result: ${scenario.toExpected.get}\nActual result: $actual\nCode:\n${scenario.toCode.get}\n${ExceptionScenarioPrinter.full(scenario)}", scenario, actual, cause)
 }
-class CodeDoesntProduceExpectedException(msg: String, scenario: Scenario[_, _, _, _], val actual: Either[Exception, _], cause: Throwable) extends ScenarioException(msg, scenario, cause)
+class CodeDoesntProduceExpectedException(msg: String, scenario: AnyScenario, val actual: Either[Exception, _], cause: Throwable) extends ScenarioException(msg, scenario, cause)
 
 object ScenarioShouldHaveCodeIfExpectsException {
-  def apply(s: Scenario[_, _, _, _]) = new ScenarioShouldHaveCodeIfExpectsException("A code block is needed if the expected result is an exception. That code block show throw the exception", s)
+  def apply(s: AnyScenario) = new ScenarioShouldHaveCodeIfExpectsException("A code block is needed if the expected result is an exception. That code block show throw the exception", s)
 }
-class ScenarioShouldHaveCodeIfExpectsException(msg: String, scenario: Scenario[_, _, _, _]) extends ScenarioException(msg, scenario)
+class ScenarioShouldHaveCodeIfExpectsException(msg: String, scenario: AnyScenario) extends ScenarioException(msg, scenario)
 
 object ExceptionThrownInAssertion {
-  def apply(s: Scenario[_, _, _, _], assertion: CodeHolder[_], e: Exception) =
+  def apply(s: AnyScenario, assertion: CodeHolder[_], e: Exception) =
     new ExceptionThrownInAssertion(s"Threw exception $e while evaluating assertion $assertion in\n${ExceptionScenarioPrinter.full(s)}", s, e)
 }
-class ExceptionThrownInAssertion(msg: String, scenario: Scenario[_, _, _, _], cause: Throwable) extends ScenarioException(msg, scenario, cause)
+class ExceptionThrownInAssertion(msg: String, scenario: AnyScenario, cause: Throwable) extends ScenarioException(msg, scenario, cause)
 
 object ScenarioBecauseException {
-  def apply(scenario: Scenario[_, _, _, _], cause: Throwable = null)(implicit ldp: CddDisplayProcessor) =
-    new ScenarioBecauseException(s"Because is not true. Because is\n${scenario.because.getOrElse(throw new IllegalStateException).description}\n${ExceptionScenarioPrinter.full(scenario)}", scenario, cause)
+  def apply(scenario: AnyScenario, cause: Throwable = null)(implicit ldp: CddDisplayProcessor) =
+    new ScenarioBecauseException(s"Because is not true. Because is\n${scenario.toBecause.getOrElse(throw new IllegalStateException).description}\n${ExceptionScenarioPrinter.full(scenario)}", scenario, cause)
 }
-class ScenarioBecauseException(msg: String, scenario: Scenario[_, _, _, _], cause: Throwable) extends ScenarioException(msg, scenario, cause)
+class ScenarioBecauseException(msg: String, scenario: AnyScenario, cause: Throwable) extends ScenarioException(msg, scenario, cause)
 
 object CameToWrongConclusionScenarioException {
-  def apply(expected: Any, actual: Any, s: Scenario[_, _, _, _], cause: Throwable)(implicit ldp: CddDisplayProcessor) =
+  def apply(expected: Any, actual: Any, s: AnyScenario, cause: Throwable)(implicit ldp: CddDisplayProcessor) =
     new CameToWrongConclusionScenarioException(s"CDD Error: Scenario came to wrong result\nExpected\n$expected\nActual\n$actual\nScenario\n${ExceptionScenarioPrinter.full(s)}", expected, actual, s, cause)
 
 }
-class CameToWrongConclusionScenarioException(msg: String, val expected: Any, val actual: Any, s: Scenario[_, _, _, _], cause: Throwable) extends ScenarioException(msg, s, cause)
+class CameToWrongConclusionScenarioException(msg: String, val expected: Any, val actual: Any, s: AnyScenario, cause: Throwable) extends ScenarioException(msg, s, cause)
 
 object AssertionException {
-  def apply(a: CodeHolder[_], s: Scenario[_, _, _, _])(implicit ldp: CddDisplayProcessor) =
+  def apply(a: CodeHolder[_], s: AnyScenario)(implicit ldp: CddDisplayProcessor) =
     new AssertionException(s"Assertion failed\n${a.description}\n${ExceptionScenarioPrinter.full(s)}", a.fn, s)
 }
 
-class AssertionException(msg: String, val assertion: Any, scenario: Scenario[_, _, _, _]) extends ScenarioException(msg, scenario)
+class AssertionException(msg: String, val assertion: Any, scenario: AnyScenario) extends ScenarioException(msg, scenario)
 
 object CannotDefineExpectedTwiceException {
   def apply(original: Either[Exception, _], beingAdded: Either[Exception, _]) = new CannotDefineExpectedTwiceException(s"Original${original}\nBeing Added $beingAdded ", original, beingAdded);
@@ -179,11 +179,11 @@ class CannotSendNoneToOptionLens(msg: String) extends EngineException(msg)
 class CannotHaveFoldingEngineWithoutChildEnginesException extends EngineException
 
 object BecauseClauseScenarioException {
-  def apply(scenario: Scenario[_, _, _, _], cause: Throwable)(implicit ldp: CddDisplayProcessor) =
-    throw new BecauseClauseScenarioException((s"Threw exception evaluating because ${scenario.because.getOrElse(throw new IllegalStateException).description} \n${ExceptionScenarioPrinter.full(scenario)}"), scenario, cause)
+  def apply(scenario: AnyScenario, cause: Throwable)(implicit ldp: CddDisplayProcessor) =
+    throw new BecauseClauseScenarioException((s"Threw exception evaluating because ${scenario.toBecause.getOrElse(throw new IllegalStateException).description} \n${ExceptionScenarioPrinter.full(scenario)}"), scenario, cause)
 }
 
-class BecauseClauseScenarioException(msg: String, scenario: Scenario[_, _, _, _], cause: Throwable) extends ScenarioException(msg, scenario, cause)
+class BecauseClauseScenarioException(msg: String, scenario: AnyScenario, cause: Throwable) extends ScenarioException(msg, scenario, cause)
 
 object BecauseClauseException {
   def apply(params: Any, cause: Throwable)(implicit ldp: CddDisplayProcessor) =
@@ -193,7 +193,7 @@ object BecauseClauseException {
 class BecauseClauseException(msg: String, val params: Any, cause: Throwable) extends EngineException(msg, cause)
 
 object ScenarioCausingProblemWithOrRuleException {
-  def apply(scenariosThatWouldBeBroken: List[Scenario[_, _, _, _]], beingAdded: Scenario[_, _, _, _])(implicit ldp: CddDisplayProcessor) = {
+  def apply(scenariosThatWouldBeBroken: List[AnyScenario], beingAdded: AnyScenario)(implicit ldp: CddDisplayProcessor) = {
     val msg = "The scenario you added already came to the correct conclusion. \n" +
       "As well as that it had a because clause, and if the because clause was added, other scenario(s) that as already been added would now come to the wrong conclusion\n" +
       s"Scenario being added:\n${ExceptionScenarioPrinter.full(beingAdded)}\n" +
@@ -204,8 +204,7 @@ object ScenarioCausingProblemWithOrRuleException {
   }
 }
 class ScenarioCausingProblemWithOrRuleException(msg: String,
-  val scenariosThatWouldBeBroken: List[Scenario[_, _, _, _]],
-  beingAdded: Scenario[_, _, _, _]) extends ScenarioConflictException(msg, scenariosThatWouldBeBroken, beingAdded)
+  val scenariosThatWouldBeBroken: List[AnyScenario], beingAdded: AnyScenario) extends ScenarioConflictException(msg, scenariosThatWouldBeBroken, beingAdded)
 
 object MultipleScenarioExceptions {
   def apply(list: List[Exception])(implicit ldp: CddDisplayProcessor) = {

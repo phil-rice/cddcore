@@ -91,9 +91,9 @@ class TraceItemIntegrationTest extends AbstractTest {
     val plus2 = Engine[Int, Int].title("plus two").scenario(2).expected(4).code(_ + 2).build
     val times2plus2 = Engine[Int, Int].title("times two plus two").scenario(2).expected(6).code((x: Int) => plus2(times2(x))).build
 
-    val times2ED = times2.asRequirement.asInstanceOf[EngineDescription[_, _, _, _]]
-    val plus2ED = plus2.asRequirement.asInstanceOf[EngineDescription[_, _, _, _]]
-    val times2plus2ED = times2plus2.asRequirement.asInstanceOf[EngineDescription[_, _, _, _]]
+    val times2ED = times2.asRequirement.asInstanceOf[EngineDescription[_, _]]
+    val plus2ED = plus2.asRequirement.asInstanceOf[EngineDescription[_, _]]
+    val times2plus2ED = times2plus2.asRequirement.asInstanceOf[EngineDescription[_, _]]
     val times2plus2Tree = times2plus2ED.tree.get
 
     val times2scenario = times2ED.scenarios(0)

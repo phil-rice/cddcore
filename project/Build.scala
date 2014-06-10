@@ -43,7 +43,7 @@ object CddBuild extends Build {
     unmanagedClasspath in Runtime <+= (baseDirectory) map { bd => Attributed.blank(bd / "src/main/resources") },
     organization := "org.cddcore",
    
-    version := "2.0.1",
+    version := "2.1.0",
     scalacOptions ++= Seq(),
     retrieveManaged := false,
     scalaVersion := "2.10.4",

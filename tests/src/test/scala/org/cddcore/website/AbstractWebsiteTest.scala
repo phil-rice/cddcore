@@ -52,13 +52,13 @@ abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with Bef
 
     def checkPath(path: List[Reportable]) =
       for (subPath <- Lists.decreasingList(path)) subPath.head match {
-        case e: EngineDescription[_, _, _, _] =>
+        case e: EngineDescription[_, _] =>
           val engineWithTestsDiv = onlyDivWith("engineWithTests")
           checkEngineSummary(subPath, engineWithTestsDiv)
-        case u: UseCase[_, _, _, _] =>
+        case u: UseCase[_, _] =>
           val usecaseDiv = onlyDivWith("usecaseSummary")
           checkUsecase(u, usecaseDiv)
-        case s: Scenario[_, _, _, _] =>
+        case s: AnyScenario =>
           val scenarioDiv = onlyDivWith("scenario")
           checkScenarioDetails(subPath, scenarioDiv)
       }
@@ -69,20 +69,20 @@ abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with Bef
     type PageType = IndexPage
 
     def clickEngineFromTests(path: List[Reportable]) = {
-      val urlId = UrlMap.urlId(path.head.asInstanceOf[EngineRequirement[_, _, _, _]])
+      val urlId = UrlMap.urlId(path.head.asInstanceOf[EngineRequirement[_, _]])
       val h = html
       click on id(urlId)
       new EngineFromTestsPage(path)
     }
 
     def clickUseCase(path: List[Reportable]) = {
-      val urlId = UrlMap.urlId(path.head.asInstanceOf[UseCase[_, _, _, _]])
+      val urlId = UrlMap.urlId(path.head.asInstanceOf[UseCase[_, _]])
       click on id(urlId)
       new UseCasePage(path)
     }
 
     def clickScenario(path: List[Reportable]) = {
-      val urlId = UrlMap.urlId(path.head.asInstanceOf[Scenario[_, _, _, _]])
+      val urlId = UrlMap.urlId(path.head.asInstanceOf[AnyScenario])
       click on id(urlId)
       new ScenarioPage(path)
     }
@@ -91,7 +91,7 @@ abstract class AbstractWebsiteTest extends AbstractTest with WebBrowser with Bef
   class EngineFromTestsPage(val path: List[Reportable]) extends AbstractPage {
     type PageType = EngineFromTestsPage
     checkPath(path)
-    val ed = path.head.asInstanceOf[EngineRequirement[_, _, _, _]]
+    val ed = path.head.asInstanceOf[EngineRequirement[_, _]]
     val useCases = ed.useCases
     val useCaseDivs = divsWith("usecaseSummary")
     for ((uc, div) <- useCases.zipAll(useCaseDivs, null, null))

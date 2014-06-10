@@ -5,9 +5,9 @@ import org.cddcore.engine.builder._
 import scala.language.implicitConversions
 import org.scalatest.junit.JUnitRunner
 
-abstract class EngineFewScenarioTest[Params, BFn, R, RFn, B <: Builder[Params, BFn, R, RFn, R, B, E], E <: EngineTools[Params, BFn, R, RFn]] extends DecisionTreeBuilderAndBuilderBeingTested[Params, BFn, R, RFn, R, B, E] {
+abstract class EngineFewScenarioTest[Params, R, B <: Builder[Params, R, R, B, E], E <: EngineTools[Params, R]] extends DecisionTreeBuilderAndBuilderBeingTested[Params, R, R, B, E] {
   implicit def toSome[X](x: X) = Some(x)
-  implicit def toDecisionTreeDecisionTree[Params, BFn, R, RFn](x: EngineTools[Params, BFn, R, RFn]) = x.asInstanceOf[DecisionTree[Params, BFn, R, RFn]]
+  implicit def toDecisionTreeDecisionTree[Params, R](x: EngineTools[Params, R]) = x.asInstanceOf[DecisionTree[Params, R]]
 
   def check(seeds: String*) {
     for (these <- seeds.toList.permutations) {
@@ -54,9 +54,9 @@ abstract class EngineFewScenarioTest[Params, BFn, R, RFn, B <: Builder[Params, B
 
 }
 
-abstract class EngineFewScenario1Test[P, R] extends EngineFewScenarioTest[P, (P) => Boolean, R, (P) => R, Builder1[P, R, R], Engine1[P, R, R]] with SimpleBuilder1Test[P, R]
-abstract class EngineFewScenario2Test[P1, P2, R] extends EngineFewScenarioTest[(P1, P2), (P1, P2) => Boolean, R, (P1, P2) => R, Builder2[P1, P2, R, R], Engine2[P1, P2, R, R]] with SimpleBuilder2Test[P1, P2, R]
-abstract class EngineFewScenario3Test[P1, P2, P3, R] extends EngineFewScenarioTest[(P1, P2, P3), (P1, P2, P3) => Boolean, R, (P1, P2, P3) => R, Builder3[P1, P2, P3, R, R], Engine3[P1, P2, P3, R,R]] with SimpleBuilder3Test[P1, P2, P3, R]
+abstract class EngineFewScenario1Test[P, R] extends EngineFewScenarioTest[P, R,  Builder1[P, R, R], Engine1[P, R, R]] with SimpleBuilder1Test[P, R]
+abstract class EngineFewScenario2Test[P1, P2, R] extends EngineFewScenarioTest[(P1, P2),  R, Builder2[P1, P2, R, R], Engine2[P1, P2, R, R]] with SimpleBuilder2Test[P1, P2, R]
+abstract class EngineFewScenario3Test[P1, P2, P3, R] extends EngineFewScenarioTest[(P1, P2, P3),  R,  Builder3[P1, P2, P3, R, R], Engine3[P1, P2, P3, R,R]] with SimpleBuilder3Test[P1, P2, P3, R]
 
 @RunWith(classOf[JUnitRunner])
 class EngineFewScenarioStringStringTest extends EngineFewScenario1Test[String, String] with StringStringTest

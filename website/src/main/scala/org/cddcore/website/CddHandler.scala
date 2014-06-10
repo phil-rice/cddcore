@@ -93,7 +93,7 @@ class PathHandler extends CddPathHandler {
     val renderer = Report.rendererFor(report)
     val ed = PathUtils.findEngine(path)
     val rc = (path.head, ed) match {
-      case (s: Scenario[_, _, _, _], ed: EngineDescription[_,_,_,_]) => {
+      case (s: AnyScenario, ed: EngineDescription[_,_]) => {
         val engine = ""
         renderContext
       }

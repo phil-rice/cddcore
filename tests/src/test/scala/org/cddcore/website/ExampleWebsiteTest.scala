@@ -49,7 +49,7 @@ class ExampleWebsiteTest extends AbstractWebsiteTest with ExampleWebSiteEngines 
   def projectPageToEnginePath: (IndexPage) => List[List[Reportable]] = (pp) => engines.map((e)=>List(e.asRequirement))
 
   it should "allow each engine to be display" in {
-    clickAllLinks[IndexPage, EngineFromTestsPage, EngineRequirement[_, _, _, _]](projectPageAtIndex,
+    clickAllLinks[IndexPage, EngineFromTestsPage, EngineRequirement[_, _]](projectPageAtIndex,
       projectPageToEnginePath,
       click = _.clickEngineFromTests(_),
       recover = _.clickLogo)

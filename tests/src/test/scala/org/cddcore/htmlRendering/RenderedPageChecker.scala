@@ -103,13 +103,13 @@ trait HtmlRenderedChecker extends HtmlChecker {
     val engineLinkText = engineLink.text
     val engineLinkUrl = engineLink.attribute("href").get.text
 
-    val ed = path.head.asInstanceOf[EngineRequirement[_, _, _, _]]
+    val ed = path.head.asInstanceOf[EngineRequirement[_, _]]
     assertEquals(urlMap(ed), engineLinkUrl)
   }
 
-  def checkEngineSummaryWithUsecases[Params, BFn, R, RFn](path: List[Reportable], engineNode: Node) {
+  def checkEngineSummaryWithUsecases[Params, R](path: List[Reportable], engineNode: Node) {
     import ReportableHelper._
-    val engine = path.head.asInstanceOf[EngineRequirement[Params, BFn, R, RFn]]
+    val engine = path.head.asInstanceOf[EngineRequirement[Params, R]]
     checkEngineSummary(path, engineNode)
     val engineSummaryDiv = onlyDivWith("engineSummary", engineNode.child)
     val usecaseDivs = divsWith("usecaseSummary")
@@ -119,7 +119,7 @@ trait HtmlRenderedChecker extends HtmlChecker {
   }
   private def findUseCaseLinks(useCaseNode: Node) = only(useCaseNode \ "h4") \ "a"
 
-  def checkUsecase(useCase: UseCase[_, _, _, _], useCaseNode: Node, expectedLinks: Option[Int] = None) {
+  def checkUsecase(useCase: UseCase[_, _], useCaseNode: Node, expectedLinks: Option[Int] = None) {
     val links = findUseCaseLinks(useCaseNode)
     val useCaselink = links.head
     expectedLinks match {
@@ -131,13 +131,13 @@ trait HtmlRenderedChecker extends HtmlChecker {
   }
 
   def checkUsecaseWithScenariosSummarized(path: List[Reportable], useCaseNode: Node) {
-    val useCase = path.head.asInstanceOf[UseCase[_, _, _, _]]
+    val useCase = path.head.asInstanceOf[UseCase[_, _]]
     checkUsecase(useCase, useCaseNode, Some(1 + useCase.nodes.size))
 
     val links = findUseCaseLinks(useCaseNode)
     val scenarioLinks = links.tail
     val summaries = useCase.scenarios.zipAll(scenarioLinks, null, null).map(_ match {
-      case (s: Scenario[_, _, _, _], scenarioLink) => {
+      case (s: AnyScenario, scenarioLink) => {
         assertTextEquals("", scenarioLink)
         assertEquals(urlMap(s), scenarioLink.attribute("href").get text)
       }
@@ -145,17 +145,17 @@ trait HtmlRenderedChecker extends HtmlChecker {
   }
 
   def checkUsecaseWithScenariosDetails(path: List[Reportable], useCaseNode: Node) {
-    val useCase = path.head.asInstanceOf[UseCase[_, _, _, _]]
+    val useCase = path.head.asInstanceOf[UseCase[_, _]]
     checkUsecase(useCase, useCaseNode, Some(1))
 
     val scenarioDivs = divsWith("scenario", useCaseNode.child)
     val summaries = useCase.scenarios.zipAll(scenarioDivs, null, null).map(_ match {
-      case (s: Scenario[_, _, _, _], scenarioDiv) => checkScenarioDetails(s :: path, scenarioDiv)
+      case (s: AnyScenario, scenarioDiv) => checkScenarioDetails(s :: path, scenarioDiv)
     })
   }
 
   def checkScenarioDetails(path: List[Reportable], scenarioNode: Node) {
-    val test = path.head.asInstanceOf[Scenario[_, _, _, _]]
+    val test = path.head.asInstanceOf[AnyScenario]
     val scenarioText = onlyDivWith("scenarioText", scenarioNode.child)
     val linkNode = only(scenarioText \ "a")
     val link = linkNode.attribute("href").get
@@ -164,10 +164,10 @@ trait HtmlRenderedChecker extends HtmlChecker {
     val trs = table \ "tr"
     val paramTd = findTdInRowWithTitle(table, "Parameter")
     val paramText = paramTd.get.text
-    assertEquals(paramText, cdp(test.params))
+    assertEquals(paramText, cdp(test.toParams))
 
     val expectedTd = findTdInRowWithTitle(table, "Expected")
-    assertTextEquals(test.prettyPrintExpected, expectedTd.get)
+    assertTextEquals(cdp(test.toExpected.get.right.get), expectedTd.get)
   }
 
 }

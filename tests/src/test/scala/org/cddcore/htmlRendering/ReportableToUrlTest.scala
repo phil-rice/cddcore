@@ -161,7 +161,7 @@ class ReportableToUrlTest extends AbstractTest with SomeHoldersForTest with Repo
   //  }
   //
   //  it should "make a urlMap for folding engines" in {
-  //    implicit def toFoldingEngine[Params, BFn, R, RFn, Full](e: Engine[Params, BFn, R, RFn]) = e.asInstanceOf[FoldingEngine[Params, BFn, R, RFn, Full]]
+  //    implicit def toFoldingEngine[Params, R, Full](e: Engine[Params, R]) = e.asInstanceOf[FoldingEngine[Params, R, Full]]
   //    val f = Engine.foldList[Int, String].
   //      childEngine("").useCase("uc1").scenario(1).expected("x").scenario(2).expected("y").because((x: Int) => x == 2).
   //      childEngine("").

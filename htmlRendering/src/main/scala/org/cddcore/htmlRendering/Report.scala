@@ -7,6 +7,7 @@ import StartChildEndType._
 import EngineTools._
 import java.io.File
 import org.cddcore.engine.builder.Conclusion
+import org.cddcore.engine.builder.AnyConclusion
 
 object Report {
   def apply(title: Option[String] = None, description: Option[String] = None, nodes: List[Reportable] = List()) =
@@ -17,7 +18,7 @@ object Report {
     new FocusedReport(title, List(engine.asRequirement), description)
   def focusedReport(title: Option[String], pathWithoutReport: List[Reportable], description: Option[String] = None) =
     new FocusedReport(title, pathWithoutReport, description)
-  def traceReport(title: Option[String], traceItems: List[TraceItem[Engine, Any, Any, Conclusion[_, _, _, _]]], description: Option[String] = None) =
+  def traceReport(title: Option[String], traceItems: List[TraceItem[Engine, Any, Any, AnyConclusion]], description: Option[String] = None) =
     new TraceReport(title, traceItems, description)
 
   def htmlAndRenderedContext(report: Report, engine: Function3[RenderContext, List[Reportable], StartChildEndType, String]): (String, RenderContext) = {
@@ -32,7 +33,7 @@ object Report {
   def html(report: Report, engine: Function3[RenderContext, List[Reportable], StartChildEndType, String], renderContext: RenderContext): String =
     Lists.traversableToStartChildEnd(report.reportPaths).foldLeft("") { case (html, (path, cse)) => html + engine(renderContext, path, cse) }
 
-  def htmlAndRenderedContext(title: Option[String], traceItems: List[TraceItem[Engine, Any, Any, Conclusion[_, _, _, _]]], description: Option[String] = None)(implicit ldp: CddDisplayProcessor): (String, RenderContext) = {
+  def htmlAndRenderedContext(title: Option[String], traceItems: List[TraceItem[Engine, Any, Any, AnyConclusion]], description: Option[String] = None)(implicit ldp: CddDisplayProcessor): (String, RenderContext) = {
     val report = new TraceReport(title, traceItems, description)
     val urlMap = UrlMap() ++ report.urlMapPaths
     val iconUrl = Strings.url(urlMap.rootUrl, report.titleString, "")
@@ -40,7 +41,7 @@ object Report {
     (html(report, HtmlRenderer.traceReportSingleItemRenderer, renderContext), renderContext)
   }
 
-  def htmlFromTrace(title: String, traceItems: List[TraceItem[Engine, Any, Any, Conclusion[_, _, _, _]]], description: Option[String] = None)(implicit ldp: CddDisplayProcessor): String =
+  def htmlFromTrace(title: String, traceItems: List[TraceItem[Engine, Any, Any, AnyConclusion]], description: Option[String] = None)(implicit ldp: CddDisplayProcessor): String =
     htmlAndRenderedContext(Some(title), traceItems, description)._1
 
   def rendererFor(report: Report) =
@@ -48,9 +49,9 @@ object Report {
       case r: DocumentAndEngineReport => HtmlRenderer.engineAndDocumentsSingleItemRenderer
       case r: TraceReport => HtmlRenderer.traceReportSingleItemRenderer
       case r: FocusedReport => r.focusPath.head match {
-        case e: EngineRequirement[_, _, _, _] => HtmlRenderer.engineReportSingleItemRenderer
-        case uc: UseCase[_, _, _, _] => HtmlRenderer.useCaseOrScenarioReportRenderer
-        case s: Scenario[_, _, _, _] => HtmlRenderer.useCaseOrScenarioReportRenderer
+        case e: EngineRequirement[_, _] => HtmlRenderer.engineReportSingleItemRenderer
+        case uc: UseCase[_, _] => HtmlRenderer.useCaseOrScenarioReportRenderer
+        case s: Scenario[_, _] => HtmlRenderer.useCaseOrScenarioReportRenderer
       }
     }
 
@@ -113,20 +114,20 @@ class ReportOrchestrator(rootUrl: String, title: String, engines: List[Engine], 
       }
     }, (e) => { System.err.println("Failed in make report"); e.printStackTrace; if (e.getCause != null) { System.err.println("Cause"); e.getCause().printStackTrace; } })
 
-  def pathToConclusion[Params, BFn, R, RFn](path: List[Reportable]): List[Reportable] = {
-    def engineFromTestsFor(ed: EngineDescription[Params, BFn, R, RFn]) = {
-      def fromEngine(e: Engine): List[EngineFromTests[Params, BFn, R, RFn]] = e match {
-        case e: EngineFromTests[Params, BFn, R, RFn] if (e.asRequirement.eq(ed)) => List(e)
-        case f: FoldingEngine[Params, BFn, R, RFn, _] => f.engines.collect { case e: EngineFromTests[Params, BFn, R, RFn] if (e.asRequirement.eq(ed)) => e }
-        case d: DelegatedEngine[Params, BFn, R, RFn] => fromEngine(d.delegate)
+  def pathToConclusion[Params, R](path: List[Reportable]): List[Reportable] = {
+    def engineFromTestsFor(ed: EngineDescription[Params, R]) = {
+      def fromEngine(e: Engine): List[EngineFromTests[Params, R]] = e match {
+        case e: EngineFromTests[Params, R] if (e.asRequirement.eq(ed)) => List(e)
+        case f: FoldingEngine[Params, R, _] => f.engines.collect { case e: EngineFromTests[Params, R] if (e.asRequirement.eq(ed)) => e }
+        case d: DelegatedEngine[Params, R] => fromEngine(d.delegate)
         case _ => List()
       }
       engines.flatMap(fromEngine(_)).head
     }
-    def pathFrom(e: EngineFromTests[Params, BFn, R, RFn], params: Params) = e.evaluator.findPathToConclusionWithParams(e.tree, params)
+    def pathFrom(e: EngineFromTests[Params, R], params: Params) = e.evaluator.findPathToConclusionWithParams(e.tree, params)
 
     path.head match {
-      case s: Scenario[Params, BFn, R, RFn] => path.collect { case ed: EngineDescription[Params, BFn, R, RFn] => pathFrom(engineFromTestsFor(ed), s.params) }.head
+      case s: Scenario[Params, R] => path.collect { case ed: EngineDescription[Params, R] => pathFrom(engineFromTestsFor(ed), s.params) }.head
       case _ => List()
     }
   }
@@ -157,8 +158,8 @@ case class DocumentAndEngineReport(title: Option[String],
   private val thisAsPath: List[Reportable] = List(this)
   private val thisAndEngineHolderAsPath: List[Reportable] = List(engineHolder, this)
   private val shortenginePaths: List[List[Reportable]] = engines.flatMap(_.asRequirement match {
-    case e: EngineDescription[_, _, _, _] => List(e :: thisAndEngineHolderAsPath)
-    case f: FoldingEngineDescription[_, _, _, _, _] => {
+    case e: EngineDescription[_, _] => List(e :: thisAndEngineHolderAsPath)
+    case f: FoldingEngineDescription[_, _, __] => {
       val head = (f :: thisAndEngineHolderAsPath)
       val tail = f.nodes.map(_ :: f :: thisAndEngineHolderAsPath);
       val result = head :: tail
@@ -182,12 +183,12 @@ case class FocusedReport(title: Option[String],
   private val pathToFocus = focusPath :+ this
   private val pathsToFocus = Lists.decreasingList(pathToFocus).reverse
   val addDecisionTree = (path: List[Reportable]) => path match {
-    case path @ (ed: EngineDescription[_, _, _, _]) :: tail => ed.tree.get.treePathsWithElseClause(path)
+    case path @ (ed: EngineDescription[_, _]) :: tail => ed.tree.get.treePathsWithElseClause(path)
     case _ => List()
   }
   def childrenPaths(path: List[Reportable]): List[List[Reportable]] = path match {
-    case (f: FoldingEngineDescription[_, _, _, _, _]) :: tail => f.nodes.flatMap {
-      case ed: EngineDescription[_, _, _, _] => ed.pathsIncludingTreeAndEngine(path)
+    case (f: FoldingEngineDescription[_, _, _]) :: tail => f.nodes.flatMap {
+      case ed: EngineDescription[_, _] => ed.pathsIncludingTreeAndEngine(path)
     }
     case (h: NestedHolder[Reportable]) :: tail => h.pathsFrom(path).toList
     case _ => List()
@@ -197,7 +198,7 @@ case class FocusedReport(title: Option[String],
 
 }
 case class TraceReport(title: Option[String],
-  val traceItems: List[TraceItem[Engine, Any, Any, Conclusion[_, _, _, _]]],
+  val traceItems: List[TraceItem[Engine, Any, Any, AnyConclusion]],
   val description: Option[String] = None,
   val textOrder: Int = Reportable.nextTextOrder) extends Report {
   import EngineTools._
@@ -210,23 +211,23 @@ case class TraceReport(title: Option[String],
     val result = traceItemPaths.flatMap {
       case path @ (ti: TraceItem[_, _, _, _]) :: tail =>
         path :: ((ti.main: @unchecked) match {
-          case f: FoldingEngine[_, _, _, _, _] => List()
-          case e: EngineFromTests[_, _, _, _] =>  e.tree.treePathsWithElseClause(path)
+          case f: FoldingEngine[_, _, _] => List()
+          case e: EngineFromTests[_, _] => e.tree.treePathsWithElseClause(path)
         })
     }
-        thisPath :: result
+    thisPath :: result
   }
-  def edsInTraceItem[Main, Params, Result, Evidence](traceItem: TraceItem[Main, Params, Result, Evidence]): List[EngineRequirement[_, _, _, _]] = {
+  def edsInTraceItem[Main, Params, Result, Evidence](traceItem: TraceItem[Main, Params, Result, Evidence]): List[EngineRequirement[_, _]] = {
     val head = traceItem.main match {
-      case e: FoldingEngine[_, _, _, _, _] => e.asRequirement
-      case e: EngineFromTests[_, _, _, _] => e.asRequirement
+      case e: FoldingEngine[_, _, _] => e.asRequirement
+      case e: EngineFromTests[_, _] => e.asRequirement
     }
     val tail = traceItem.nodes.flatMap(edsInTraceItem(_)).toList
     head :: tail
   }
 
   val eds = traceItems.flatMap(edsInTraceItem(_)).toList.removeDuplicates
-  val feds: List[NestedHolder[Reportable]] = eds.collect { case fed: FoldingEngineDescription[_, _, _, _, _] => fed.asInstanceOf[NestedHolder[Reportable]] }
+  val feds: List[NestedHolder[Reportable]] = eds.collect { case fed: FoldingEngineDescription[_, _, _] => fed.asInstanceOf[NestedHolder[Reportable]] }
   val childEngines = feds.flatMap((fed) => fed.nodes.toSet)
   val edsWithoutChildEngines = eds.filter(!childEngines.contains(_))
 

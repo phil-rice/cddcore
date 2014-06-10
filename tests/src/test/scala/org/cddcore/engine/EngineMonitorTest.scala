@@ -6,6 +6,7 @@ import org.cddcore.utilities.CddDisplayProcessor
 import org.cddcore.utilities.TraceItem
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import org.cddcore.engine.builder.AnyConclusion
 
 @RunWith(classOf[JUnitRunner])
 class EngineMonitorTest extends AbstractTest {
@@ -19,9 +20,9 @@ class EngineMonitorTest extends AbstractTest {
     private var list = List[String]()
     def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) =
       list = s"call ${e.titleString}" :: list
-    def finished[R](e: Engine, conclusion: Option[Conclusion[_, _, _, _]], result: R)(implicit ldp: CddDisplayProcessor) =
+    def finished[R](e: Engine, conclusion: Option[AnyConclusion], result: R)(implicit ldp: CddDisplayProcessor) =
       list = s"finished ${e.titleString}" :: list
-    def failed(e: Engine, conclusion: Option[Conclusion[_, _, _, _]], exception: Exception)(implicit ldp: CddDisplayProcessor) =
+    def failed(e: Engine, conclusion: Option[AnyConclusion], exception: Exception)(implicit ldp: CddDisplayProcessor) =
       list = s"failed ${e.titleString}" :: list
     def memory = list.reverse
   }
