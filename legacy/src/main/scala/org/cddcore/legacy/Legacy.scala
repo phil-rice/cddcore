@@ -5,13 +5,15 @@ import scala.language.implicitConversions
 import org.cddcore.engine.builder._
 import org.cddcore.utilities.Exceptions
 import org.cddcore.utilities.Maps
+import org.cddcore.utilities.Orderings
 
 case class LegacyData[ID, Params, R](id: ID, params: Params, description: Option[String], actual: Either[Exception, R], expected: Either[Exception, R]) {
   def fail = actual != expected
   def pass = actual == expected
 }
 
-class LegacyItem[ID, Params, R](legacyData: LegacyData[ID, Params, R], val categoriseConclusion: AnyConclusion, val replacementConclusion: AnyConclusion, val textOrder: Int = Reportable.nextTextOrder) extends LegacyData[ID, Params, R](legacyData.id, legacyData.params, legacyData.description, legacyData.actual, legacyData.expected) with Reportable
+trait AnyLegacyItem
+class LegacyItem[ID, Params, R](legacyData: LegacyData[ID, Params, R], val categoriseConclusion: AnyConclusion, val replacementConclusion: AnyConclusion, val textOrder: Int = Reportable.nextTextOrder) extends LegacyData[ID, Params, R](legacyData.id, legacyData.params, legacyData.description, legacyData.actual, legacyData.expected) with Reportable with AnyLegacyItem
 
 trait Legacy[ID, Params, R, E <: Engine] {
   def replacement: AnyEngine[Params, R]
@@ -49,6 +51,7 @@ trait LegacyMonitor[ID,Params, R] {
 class MemoryLegacyMonitor[ID, Params, R] extends LegacyMonitor[ID, Params, R] {
   var idToItem = Map[ID, L]()
   var conclusionToItems = Map[AnyConclusion, List[L]]()
+  lazy val items = idToItem.keys.toList.sorted(Orderings.natural).map(idToItem)
 
   def itemsFor(c: AnyConclusion) = conclusionToItems.getOrElse(c, Nil)
 

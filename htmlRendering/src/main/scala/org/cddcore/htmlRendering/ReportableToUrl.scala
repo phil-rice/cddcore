@@ -55,7 +55,8 @@ trait ReportableToUrl[RU <: ReportableToUrl[RU]] extends UrlMap {
 
       ru.toUrl.get(head) match {
         case Some(oldUrl) if oldUrl == url(asRu, ru.rToName, path) => ru
-        case Some(oldUrl) => throw new IllegalStateException(s"Existing path $oldUrl\nNew path ${url(ru, rToName, path)}\n$path\n")
+        case Some(oldUrl) => 
+          throw new IllegalStateException(s"Existing path $oldUrl\nNew path ${url(ru, rToName, path)}\n$path\n")
         case _ =>
           {
             val (newSeen, newRToName) = path.foldLeft((ru.seen, ru.rToName))((acc, r) => acc match {

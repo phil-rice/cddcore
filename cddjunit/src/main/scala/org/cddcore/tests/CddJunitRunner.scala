@@ -60,7 +60,7 @@ trait CddRunner extends Runner {
       case t: AnyScenario =>
         val result = t.titleString + " => " + ldp(t.toExpected.getOrElse(default))
         result
-      case r: Requirement => r.title.getOrElse(default) 
+      case r: Requirement => r.title.getOrElse(default)
       case _ => throw new IllegalStateException(r.getClass() + "/" + r)
     })
     val result = count match { case 1 => name; case _ => name + "_" + count }
@@ -95,7 +95,7 @@ trait CddRunner extends Runner {
   }
 
   def addRequirement(d: Description, r: Requirement): Unit = {
-    if (Engine.logging) println(s"Adding requirement: $r")
+    if (Engine.logging) println(s"Adding requirement: ${Strings.oneLine(r)}")
     val childDescription = makeDescriptionfor(r)
     val name = names(r)
     d.addChild(childDescription)
@@ -107,43 +107,63 @@ trait CddRunner extends Runner {
 
   def run(notifier: RunNotifier) = {
     import KeyLike._
+    import Strings.oneLine
+    var depth = 0
+    def indent = Strings.blanks(depth)
     def fail(d: Description, e: Exception) = {
-      if (Engine.logging) { println(s"Failed: d"); e.printStackTrace() }
+      if (Engine.logging) { println(s"$indent Failed: "); e.printStackTrace() }
       notifier.fireTestFailure(new Failure(d, e))
     }
 
-    def runDescription(description: Description, middle: => Unit) {
-      if (Engine.logging) println(s"Starting: $description")
+    def testStarted(description: Description) {
+      if (Engine.logging) println(s"$indent Starting: ${oneLine(description)}")
       notifier.fireTestStarted(description);
+
+    }
+    def runDescription(description: Description, middle: => Unit) {
+      depth += 1
+      testStarted(description)
       try {
         middle
         notifier.fireTestFinished(description)
-        if (Engine.logging) println(s"Finishing: $description")
+        if (Engine.logging) println(s"$indent Finishing: ${oneLine(description)}")
       } catch { case e: Exception => fail(description, e) }
+      finally {
+        depth -= 1
+      }
     }
 
     def runReportable(r: Requirement, middle: => Unit) = {
       val description = reportableToDescription(r);
       if (description == null) {
-        if (Engine.logging) println(s"No description found for $r")
-        throw new IllegalStateException(s"No description found for $r")
+        if (Engine.logging) println(s"$indent No description found for $r")
+        throw new IllegalStateException(s"$indent No description found for $r")
       }
       exceptionMap.get(r) match {
-        case Some(e :: Nil) => fail(description, e)
-        case Some(eList) => fail(description, MultipleScenarioExceptions(eList))
+        case Some(e :: Nil) => { testStarted(description); fail(description, e) }
+        case Some(eList) => { testStarted(description); fail(description, MultipleScenarioExceptions(eList)) }
         case _ => runDescription(description, middle)
       }
     }
     def runReportableAndChildren[Params, R](r: Requirement, e: EngineFromTests[Params, R]): Unit =
       runReportable(r, r match {
         case holder: BuilderNodeAndHolder[Params, R] => for (child <- holder.nodes) runReportableAndChildren(child, e)
-        case scenario: Scenario[Params, R] => import e._; evaluator.validator.checkCorrectValue(evaluator, tree, scenario)
+        case scenario: Scenario[Params, R] => {
+          import e._;
+          if (Engine.logging) println(s"$indent startRepAndChildren: ${oneLine(scenario.titleString)}")
+          Exceptions(evaluator.validator.checkCorrectValue(evaluator, tree, scenario), (e) => s"Failed with $e")
+          if (Engine.logging) println(s"$indent endRepAndChildren: ${oneLine(scenario.titleString)}")
+        }
       })
+
     def runEngine[Params, R, FullR](e: EngineTools[Params, R]): Unit = e match {
       case d: DelegatedEngine[Params, R] => { runEngine(d.delegate); return }
       case f: FoldingEngine[Params, R, FullR] => runReportable(f.asRequirement, for (e <- f.engines) runEngine(e))
       case e: EngineFromTests[Params, R] => runReportableAndChildren(e.asRequirement, e)
     }
+
+    if (Engine.logging) println(s"Starting main run")
+
     val description = getDescription
     instance match {
       case Left(e) =>
@@ -159,7 +179,9 @@ trait CddRunner extends Runner {
         })
     }
 
+    if (Engine.logging) println(s"printing reports")
     new ReportOrchestrator(CddRunner.directory.toURL().toString(), "JUnit", allEngines).makeReports
+    if (Engine.logging) println(s"Ending main run")
 
   }
 }

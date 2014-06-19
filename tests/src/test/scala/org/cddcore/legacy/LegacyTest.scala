@@ -7,43 +7,13 @@ import scala.language.implicitConversions
 import org.cddcore.engine.builder.Engine1FromTests
 import org.cddcore.engine.builder.ElseClause
 import org.cddcore.htmlRendering.Report
+import org.cddcore.htmlRendering.SampleContexts
+import org.cddcore.htmlRendering.RenderContext
 
 @RunWith(classOf[JUnitRunner])
 class LegacyTest extends AbstractTest {
+  import LegacySamples._
   import EngineTools._
-  val replacementEngine = Engine[Int, String]().
-    useCase("").
-    scenario(1).expected("X").
-    scenario(2).expected("XX").because((p: Int) => p == 2).
-    build.asInstanceOf[Engine1FromTests[Int, String]];
-
-  val replacementRoot = replacementEngine.tree.root.asDecision
-  val conclusionX = replacementRoot.no.asConclusion
-  val conclusionXX = replacementRoot.yes.asConclusion
-  val conclusionXTitle = ConclusionAsTitle(conclusionX)
-  val conclusionXXTitle = ConclusionAsTitle(conclusionXX)
-
-  val categoriserEngine = Engine[LegacyData[Int, Int, String], String]().
-    useCase("Pass").expected("pass").
-    scenario(LegacyData(1, 1, None, Right("X"), Right("X"))).because((l) => l.expected == l.actual).
-    useCase("Fail").expected("fail").
-    scenario(LegacyData(1, 1, None, Right("X"), Right("Y"))).because((l) => l.expected != l.actual).
-    build.asInstanceOf[Engine1FromTests[LegacyData[Int, Int, String], String]];
-
-  val categoriserRoot = categoriserEngine.tree.root.asDecision
-  val passConclusion = categoriserRoot.yes.asConclusion
-  val notPassDecision = categoriserRoot.no.asDecision
-  val failConclusion = notPassDecision.yes.asConclusion
-  val undecidedConclusion = notPassDecision.no.asConclusion
-  val passTitle = ConclusionAsTitle(passConclusion)
-  val failTitle = ConclusionAsTitle(failConclusion)
-
-  def makeLegacy(ids: Iterable[Int], reporter: LegacyMonitor[Int, Int, String]) =
-    new SingleConclusionLegacy[Int, Int, String](ids,
-      (x: Int) => x,
-      (x: Int) => Right("X".padTo(x, "X").mkString),
-      replacementEngine, categoriserEngine,
-      reporter)
 
   "The legacy test" should "be set up properly" in {
     assertEquals(Some(Right("X")), conclusionX.scenarios.head.expected)
@@ -81,6 +51,13 @@ class LegacyTest extends AbstractTest {
     List(conclusionXX, replacementRoot, replacementEngine.tree, replacementEngine.asRequirement, report),
     List(ElseClause(), replacementRoot, replacementEngine.tree, replacementEngine.asRequirement, report),
     List(conclusionX, replacementRoot, replacementEngine.tree, replacementEngine.asRequirement, report))
+
+  "A legacy reports urlMaps" should "not throw an exception" in {
+    import SampleContexts._
+    import LegacySamples._
+    val context: RenderContext = legacyReport
+
+  }
 
   "The Legacy report, with no conclusion" should "return a path for the report, the  two engines, their conclusions some items , and the decision tree for each engine" in {
     val monitor = new MemoryLegacyMonitor[Int, Int, String]

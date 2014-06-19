@@ -21,7 +21,7 @@ object SampleContexts {
   val iconUrl = "IconUrl"
   val emptyUrlMap = UrlMap(rootUrl)
 
-  def context(report: Report, pathToConclusions: List[Reportable] = List()) = {
+  def context(report: Report, pathToConclusions: List[Reportable] = List()): RenderContext = {
     val urlMap = emptyUrlMap ++ report.urlMapPaths
     val rc = RenderContext(urlMap, SampleContexts.testDate, iconUrl, pathToConclusions)
     rc
