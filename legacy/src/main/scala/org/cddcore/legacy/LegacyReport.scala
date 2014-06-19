@@ -75,7 +75,7 @@ object LegacyReportRenderer {
     }.
 
     scenario(legacyReport, List(li1, legacyReport), End). 
-    expected("</div> <!-- legacyItem -->\n").
+    expected("</div> <!-- legacyItemTable --></div> <!-- legacyItem -->\n").
     matchOn { case (rc, path @ (li: AnyLegacyItem) :: tail, End) => "</div> <!-- legacyItemTable --></div> <!-- legacyItem -->\n" }.
     build
 
