@@ -140,4 +140,13 @@ class LegacyTest extends AbstractTest {
     val actual = report.reportPaths
     assertEquals(expected, actual)
   }
+
+  "A legacy report" should "be rendered properly" in {
+    val monitor = new MemoryLegacyMonitor[Int, Int, String]
+    val legacy = makeLegacy(List(1, 2, 3), monitor)
+    val report = LegacyReport("title", legacy, monitor)
+    val html = Report.html(report, LegacyReportRenderer.legacyRenderer)
+    println(html);
+
+  }
 } 

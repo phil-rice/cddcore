@@ -66,6 +66,7 @@ object LegacyReportRenderer {
   val legacyRenderer = Engine[RenderContext, List[Reportable], StartChildEndType, String]().
     title("Legacy Report Renderer").
     renderReport.
+    renderFoldingEngines.renderChildEngines.renderEngineFromTests.
     renderDecisionTrees.
 
     scenario(legacyReport, List(li1, legacyReport), Start).
@@ -74,11 +75,22 @@ object LegacyReportRenderer {
       case (rc, path @ (li: AnyLegacyItem) :: tail, Start) => "<div class='legacyItem'><div class='legacyItemTable'>\n"
     }.
 
-    scenario(legacyReport, List(li1, legacyReport), End). 
+    scenario(legacyReport, List(li1, legacyReport), End).
     expected("</div> <!-- legacyItemTable --></div> <!-- legacyItem -->\n").
     matchOn { case (rc, path @ (li: AnyLegacyItem) :: tail, End) => "</div> <!-- legacyItemTable --></div> <!-- legacyItem -->\n" }.
-    build
 
+    scenario(legacyReport, List(passTitle, li1, legacyReport), Start).
+    expected("<div class='conclusionTitle'><h2>pass</h2>\n").
+    matchOn {
+      case (rc, path @ (ct: ConclusionAsTitle) :: tail, Start) => 
+        s"<div class='conclusionTitle'><h2>${Strings.htmlEscape(ct.conclusion.toCode.description)}</h2>\n"
+    }.
+    scenario(legacyReport, List(passTitle, li1, legacyReport), End).
+    expected("</div> <!-- conclusionTitle -->\n").
+    matchOn {
+      case (rc, path @ (ct: ConclusionAsTitle) :: tail, End) => "</div> <!-- conclusionTitle -->\n"
+    }.
+    build
 }
 
 object LegacyReport {
