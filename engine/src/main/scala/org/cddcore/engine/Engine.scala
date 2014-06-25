@@ -192,19 +192,19 @@ class PrintlnEngineMonitor extends EngineMonitor {
 class TraceEngineMonitor(implicit ldp: CddDisplayProcessor) extends EngineMonitor {
   var logging = true
   var traceBuilder = TraceBuilder[Engine, Any, Any,AnyConclusion]()
-  def log(prefix: String, stuff: => {}) = { stuff; if (logging) println(prefix + " " + Strings.oneLine(traceBuilder.shortToString)) }
-  def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) =
-    log("call", traceBuilder = traceBuilder.nest(e.asInstanceOf[Engine], params))
-  def finished[R](e: Engine, conclusion: Option[AnyConclusion], result: R)(implicit ldp: CddDisplayProcessor) =
+  def log(prefix: String, stuff: => Unit) = { stuff; if (logging) println(prefix + " " + Strings.oneLine(traceBuilder.shortToString)) }
+  def call[Params](e: Engine, params: Params)(implicit cdp: CddDisplayProcessor) =
+    log("call", {traceBuilder = traceBuilder.nest(e.asInstanceOf[Engine], params)})
+  def finished[R](e: Engine, conclusion: Option[AnyConclusion], result: R)(implicit cdp: CddDisplayProcessor) =
     log("finished", traceBuilder = traceBuilder.finished(result, conclusion))
-  def failed(e: Engine, conclusion: Option[AnyConclusion], exception: Exception)(implicit ldp: CddDisplayProcessor) =
+  def failed(e: Engine, conclusion: Option[AnyConclusion], exception: Exception)(implicit cdp: CddDisplayProcessor) =
     log("failed", traceBuilder = traceBuilder.failed(exception, conclusion))
   def trace = traceBuilder.children
 }
 
 class ProfileEngineMonitor extends EngineMonitor {
   val profiler = new SimpleProfiler[Engine]
-  def call[Params](e: Engine, params: Params)(implicit ldp: CddDisplayProcessor) = profiler.start(e)
+  def call[Params](e: Engine, params: Params)(implicit cdp: CddDisplayProcessor) = profiler.start(e)
   def finished[R](e: Engine, conclusion: Option[AnyConclusion], result: R)(implicit ldp: CddDisplayProcessor) = profiler.end(e)
   def failed(e: Engine, conclusion: Option[AnyConclusion], exception: Exception)(implicit ldp: CddDisplayProcessor) = profiler.end(e)
 }

@@ -102,7 +102,7 @@ class ReportOrchestrator(rootUrl: String, title: String, engines: List[Engine], 
       val t = rootReport.reportPaths
       reportWriter.print(iconUrl, None, Report.html(rootReport, HtmlRenderer.engineAndDocumentsSingleItemRenderer, renderContext))
 
-      for (e <- engines; path <- e.asRequirement.pathsIncludingSelf.toList) {
+      for (e <- engines; path: List[Reportable] <- e.asRequirement.pathsIncludingSelf.toList) {
         val r = path.head
         val url = urlMap(r)
         val report = Report.focusedReport(Some("title"), path)
@@ -150,7 +150,7 @@ case class DocumentAndEngineReport(title: Option[String],
   import EngineTools._
   import ReportableHelper._
 
-  val documents = engines.flatMap(_.asRequirement.documents).toList.removeDuplicates
+  val documents = engines.flatMap(_.asRequirement.documents).toList.distinct
   val sortedEngines = engines.toList.sortBy(_.textOrder)
   val documentHolder = DocumentHolder(documents)
   val engineHolder = EngineHolder(sortedEngines)
@@ -226,7 +226,7 @@ case class TraceReport(title: Option[String],
     head :: tail
   }
 
-  val eds = traceItems.flatMap(edsInTraceItem(_)).toList.removeDuplicates
+  val eds = traceItems.flatMap(edsInTraceItem(_)).toList.distinct
   val feds: List[NestedHolder[Reportable]] = eds.collect { case fed: FoldingEngineDescription[_, _, _] => fed.asInstanceOf[NestedHolder[Reportable]] }
   val childEngines = feds.flatMap((fed) => fed.nodes.toSet)
   val edsWithoutChildEngines = eds.filter(!childEngines.contains(_))

@@ -4,6 +4,15 @@ import com.typesafe.sbteclipse.plugin.EclipsePlugin.EclipseKeys
 
 object CddBuild extends Build {
 
+  val scalaVersionNo = "2.11.0"
+  val scalaTestVersionNo = "2.2.0"
+  
+  
+  
+ 
+  
+  
+  
   val buildSettings = Defaults.defaultSettings ++  Seq(
    (testOptions in Test) += Tests.Argument(TestFrameworks.ScalaTest, "-h", "report"),
     publishMavenStyle := true,
@@ -43,13 +52,29 @@ object CddBuild extends Build {
     unmanagedClasspath in Runtime <+= (baseDirectory) map { bd => Attributed.blank(bd / "src/main/resources") },
     organization := "org.cddcore",
    
-    version := "2.1.0",
+    version := "2.1.1",
     scalacOptions ++= Seq(),
     retrieveManaged := false,
-    scalaVersion := "2.10.4",
+    //scalaVersion := "2.10.4",  //need to change this in engine project as well
+    scalaVersion := scalaVersionNo,
     EclipseKeys.withSource := true,
     resolvers += Classpaths.typesafeResolver,
-	resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/")
+	resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
+	libraryDependencies := {
+       CrossVersion.partialVersion(scalaVersion.value) match {
+    // if scala 2.11+ is used, add dependency on scala-xml module
+    case Some((2, scalaMajor)) if scalaMajor >= 11 =>
+      libraryDependencies.value ++ Seq(
+        "org.scala-lang.modules" %% "scala-xml" % "1.0.1",
+        "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.1",
+        "org.scala-lang.modules" %% "scala-swing" % "1.0.1")
+    case _ =>
+      // or just libraryDependencies.value if you don't depend on scala-swing
+      libraryDependencies.value :+ "org.scala-lang" % "scala-swing" % scalaVersion.value
+  }
+}
+	
+	)
 	
 	
   lazy val build = Project(id = "build", settings = buildSettings, base = file("build"))
@@ -59,7 +84,7 @@ object CddBuild extends Build {
   lazy val htmlRendering = Project(id = "htmlRendering", settings = buildSettings, base = file("htmlRendering")).dependsOn(engine)
   lazy val cddjunit = Project(id = "cddjunit", settings = buildSettings, base = file("cddjunit")).dependsOn( engine,htmlRendering)
   lazy val website = Project(id = "website",settings = buildSettings,  base = file("website")).dependsOn( engine,htmlRendering)
-  lazy val examples = Project(id = "examples",settings = buildSettings,  base = file("examples")).dependsOn(engine,cddjunit, structure,website)
+  lazy val examples = Project(id = "examples",settings = buildSettings,  base = file("examples")).dependsOn(engine,cddjunit, structure,website, legacy)
   lazy val legacy = Project(id = "legacy",settings = buildSettings,  base = file("legacy")).dependsOn(engine,cddjunit, structure,website)
   lazy val tests = Project(id = "tests", settings = buildSettings, base = file("tests")).dependsOn( engine, htmlRendering,cddjunit, structure,website, examples, legacy)
 //  lazy val root = Project(id = "root",settings = buildSettings,  base = file(".")).aggregate( engine, tests,cddjunit)

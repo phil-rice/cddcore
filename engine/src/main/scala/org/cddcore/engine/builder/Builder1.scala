@@ -112,7 +112,7 @@ case class Builder1[P, R, FullR](
 }
 
 
-case class SimpleBuildEngine1[P, R] extends SimpleBuildEngine[P, R, Engine1[P, R, R]](
+ class SimpleBuildEngine1[P, R] extends SimpleBuildEngine[P, R, Engine1[P, R, R]](
   BuildEngine.defaultRootCode1, new MakeClosures, BuildEngine.expectedToCode1) {
   def constructEngine(
     requirement: EngineRequirement[P, R],

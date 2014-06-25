@@ -1,6 +1,6 @@
 name := "structure"
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.10.4"
+libraryDependencies += "org.scala-lang" % "scala-compiler" % CddBuild.scalaVersionNo
 
 libraryDependencies += "org.joda" % "joda-convert" % "1.2"
 

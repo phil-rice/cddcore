@@ -1,4 +1,4 @@
 name := "engine"
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.10.4"
+libraryDependencies += "org.scala-lang" % "scala-compiler" % CddBuild.scalaVersionNo
 

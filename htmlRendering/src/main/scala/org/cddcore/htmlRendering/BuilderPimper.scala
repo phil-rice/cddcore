@@ -13,6 +13,13 @@ import scala.language.implicitConversions
 
 object BuilderPimper {
   implicit def toPimper(builder: Builder3[RenderContext, List[Reportable], StartChildEndType, String, String]): BuilderPimper = new BuilderPimper(builder: Builder3[RenderContext, List[Reportable], StartChildEndType, String, String])
+  def table(clazz: String, rows: Tuple2[String, _]*) =
+    s"<table class='$clazz'>${
+      rows.map {
+        case (c, (n, v)) => s"<tr class='$c'><td class='title'>$n</td><td class='value'>$v</td></tr>"
+        case (n, v) => s"<tr><td class='title'>$n</td><td class='value'>$v</td></tr>"
+      }.mkString("")
+    }</table>"
 }
 
 class BuilderPimper(builder: Builder3[RenderContext, List[Reportable], StartChildEndType, String, String]) {
@@ -32,7 +39,7 @@ class BuilderPimper(builder: Builder3[RenderContext, List[Reportable], StartChil
   def renderReport = builder.useCase("Reports have a huge template at the start, and end. The report title and date are substituted in").
     scenario(engineReport, engineReport, Start).
     expected(ReportDetails().reportStart("engineReportTitle", iconUrl, testDate)).
-    matchOn { case (RenderContext(_, date, iconUrl, pathToConclusion, reportDetails), (r: Report) :: _, Start) => reportDetails.reportStart(r.titleString, iconUrl, date) }.
+    matchOn { case (RenderContext(_, date, iconUrl, pathToConclusion, reportDetails, _), (r: Report) :: _, Start) => reportDetails.reportStart(r.titleString, iconUrl, date) }.
 
     scenario(engineReport, engineReport, End).
     expected(ReportDetails().reportEnd).
@@ -158,16 +165,11 @@ class BuilderPimper(builder: Builder3[RenderContext, List[Reportable], StartChil
   def renderScenarioDetailed = builder.useCase("a scenario is a table").
     scenario(engineReport, uc0s0, Child).
     expected(s"<div class='scenario'><div class='scenarioText'>${titleAndIcon(context(engineReport), uc0s0)}</div><!-- scenarioText -->" +
-      "<table class='scenarioTable'>" +
-      "<tr><td class='title'>Parameter</td><td class='value'>0</td></tr>" +
-      "<tr><td class='title'>Expected</td><td class='value'>0</td>" +
-      "</tr></table></div><!-- scenario -->").
+      table("scenarioTable", "Parameter" -> "0", "Expected" -> "0") + "</div><!-- scenario -->\n").
     matchOn {
       case (rc, (s: Scenario[_, _]) :: _, Child) => s"<div class='scenario'><div class='scenarioText'>${titleAndIcon(rc, s)}</div><!-- scenarioText -->" +
-        s"<table class='scenarioTable'>" +
-        s"<tr><td class='title'>Parameter</td><td class='value'>${rc.cdp.html(s.params)}</td></tr>" +
-        s"<tr><td class='title'>Expected</td><td class='value'>${s.htmlPrintExpected}</td></tr>" +
-        "</table></div><!-- scenario -->"
+        table("scenarioTable", "Parameter" -> rc.cdp.html(s.params), "Expected" -> s.htmlPrintExpected) +
+        "</div><!-- scenario -->\n"
     }
 
   def renderDecisionTrees = builder.useCase("A decision tree, closes off the engine with summary div and  get's it's own div").
@@ -262,7 +264,12 @@ class BuilderPimper(builder: Builder3[RenderContext, List[Reportable], StartChil
     matchOn {
       case (rc, path @ (c: AnyConclusion) :: _, Child) => "\n" +
         s"<div class='result'>${indent(path)}<span class='keyword'>then&#160;</span>" +
-        s"${c.toScenarios.map((s) => s"<a class='scenarioLink' href='${rc.urlMap(s)}'>${icon(rc, s)}</a>").mkString("")}" +
+        s"${
+          c.toScenarios.map {
+            case s if rc.urlMap.get(s).isDefined => s"<a class='scenarioLink' href='${rc.urlMap(s)}'>${icon(rc, s)}</a>"
+            case s => s"<a class='scenarioLink'>${icon(rc, s)}</a>"
+          }.mkString("")
+        }" +
         s"<div class='conclusion'>${Strings.htmlEscape(c.toCode.description)}</div><!-- conclusion --></div><!-- result -->\n"
     }.
     useCase("A conclusion that is on the pathToConclusion needs to be marked get's it's own div").

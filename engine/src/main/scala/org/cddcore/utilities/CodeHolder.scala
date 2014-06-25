@@ -16,7 +16,7 @@ object CodeHolder {
 
 }
 case class CodeHolder[Fn](val fn: Fn, val description: String, val comment: String = "") extends AbstractCodeHolder {
-  //Need this to allow tests to pass. Obvio usly this is dodgy if we start putting them in maps etc... so don't!
+  //Need this to allow tests to pass. Obviously this is dodgy if we start putting them in maps etc... so don't!
   override def equals(other: Any): Boolean = other match {
     case c: CodeHolder[Fn] => c.description == description
     case _ => false

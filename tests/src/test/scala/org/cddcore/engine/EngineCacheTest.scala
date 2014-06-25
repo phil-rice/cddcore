@@ -25,7 +25,7 @@ abstract class EngineCacheTest[Params, R, FullR, B <: Builder[Params, R, R, B, E
     assertEquals(engine.evaluator, cached.evaluator)
     assertEquals(engine.titleString, cached.titleString)
     assertEquals(engine.ldp, cached.ldp)
-    assert(engine.buildExceptions.eq(cached.buildExceptions))
+    assertEquals(true, engine.buildExceptions.eq(cached.buildExceptions))
   }
 
   it should "give the same results for a blank engine" in {

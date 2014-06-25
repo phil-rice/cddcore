@@ -35,7 +35,7 @@ class SimpleReportDetails(
 
 }
 
-case class RenderContext(urlMap: UrlMap, reportDate: Date, iconUrl: String, pathToConclusion: List[Reportable] = List(), reportDetails: ReportDetails = ReportDetails())(implicit cddDisplayProcessor: CddDisplayProcessor) {
+case class RenderContext(urlMap: UrlMap, reportDate: Date, iconUrl: String, pathToConclusion: List[Reportable] = List(), reportDetails: ReportDetails = ReportDetails(), misc: Map[String,Any] = Map())(implicit cddDisplayProcessor: CddDisplayProcessor) {
   val cdp = cddDisplayProcessor
   override def toString = getClass.getSimpleName()
 }

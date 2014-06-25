@@ -137,7 +137,7 @@ class FoldingBuildEngine3[P1, P2, P3, R, FullR] extends SimpleFoldingBuildEngine
     ldp: CddDisplayProcessor): FoldingEngine3[P1, P2, P3, R, FullR] =
     FoldingEngine3(requirement, engines, evaluateTree, exceptionMap, initialValue, foldingFn)(ldp)
 }
-case class SimpleBuildEngine3[P1, P2, P3, R] extends SimpleBuildEngine[(P1, P2, P3), R, Engine3[P1, P2, P3, R, R]](
+ class SimpleBuildEngine3[P1, P2, P3, R] extends SimpleBuildEngine[(P1, P2, P3), R, Engine3[P1, P2, P3, R, R]](
   BuildEngine.defaultRootCode3, new MakeClosures, BuildEngine.expectedToCode3) {
   def constructEngine(requirement: EngineRequirement[(P1, P2, P3), R], dt: DecisionTree[(P1, P2, P3), R],
     exceptionMap: ExceptionMap, ldp: CddDisplayProcessor) =
