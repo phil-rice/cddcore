@@ -4,15 +4,10 @@ import com.typesafe.sbteclipse.plugin.EclipsePlugin.EclipseKeys
 
 object CddBuild extends Build {
 
-  val scalaVersionNo = "2.11.0"
+  val cddVersionNo = "2.1.1"
+  val scalaVersionNo = "2.11.1"
   val scalaTestVersionNo = "2.2.0"
-  
-  
-  
- 
-  
-  
-  
+    
   val buildSettings = Defaults.defaultSettings ++  Seq(
    (testOptions in Test) += Tests.Argument(TestFrameworks.ScalaTest, "-h", "report"),
     publishMavenStyle := true,
@@ -52,7 +47,7 @@ object CddBuild extends Build {
     unmanagedClasspath in Runtime <+= (baseDirectory) map { bd => Attributed.blank(bd / "src/main/resources") },
     organization := "org.cddcore",
    
-    version := "2.1.1",
+    version := cddVersionNo,
     scalacOptions ++= Seq(),
     retrieveManaged := false,
     //scalaVersion := "2.10.4",  //need to change this in engine project as well

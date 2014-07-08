@@ -102,7 +102,7 @@ class ReportOrchestrator(rootUrl: String, title: String, engines: List[Engine], 
       val t = rootReport.reportPaths
       reportWriter.print(iconUrl, None, Report.html(rootReport, HtmlRenderer.engineAndDocumentsSingleItemRenderer, renderContext))
 
-      for (e <- engines; path: List[Reportable] <- e.asRequirement.pathsIncludingSelf.toList) {
+      for (e <- engines; path: List[Reportable] <- ( e.asRequirement.pathsIncludingSelf.toList): List[List[Reportable]]) {
         val r = path.head
         val url = urlMap(r)
         val report = Report.focusedReport(Some("title"), path)

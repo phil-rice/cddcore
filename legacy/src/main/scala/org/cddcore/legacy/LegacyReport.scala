@@ -138,8 +138,8 @@ case class SingleConclusionLegacyReport[ID, Params, R](title: Option[String], le
   private def pathFor(e: Engine): List[List[Reportable]] = {
     import EngineTools._
     val ed = e.asRequirement
-    val conclusionsInEngine = e.trees.flatMap(_.root.conclusions)
-    val conclusions = conclusion match { case Some(c) if conclusionsInEngine.contains(c) => List(c); case _ => e.trees.flatMap(_.root.conclusions) }
+    val conclusionsInEngine = e.trees.flatMap((x: DecisionTree[_,_])=> x.root.conclusions)
+    val conclusions = conclusion match { case Some(c) if conclusionsInEngine.contains(c) => List(c); case _ => e.trees.flatMap((x: DecisionTree[_,_])=> x.root.conclusions) }
     val middle: List[List[Reportable]] = conclusions.flatMap((c) => {
       val h: List[Reportable] = List(getTitle(List(c, ed, this), c), ed, this)
       val m: List[List[Reportable]] = (conclusionToItems.get(c) match {
@@ -154,7 +154,7 @@ case class SingleConclusionLegacyReport[ID, Params, R](title: Option[String], le
         case _ => h :: m
       }
     })
-    val tail = e.trees.flatMap(_.treePathsWithElseClause(List(e.asRequirement, this)))
+    val tail = e.trees.flatMap((x: DecisionTree[_,_])=> x.treePathsWithElseClause(List(e.asRequirement, this)))
     List[Reportable](ed, this) :: middle ::: tail
   }
   val reportPaths: List[List[org.cddcore.engine.Reportable]] =
