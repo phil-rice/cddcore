@@ -13,7 +13,8 @@ trait BuildFoldingEngine[Params, R, FullR, F <: EngineTools[Params, R], E <: Eng
     ldp: CddDisplayProcessor): F
   def buildChildEngine: BuildEngine[Params, R, R, E]
 
-  def buildEngine(r: EngineRequirement[Params, R], buildExceptions: ExceptionMap, ldp: CddDisplayProcessor) = {
+  def buildEngine(r: EngineRequirement[Params, R], buildExceptions: ExceptionMap, ldp: CddDisplayProcessor) = try {
+    Engine.logBuild("build folding engine")
     r match {
       case f: FoldingEngineDescription[Params, R, FullR] => {
         val initial = (List[EngineFromTests[Params, R]](), buildExceptions)
@@ -32,13 +33,16 @@ trait BuildFoldingEngine[Params, R, FullR, F <: EngineTools[Params, R], E <: Eng
         constructFoldingEngine(requirements, engines, exceptionMap, f.initialValue, f.foldingFn, ldp)
       }
     }
+  } finally {
+    Engine.logBuild("end of build folding engine")
+
   }
 }
 
 abstract class SimpleFoldingBuildEngine[Params, R, FullR, F <: EngineTools[Params, R], E <: EngineTools[Params, R]](
-  val defaultRoot: CodeHolder[(Params)=>R],
+  val defaultRoot: CodeHolder[(Params) => R],
   makeClosures: MakeClosures[Params, R],
-  val expectedToCode: (Either[Exception, R]) => CodeHolder[(Params)=>R],
+  val expectedToCode: (Either[Exception, R]) => CodeHolder[(Params) => R],
   val buildChildEngine: BuildEngine[Params, R, R, E])(implicit val ldp: CddDisplayProcessor)
   extends BuildFoldingEngine[Params, R, FullR, F, E] {
   lazy val decisionTreeLens = new DecisionTreeLens[Params, R]

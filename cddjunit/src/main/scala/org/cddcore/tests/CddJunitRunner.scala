@@ -15,6 +15,7 @@ import org.junit.runner.notification.RunNotifier
 import org.cddcore.engine.Engine.test
 import org.cddcore.utilities.KeyLike.ReportableLike
 import org.cddcore.htmlRendering.ReportOrchestrator
+import org.cddcore.engine._
 
 object CddRunner {
   val separator = "\n#########\n"
@@ -58,7 +59,7 @@ trait CddRunner extends Runner {
     val default = templateLike(r) + r.textOrder
     val name = Strings.clean(r match {
       case t: AnyScenario =>
-        val result = t.titleString + " => " + ldp(t.toExpected.getOrElse(default))
+        val result = t.titleOrDescription(ldp(t.toParams)) + " => " + ldp(t.toExpected.getOrElse(default))
         result
       case r: Requirement => r.title.getOrElse(default)
       case _ => throw new IllegalStateException(r.getClass() + "/" + r)
@@ -84,7 +85,7 @@ trait CddRunner extends Runner {
     instance match {
       case Left(e) =>
       case _ =>
-        if (Engine.logging) println("Running\n" + rootEngines.mkString("\n---------------------\n"))
+        Engine.log("Running\n" + rootEngines.mkString("\n---------------------\n"))
         for (exceptionOrEngine <- rootEngines)
           exceptionOrEngine match {
             case Right(engine) => addRequirement(result, engine.asRequirement)
@@ -95,7 +96,7 @@ trait CddRunner extends Runner {
   }
 
   def addRequirement(d: Description, r: Requirement): Unit = {
-    if (Engine.logging) println(s"Adding requirement: ${Strings.oneLine(r)}")
+    if (Engine.logging) Engine.log(s"Adding requirement: ${Strings.oneLine(r)}")
     val childDescription = makeDescriptionfor(r)
     val name = names(r)
     d.addChild(childDescription)
@@ -162,7 +163,7 @@ trait CddRunner extends Runner {
       case e: EngineFromTests[Params, R] => runReportableAndChildren(e.asRequirement, e)
     }
 
-    if (Engine.logging) println(s"Starting main run")
+    Engine.log(s"Starting main run")
 
     val description = getDescription
     instance match {
@@ -179,9 +180,9 @@ trait CddRunner extends Runner {
         })
     }
 
-    if (Engine.logging) println(s"printing reports")
+    Engine.log(s"printing reports")
     new ReportOrchestrator(CddRunner.directory.toURL().toString(), "JUnit", allEngines).makeReports
-    if (Engine.logging) println(s"Ending main run")
+    Engine.log(s"Ending main run")
 
   }
 }

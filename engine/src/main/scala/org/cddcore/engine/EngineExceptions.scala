@@ -180,7 +180,7 @@ class CannotHaveFoldingEngineWithoutChildEnginesException extends EngineExceptio
 
 object BecauseClauseScenarioException {
   def apply(scenario: AnyScenario, cause: Throwable)(implicit ldp: CddDisplayProcessor) =
-    throw new BecauseClauseScenarioException((s"Threw exception evaluating because ${scenario.toBecause.getOrElse(throw new IllegalStateException).description} \n${ExceptionScenarioPrinter.full(scenario)}"), scenario, cause)
+    throw new BecauseClauseScenarioException((s"Threw exception evaluating because ${scenario.toBecause.getOrElse(throw new IllegalStateException(cause)).description} \n${ExceptionScenarioPrinter.full(scenario)}"), scenario, cause)
 }
 
 class BecauseClauseScenarioException(msg: String, scenario: AnyScenario, cause: Throwable) extends ScenarioException(msg, scenario, cause)

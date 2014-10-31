@@ -152,7 +152,7 @@ trait EngineFromTests[Params, R] extends EngineTools[Params, R] with AnySingleCo
       case c: Conclusion[Params, R] => indent + c.code.pretty + "\n";
     }
   }
-  override def toString(): String = toString("", tree.root)
+  override def toString(): String = "short to string" // toString("", tree.root)
 
 }
 
@@ -191,10 +191,10 @@ class PrintlnEngineMonitor extends EngineMonitor {
 
 class TraceEngineMonitor(implicit ldp: CddDisplayProcessor) extends EngineMonitor {
   var logging = true
-  var traceBuilder = TraceBuilder[Engine, Any, Any,AnyConclusion]()
+  var traceBuilder = TraceBuilder[Engine, Any, Any, AnyConclusion]()
   def log(prefix: String, stuff: => Unit) = { stuff; if (logging) println(prefix + " " + Strings.oneLine(traceBuilder.shortToString)) }
   def call[Params](e: Engine, params: Params)(implicit cdp: CddDisplayProcessor) =
-    log("call", {traceBuilder = traceBuilder.nest(e.asInstanceOf[Engine], params)})
+    log("call", { traceBuilder = traceBuilder.nest(e.asInstanceOf[Engine], params) })
   def finished[R](e: Engine, conclusion: Option[AnyConclusion], result: R)(implicit cdp: CddDisplayProcessor) =
     log("finished", traceBuilder = traceBuilder.finished(result, conclusion))
   def failed(e: Engine, conclusion: Option[AnyConclusion], exception: Exception)(implicit cdp: CddDisplayProcessor) =
@@ -217,6 +217,9 @@ class MultipleEngineMonitors(monitors: List[EngineMonitor]) extends EngineMonito
 
 object Engine {
   var logging = ("true" == System.getenv("cdd.junit.log")) || false
+  var loggingBuild = ("true" == System.getenv("cdd.junit.logbuild")) || false
+  def log(message: => String) = if (logging) println(message)
+  def logBuild(message: => String) = if (loggingBuild) println(message)
   /** returns a builder for an engine that implements Function[P,R] */
   def apply[P, R]()(implicit ldp: CddDisplayProcessor) = Builder1[P, R, R](BuildEngine.initialNodes, ExceptionMap(), BuildEngine.builderEngine1)(ldp)
   /** returns a builder for an engine that implements Function2[P1,P2,R] */

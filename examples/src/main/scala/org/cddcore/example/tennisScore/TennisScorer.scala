@@ -58,7 +58,6 @@ object TennisScorer {
 
     scenario(4, 5).expected("advantage right").because((l: Int, r: Int) => l >= 3 && r >= 3 && r == l + 1).
     scenario(5, 6).expected("advantage right").
-    scenario(3, 4).expected("advantage right").
 
     build
 

@@ -18,9 +18,13 @@ trait Builder[Params, R, FullR, B <: Builder[Params, R, FullR, B, E], E <: Engin
   with WithCddDisplayProcessor {
   val bl = new FullBuilderLens[Params, R, FullR, Builder[Params, R, FullR, B, E]]
   import bl._
-  def expectedToCode: (Either[Exception, R]) => CodeHolder[(Params)=>R]
+  def expectedToCode: (Either[Exception, R]) => CodeHolder[(Params) => R]
 
-  protected def wrap(stuff: => Builder[Params, R, FullR, B, E]): B = try {
+  protected def wrap(purpose: => String, stuff: => Builder[Params, R, FullR, B, E]): B = {
+    Engine.logBuild(purpose)
+    wrapQuietly(stuff)
+  }
+  protected def wrapQuietly(stuff: => Builder[Params, R, FullR, B, E]): B = try {
     stuff.asInstanceOf[B]
   } catch {
     case e: Exception => {
@@ -37,29 +41,29 @@ trait Builder[Params, R, FullR, B <: Builder[Params, R, FullR, B, E], E <: Engin
   }
   protected def makeClosures: MakeClosures[Params, R]
 
-  def title(title: String): B = wrap(currentNodeL.andThen(asRequirementL).andThen(titleL).set(this, Some(title)))
-  def description(description: String): B = wrap(currentNodeL.andThen(asRequirementL).andThen(descriptionL).set(this, Some(description)))
-  def priority(priority: Int): B = wrap(currentNodeL.andThen(asRequirementL).andThen(priorityL).set(this, Some(priority)))
+  def title(title: String): B = wrap("title", currentNodeL.andThen(asRequirementL).andThen(titleL).set(this, Some(title)))
+  def description(description: String): B = wrap("description", currentNodeL.andThen(asRequirementL).andThen(descriptionL).set(this, Some(description)))
+  def priority(priority: Int): B = wrap("priority", currentNodeL.andThen(asRequirementL).andThen(priorityL).set(this, Some(priority)))
 
-  def useCase(title: String, description: String = null): B = wrap(nextUseCaseHolderL.andThen(nodesL).mod(this, (nodes: List[BuilderNode[Params, R]]) =>
+  def useCase(title: String, description: String = null): B = wrap("useCase", nextUseCaseHolderL.andThen(nodesL).mod(this, (nodes: List[BuilderNode[Params, R]]) =>
     new UseCase[Params, R](Some(title), description = Option(description)) :: nodes))
-  def because(because: (Params)=>Boolean, description: String): B = becauseHolder(new CodeHolder[(Params)=>Boolean](because, description))
+  def because(because: (Params) => Boolean, description: String): B = becauseHolder(new CodeHolder[(Params) => Boolean](because, description))
 
   def assert(assertion: (Params, Either[Exception, R]) => Boolean, description: String) =
-    wrap(currentNodeL.andThen(toScenarioL).andThen(assertionL).mod(this, { _ :+ new CodeHolder(assertion, description) }))
+    wrap("assert", currentNodeL.andThen(toScenarioL).andThen(assertionL).mod(this, { _ :+ new CodeHolder(assertion, description) }))
 
-  def becauseHolder(becauseHolder: CodeHolder[(Params)=>Boolean]): B =
-    wrap(currentNodeL.andThen(toScenarioL).andThen(becauseL((so, sn, b) => checkBecause(makeClosures, sn))).set(this, Some(becauseHolder)))
+  def becauseHolder(becauseHolder: CodeHolder[(Params) => Boolean]): B =
+    wrap("because", currentNodeL.andThen(toScenarioL).andThen(becauseL((so, sn, b) => checkBecause(makeClosures, sn))).set(this, Some(becauseHolder)))
   def expected(r: R, title: String = null): B =
-    wrap(currentNodeL.andThen(expectedL).set(this, Some(Right(r))))
+    wrap("expected", currentNodeL.andThen(expectedL).set(this, Some(Right(r))))
   def expectedAndCode(r: R, title: String = null): B = expected(r, title).codeHolder(expectedToCode(Right(r)))
-  def expectException(e: Exception, title: String = null): B = wrap(currentNodeL.andThen(expectedL).set(this, Some(Left(e))))
+  def expectException(e: Exception, title: String = null): B = wrap("expectException", currentNodeL.andThen(expectedL).set(this, Some(Left(e))))
   def reference(ref: String, document: Document = null): B =
-    wrap(currentNodeL.andThen(asRequirementL).andThen(referencesL).mod(this, (r) => r + Reference(ref, Option(document))))
+    wrap("reference", currentNodeL.andThen(asRequirementL).andThen(referencesL).mod(this, (r) => r + Reference(ref, Option(document))))
 
   def copyNodes(nodes: List[BuilderNode[Params, R]]): B
-  def codeHolder(codeHolder: CodeHolder[(Params)=>R]): B = wrap(currentNodeL.andThen(codeL((o, n, c) => {})).set(this, Some(codeHolder)))
-  def childEngine(title: String, description: String = null): B = wrap(toFoldingEngineDescription.andThen(foldEngineNodesL).
+  def codeHolder(codeHolder: CodeHolder[(Params) => R]): B = wrap("codeHolder", currentNodeL.andThen(codeL((o, n, c) => {})).set(this, Some(codeHolder)))
+  def childEngine(title: String, description: String = null): B = wrap("childEngine", toFoldingEngineDescription.andThen(foldEngineNodesL).
     mod(this.asInstanceOf[B], ((n) => new EngineDescription[Params, R](title = Some(title), description = Option(description)) :: n)).asInstanceOf[Builder[Params, R, FullR, B, E]])
 }
 

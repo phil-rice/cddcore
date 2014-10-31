@@ -94,21 +94,21 @@ case class Builder1[P, R, FullR](
     val chResult = CodeHolder[(P) => R](p => pf.apply(p), resultToString)
     becauseHolder(chBecause).codeHolder(chResult)
   }
-  def scenario(p: P, title: String = null) = wrap(nextScenarioHolderL.andThen(nodesL).mod(this, (nodes) =>
+  def scenario(p: P, title: String = null) = wrap(s"scenario(${ldp(p)})", nextScenarioHolderL.andThen(nodesL).mod(this, (nodes) =>
     checkDuplicateScenario(bl, this, new Scenario[P, R](p, title = Option(title))) :: nodes))
 
   def assert(assertion: (P, R) => Boolean) = macro Builder1.assertionFromRImpl[P, R, FullR]
   def assertMatch(assertion: PartialFunction[(P, R), Boolean]) = macro Builder1.assertionFromPartialFunctionImpl[P, R, FullR]
   def assertException(assertion: (P, Exception) => Boolean) = macro Builder1.assertionFromException[P, R, FullR]
 
-  def configurator(cfg: (P) => Unit) = wrap(currentNodeL.andThen(toScenarioL).andThen(configuratorL).mod(this, _ :+ cfg))
-  def copyNodes(nodes: List[BuilderNode[P, R]]) = wrap(copy(nodes = nodes))
+  def configurator(cfg: (P) => Unit) = wrap("configurator", currentNodeL.andThen(toScenarioL).andThen(configuratorL).mod(this, _ :+ cfg))
+  def copyNodes(nodes: List[BuilderNode[P, R]]) = wrapQuietly(copy(nodes = nodes))
   def build: Engine1[P, R, FullR] = nodes match {
     case (r: EngineRequirement[P, R]) :: nil => buildEngine.buildEngine(r, buildExceptions, ldp)
     case _ => throw new IllegalArgumentException(nodes.toString)
   }
   def copyWithNewExceptions(buildExceptions: ExceptionMap) =
-    wrap(copy(buildExceptions = buildExceptions))
+    wrap("copyWithNewExceptions", copy(buildExceptions = buildExceptions))
 }
 
 

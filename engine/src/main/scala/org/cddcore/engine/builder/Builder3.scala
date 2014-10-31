@@ -99,7 +99,8 @@ case class Builder3[P1, P2, P3, R, FullR](
   import makeClosures._
   import validator._
 
-  def scenario(p1: P1, p2: P2, p3: P3, title: String = null) = wrap(nextScenarioHolderL.andThen(nodesL).mod(this, (nodes) => checkDuplicateScenario(bl, this, new Scenario[(P1, P2, P3), R]((p1, p2, p3), Option(title))) :: nodes))
+  def scenario(p1: P1, p2: P2, p3: P3, title: String = null) = 
+    wrap(s"scenario(${ldp(p1,p2,p3)})", nextScenarioHolderL.andThen(nodesL).mod(this, (nodes) => checkDuplicateScenario(bl, this, new Scenario[(P1, P2, P3), R]((p1, p2, p3), Option(title))) :: nodes))
 
   def because(because: (P1, P2, P3) => Boolean) = macro Builder3.becauseImpl[P1, P2, P3, R, FullR]
 
@@ -114,14 +115,14 @@ case class Builder3[P1, P2, P3, R, FullR](
     val chResult = CodeHolder[((P1, P2, P3)) => R]((p123) => pf.apply((p123)), resultToString)
     becauseHolder(chBecause).codeHolder(chResult)
   }
-  def configurator(cfg: (P1, P2, P3) => Unit) = wrap(currentNodeL.andThen(toScenarioL).andThen(configuratorL).mod(this, _ :+ ((params: (P1, P2, P3)) => cfg(params._1, params._2, params._3))))
+  def configurator(cfg: (P1, P2, P3) => Unit) = wrap("configurator", currentNodeL.andThen(toScenarioL).andThen(configuratorL).mod(this, _ :+ ((params: (P1, P2, P3)) => cfg(params._1, params._2, params._3))))
 
-  def copyNodes(nodes: List[BuilderNode[(P1, P2, P3), R]]) = wrap(copy(nodes = nodes))
+  def copyNodes(nodes: List[BuilderNode[(P1, P2, P3), R]]) = wrapQuietly(copy(nodes = nodes))
   def build: Engine3[P1, P2, P3, R, FullR] = nodes match {
     case (r: EngineRequirement[(P1, P2, P3), R]) :: nil => buildEngine.buildEngine(r, buildExceptions, ldp)
     case _ => throw new IllegalArgumentException(nodes.toString)
   }
-  def copyWithNewExceptions(buildExceptions: ExceptionMap) = wrap(copy(buildExceptions = buildExceptions))
+  def copyWithNewExceptions(buildExceptions: ExceptionMap) = wrap("copyWithNewExceptions", copy(buildExceptions = buildExceptions))
 }
 
 

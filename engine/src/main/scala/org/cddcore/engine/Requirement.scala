@@ -80,7 +80,7 @@ trait Titled {
 
 trait TitledReportable extends Reportable with Titled {
   def description: Option[String]
-  def titleOrDescription(default: String) = title.getOrElse(description.getOrElse(default))
+  def titleOrDescription(default: => String) = title.getOrElse(description.getOrElse(default))
 
 }
 
@@ -246,6 +246,7 @@ trait AnyScenario extends Reportable with Titled {
   def toParams[Params, R] = toScenario[Params, R].params
   def toExpected[Params, R] = toScenario[Params, R].expected
   def toCode[Params, R] = toScenario[Params, R].code
+  def paramsString: String
 }
 
 case class Scenario[Params, R](
@@ -267,7 +268,7 @@ case class Scenario[Params, R](
   def copyScenario(because: Option[CodeHolder[(Params) => Boolean]] = because, assertions: List[CodeHolder[(Params, Either[Exception, R]) => Boolean]] = assertions, configurators: List[(Params) => Unit] = configurators) =
     new Scenario[Params, R](params, title, description, because, code, priority, expected, references, assertions, configurators, textOrder)
 
-
+  def paramsString = cdp(params)
   def htmlPrintExpected: String = expected match {
     case Some(Left(e)) => "throws " + e.getClass
     case Some(Right(v)) => cdp.html(v)

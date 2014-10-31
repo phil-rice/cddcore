@@ -54,13 +54,14 @@ abstract class SimpleBuildEngine[Params, R, E <: EngineTools[Params, R]](
 
 trait BuildEngineFromTests[Params, R, E <: EngineTools[Params, R]] extends BuildEngine[Params, R, R, E] {
   def constructEngine(asRequirement: EngineRequirement[Params, R], dt: DecisionTree[Params, R], exceptionMap: ExceptionMap, ldp: CddDisplayProcessor): E
-  def buildEngine(requirement: EngineRequirement[Params, R], buildExceptions: ExceptionMap, ldp: CddDisplayProcessor) = {
+  def buildEngine(requirement: EngineRequirement[Params, R], buildExceptions: ExceptionMap, ldp: CddDisplayProcessor) = try {
+    Engine.logBuild("buildEngine") 
     requirement match {
       case ed: EngineDescription[Params, R] =>
         val (dt, exceptionMap, modifiedRequirement) = buildTree(ed, buildExceptions)
         constructEngine(modifiedRequirement.copy(tree = Some(dt)), dt, exceptionMap, ldp)
     }
-  }
+  } finally { Engine.logBuild("end of buildEngine") }
 }
 
 trait BuildEngine[Params, R, FullR, E <: EngineTools[Params, R]] {

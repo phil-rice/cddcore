@@ -37,9 +37,7 @@ case class Param(name: String, valueAsString: String, value: Any)
 class CddHandler(title: String, engines: List[Engine], pathHandlers: List[CddPathHandler], val prefix: String = "")(implicit ldp: CddDisplayProcessor) extends AbstractHandler {
   import EngineTools._
   val urlMap = UrlMap() ++ engines
-  if (Engine.logging)
-    for (e <- engines)
-      println(s"CDD Hander. Engine: ${e.textOrder}. Requirements ${e.asRequirement.textOrder}")
+  Engine.log(engines.map(e => s"CDD Hander. Engine: ${e.textOrder}. Requirements ${e.asRequirement.textOrder}").mkString("\n"))
 
   def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse) {
     val renderContext = RenderContext(urlMap, new Date(), prefix + "/")
