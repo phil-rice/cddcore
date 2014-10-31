@@ -4,7 +4,7 @@ import com.typesafe.sbteclipse.plugin.EclipsePlugin.EclipseKeys
 
 object CddBuild extends Build {
 
-  val cddVersionNo = "2.1.1"
+  val cddVersionNo = "2.1.2"
   val scalaVersionNo = "2.10.4"
   val scalaTestVersionNo = "2.2.0"
     
