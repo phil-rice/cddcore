@@ -20,7 +20,7 @@ import org.cddcore.engine._
 object CddRunner {
   val separator = "\n#########\n"
   val userHome = System.getProperty("user.home");
-  var directory = new File(userHome, ".cdd")
+  var directory = new File("target", "cdd")
   val needToAddListener = new AtomicBoolean(true)
   val enginesInTest = new AtomicReference(List[Engine]())
   def addToEngines(l: List[Engine]) {
@@ -36,6 +36,8 @@ object CddRunner {
 trait EngineWalker {
   def walk()
 }
+
+
 
 trait CddRunner extends Runner {
   type ExceptionOrEngine = Either[(Exception, String), EngineTools[_, _]]
@@ -181,7 +183,9 @@ trait CddRunner extends Runner {
     }
 
     Engine.log(s"printing reports")
-    new ReportOrchestrator(CddRunner.directory.toURL().toString(), "JUnit", allEngines).makeReports
+    CddRunner.directory.mkdirs()
+    val orchestrator = new ReportOrchestrator(CddRunner.directory.toURL().toString(), "JUnit", allEngines)
+    orchestrator.makeReports
     Engine.log(s"Ending main run")
 
   }
