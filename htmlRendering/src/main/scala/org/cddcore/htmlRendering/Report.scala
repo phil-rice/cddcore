@@ -8,6 +8,7 @@ import EngineTools._
 import java.io.File
 import org.cddcore.engine.builder.Conclusion
 import org.cddcore.engine.builder.AnyConclusion
+import java.net.URI
 
 object Report {
   def apply(title: Option[String] = None, description: Option[String] = None, nodes: List[Reportable] = List()) =
@@ -73,8 +74,8 @@ class FileReportWriter extends ReportWriter {
   def print(url: String, main: Option[Reportable], html: String) {
     val prefix = "file:/"
     if (url.startsWith(prefix)) {
-      val path = url.substring(prefix.length())
-      Files.printToFile(new File(path))((pw) =>
+      val file = new File(new URI(url))
+      Files.printToFile(file)((pw) =>
         pw.print(html))
     } else throw new IllegalArgumentException("Url is " + url)
   }
