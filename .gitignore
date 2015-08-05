@@ -10,4 +10,4 @@ report/
 *.swp
 .classpath
 .project
-*/.settings/*
+*/.settings/

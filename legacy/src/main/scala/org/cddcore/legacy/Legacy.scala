@@ -15,6 +15,7 @@ case class LegacyData[ID, Params, R](id: ID, params: Params, description: Option
 trait AnyLegacyItem{
   def toLegacyItem[ID, Params, R] = asInstanceOf[LegacyItem[ID, Params, R]]
   def toId[ID]: Any = toLegacyItem[ID, Any, Any].id
+  def toDescription: Option[String] = toLegacyItem[Any, Any, Any].description
   def toExpected[R]: Either[Exception, R] = toLegacyItem[Any, Any, R].expected
   def toActual[R]: Either[Exception, R] = toLegacyItem[Any, Any, R].actual
 }

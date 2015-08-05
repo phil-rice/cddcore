@@ -77,8 +77,8 @@ object LegacyReportRenderer {
       "<div class='legacyItem'><div class='legacyItemTable'>" +
       table("legacyItemTable",
         "legacyTR" -> ("ID" -> "1"),
-        "legacyTR" -> ("Description" -> li1),
-        "legacyTR" -> ("Parameter" -> "1"),
+        "legacyTR" -> ("Description" -> li1.description.getOrElse("")),
+        "legacyTR" -> ("Parameter" -> li1.params),
         "legacyTR" -> ("Expected" -> "X"),
         "legacyTR" -> ("Actual" -> "X")) +
         "</div> <!-- legacyItemTable --></div> <!-- legacyItem -->\n").
@@ -87,8 +87,8 @@ object LegacyReportRenderer {
         "<div class='legacyItem'><div class='legacyItemTable'>" +
           table("legacyItemTable",
             "legacyTR" -> ("ID" -> li.toId),
-            "legacyTR" -> ("Description" -> li1),
-            "legacyTR" -> ("Parameter" -> "1"),
+            "legacyTR" -> ("Description" -> li.toDescription.getOrElse("")),
+            "legacyTR" -> ("Parameter" -> rc.cdp(li.toLegacyItem.params)),
             "legacyTR" -> ("Expected" -> Exceptions.html(li.toExpected)(rc.cdp)),
             "legacyTR" -> ("Actual" -> Exceptions.html(li.toActual)(rc.cdp))) +
             "</div> <!-- legacyItemTable --></div> <!-- legacyItem -->\n"
