@@ -48,11 +48,11 @@ object Report {
   def rendererFor(report: Report) =
     report match {
       case r: DocumentAndEngineReport => HtmlRenderer.engineAndDocumentsSingleItemRenderer
-      case r: TraceReport => HtmlRenderer.traceReportSingleItemRenderer
+      case r: TraceReport             => HtmlRenderer.traceReportSingleItemRenderer
       case r: FocusedReport => r.focusPath.head match {
         case e: EngineRequirement[_, _] => HtmlRenderer.engineReportSingleItemRenderer
-        case uc: UseCase[_, _] => HtmlRenderer.useCaseOrScenarioReportRenderer
-        case s: Scenario[_, _] => HtmlRenderer.useCaseOrScenarioReportRenderer
+        case uc: UseCase[_, _]          => HtmlRenderer.useCaseOrScenarioReportRenderer
+        case s: Scenario[_, _]          => HtmlRenderer.useCaseOrScenarioReportRenderer
       }
     }
 
@@ -103,10 +103,10 @@ class ReportOrchestrator(rootUrl: String, title: String, engines: List[Engine], 
       val t = rootReport.reportPaths
       reportWriter.print(iconUrl, None, Report.html(rootReport, HtmlRenderer.engineAndDocumentsSingleItemRenderer, renderContext))
 
-      for (e <- engines; path: List[Reportable] <- ( e.asRequirement.pathsIncludingSelf.toList): List[List[Reportable]]) {
+      for (e <- engines; path: List[Reportable] <- (e.asRequirement.pathsIncludingSelf.toList): List[List[Reportable]]) {
         val r = path.head
         val url = urlMap(r)
-        val report = Report.focusedReport(Some("title"), path)
+        val report = Report.focusedReport(Reportable.titleOf(r), path)
         val renderer = HtmlRenderer.rendererFor(r)
         val actualPathToConclusion = pathToConclusion(path)
         val newRenderContext = renderContext.copy(pathToConclusion = actualPathToConclusion)
@@ -129,25 +129,25 @@ class ReportOrchestrator(rootUrl: String, title: String, engines: List[Engine], 
 
     path.head match {
       case s: Scenario[Params, R] => path.collect { case ed: EngineDescription[Params, R] => pathFrom(engineFromTestsFor(ed), s.params) }.head
-      case _ => List()
+      case _                      => List()
     }
   }
 }
 
 case class SimpleReport(
-  val title: Option[String],
-  val description: Option[String],
-  val nodes: List[Reportable],
-  val textOrder: Int = Reportable.nextTextOrder) extends Report with NestedHolder[Reportable] {
+    val title: Option[String],
+    val description: Option[String],
+    val nodes: List[Reportable],
+    val textOrder: Int = Reportable.nextTextOrder) extends Report with NestedHolder[Reportable] {
   val reportPaths = pathsIncludingSelf.toList
 
   override def toString = s"Report(${title.getOrElse("None")}, nodes=(${nodes.mkString(",")}))"
 }
 
 case class DocumentAndEngineReport(title: Option[String],
-  val engines: Traversable[Engine],
-  val description: Option[String] = None,
-  val textOrder: Int = Reportable.nextTextOrder) extends Report with NestedHolder[Reportable] {
+                                   val engines: Traversable[Engine],
+                                   val description: Option[String] = None,
+                                   val textOrder: Int = Reportable.nextTextOrder) extends Report with NestedHolder[Reportable] {
   import EngineTools._
   import ReportableHelper._
 
@@ -175,9 +175,9 @@ case class DocumentAndEngineReport(title: Option[String],
 }
 
 case class FocusedReport(title: Option[String],
-  val focusPath: List[Reportable],
-  val description: Option[String] = None,
-  val textOrder: Int = Reportable.nextTextOrder) extends Report {
+                         val focusPath: List[Reportable],
+                         val description: Option[String] = None,
+                         val textOrder: Int = Reportable.nextTextOrder) extends Report {
   import EngineTools._
   import ReportableHelper._
 
@@ -192,16 +192,16 @@ case class FocusedReport(title: Option[String],
       case ed: EngineDescription[_, _] => ed.pathsIncludingTreeAndEngine(path)
     }
     case (h: NestedHolder[Reportable]) :: tail => h.pathsFrom(path).toList
-    case _ => List()
+    case _                                     => List()
   }
 
   val reportPaths = pathsToFocus ::: childrenPaths(pathToFocus) ::: pathsToFocus.flatMap(addDecisionTree)
 
 }
 case class TraceReport(title: Option[String],
-  val traceItems: List[TraceItem[Engine, Any, Any, AnyConclusion]],
-  val description: Option[String] = None,
-  val textOrder: Int = Reportable.nextTextOrder) extends Report {
+                       val traceItems: List[TraceItem[Engine, Any, Any, AnyConclusion]],
+                       val description: Option[String] = None,
+                       val textOrder: Int = Reportable.nextTextOrder) extends Report {
   import EngineTools._
   import ReportableHelper._
   import ReportableHelper._
@@ -213,7 +213,7 @@ case class TraceReport(title: Option[String],
       case path @ (ti: TraceItem[_, _, _, _]) :: tail =>
         path :: ((ti.main: @unchecked) match {
           case f: FoldingEngine[_, _, _] => List()
-          case e: EngineFromTests[_, _] => e.tree.treePathsWithElseClause(path)
+          case e: EngineFromTests[_, _]  => e.tree.treePathsWithElseClause(path)
         })
     }
     thisPath :: result
@@ -221,7 +221,7 @@ case class TraceReport(title: Option[String],
   def edsInTraceItem[Main, Params, Result, Evidence](traceItem: TraceItem[Main, Params, Result, Evidence]): List[EngineRequirement[_, _]] = {
     val head = traceItem.main match {
       case e: FoldingEngine[_, _, _] => e.asRequirement
-      case e: EngineFromTests[_, _] => e.asRequirement
+      case e: EngineFromTests[_, _]  => e.asRequirement
     }
     val tail = traceItem.nodes.flatMap(edsInTraceItem(_)).toList
     head :: tail

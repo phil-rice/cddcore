@@ -43,3 +43,4 @@
 2.1.2 JUnit test now better
 2.1.3 Junit reports now go in target/cdd subdirectory of directory they are run in
 2.1.4 Junit reports should go to target/cdd on Macs as well
+2.1.6 Fixing icons in HTML rendering

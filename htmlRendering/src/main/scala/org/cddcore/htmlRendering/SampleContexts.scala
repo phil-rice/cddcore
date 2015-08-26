@@ -67,9 +67,9 @@ object SampleContexts {
   val conclusionYes = decision.yes.asConclusion
   val conclusionNo = decision.no.asConclusion
 
-  val folding = Engine.foldList[Int, Int].title("Folding Engine Title").
-    childEngine("ce0").scenario(0).expected(0).
-    childEngine("ce1").scenario(1).expected(2).code { (x) => x * 2 }.because { (x) => x > 0 }.
+  val folding = Engine.foldList[Int, Int].title("Folding Engine Title").description("folding Engine description").
+    childEngine("ce0").description("ce0 description").scenario(0).expected(0).
+    childEngine("ce1").description("ce1 description").scenario(1).expected(2).code { (x) => x * 2 }.because { (x) => x > 0 }.
     scenario(2).expected(4).
     build.asInstanceOf[FoldingEngine1[Int, Int, List[Int]]]
 

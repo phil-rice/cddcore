@@ -22,10 +22,10 @@ trait ReportDetails {
 }
 
 class SimpleReportDetails(
-  val css: String = Files.getFromClassPath(classOf[ReportDetails], "cdd.css"),
-  val reportStartTemplate: String = Files.getFromClassPath(classOf[ReportDetails], "reportStart"),
-  val reportEnd: String = Files.getFromClassPath(classOf[ReportDetails], "reportEnd"),
-  val reportDateFormatter: DateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm")) extends ReportDetails {
+    val css: String = Files.getFromClassPath(classOf[ReportDetails], "cdd.css"),
+    val reportStartTemplate: String = Files.getFromClassPath(classOf[ReportDetails], "reportStart"),
+    val reportEnd: String = Files.getFromClassPath(classOf[ReportDetails], "reportEnd"),
+    val reportDateFormatter: DateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm")) extends ReportDetails {
   def reportStart(title: String, iconUrl: String, date: Date) =
     reportStartTemplate.
       replace("$REPORT_TITLE$", title).
@@ -35,12 +35,19 @@ class SimpleReportDetails(
 
 }
 
-case class RenderContext(urlMap: UrlMap, reportDate: Date, iconUrl: String, pathToConclusion: List[Reportable] = List(), reportDetails: ReportDetails = ReportDetails(), misc: Map[String,Any] = Map())(implicit cddDisplayProcessor: CddDisplayProcessor) {
+case class RenderContext(urlMap: UrlMap, reportDate: Date, iconUrl: String, pathToConclusion: List[Reportable] = List(), reportDetails: ReportDetails = ReportDetails(), misc: Map[String, Any] = Map())(implicit cddDisplayProcessor: CddDisplayProcessor) {
   val cdp = cddDisplayProcessor
   override def toString = getClass.getSimpleName()
 }
 
-object HtmlRenderer extends DecisionTreeBuilderForTests2[RenderContext, StartChildEndType, Elem] {
+trait Icons {
+  def engineWithTestsIcon = "http://i782.photobucket.com/albums/yy108/phil-rice/engine_zps9a86cef4.png"
+  def foldingEngineIcon = "http://i782.photobucket.com/albums/yy108/phil-rice/engineFold2_zpsb62930b9.png"
+  def useCasesIcon = "http://i782.photobucket.com/albums/yy108/phil-rice/useCase_zps23a7250c.png"
+  def scenarioIcon = "http://imagizer.imageshack.us/a/img537/7868/P3Ucx2.png"
+}
+
+object HtmlRenderer extends DecisionTreeBuilderForTests2[RenderContext, StartChildEndType, Elem] with Icons {
   import SampleContexts._
   import BuilderPimper._
   def indent(path: List[Reportable]) = path.indexWhere(_.isInstanceOf[DecisionTree[_, _]]) match {
@@ -55,30 +62,30 @@ object HtmlRenderer extends DecisionTreeBuilderForTests2[RenderContext, StartChi
   val icon = Engine[RenderContext, Reportable, String]().title("icon").description("returns the html for an image for the icon for the scenario").
     code((_, _) => "<!-- no icon -->").
     useCase("Engine from tests have icon and title equal to engine titleString").
-    scenario(eBlankTitleReport, eBlankTitle).expected("<img src='http://i782.photobucket.com/albums/yy108/phil-rice/engine_zps9a86cef4.png' alt='engine with tests icon' title='EBlankTitle' />").
-    matchOn { case (_, e: EngineFromTests[_, _]) => s"<img src='http://i782.photobucket.com/albums/yy108/phil-rice/engine_zps9a86cef4.png' alt='engine with tests icon' title='${Strings.htmlEscape(e.titleString)}' />" }.
+    scenario(eBlankTitleReport, eBlankTitle).expected(s"<img src='$engineWithTestsIcon' alt='engine with tests icon' title='EBlankTitle' />").
+    matchOn { case (_, e: EngineFromTests[_, _]) => s"<img src='$engineWithTestsIcon' alt='engine with tests icon' title='${Strings.htmlEscape(e.titleString)}' />" }.
 
     useCase("Engine Descriptions have icon and title equal to engine titleString").
-    scenario(eBlankTitleReport, eBlankTitleED).expected("<img src='http://i782.photobucket.com/albums/yy108/phil-rice/engine_zps9a86cef4.png' alt='engine with tests icon' title='EBlankTitle' />").
-    matchOn { case (_, e: EngineDescription[_, _]) => s"<img src='http://i782.photobucket.com/albums/yy108/phil-rice/engine_zps9a86cef4.png' alt='engine with tests icon' title='${Strings.htmlEscape(e.titleString)}' />" }.
+    scenario(eBlankTitleReport, eBlankTitleED).expected(s"<img src='$engineWithTestsIcon' alt='engine with tests icon' title='EBlankTitle' />").
+    matchOn { case (_, e: EngineDescription[_, _]) => s"<img src='$engineWithTestsIcon' alt='engine with tests icon' title='${Strings.htmlEscape(e.titleString)}' />" }.
 
     useCase("Folding Engine Descriptions have icon and title equal to engine titleString").
-    scenario(foldingEngineReport, foldingED).expected("<img src='http://i782.photobucket.com/albums/yy108/phil-rice/engineFold2_zpsb62930b9.png' alt='folding engine icon' title='Folding Engine Title' />").
-    matchOn { case (_, e: FoldingEngineDescription[_, _, _]) => s"<img src='http://i782.photobucket.com/albums/yy108/phil-rice/engineFold2_zpsb62930b9.png' alt='folding engine icon' title='${Strings.htmlEscape(e.titleString)}' />" }.
+    scenario(foldingEngineReport, foldingED).expected(s"<img src='$foldingEngineIcon' alt='folding engine icon' title='Folding Engine Title' />").
+    matchOn { case (_, e: FoldingEngineDescription[_, _, _]) => s"<img src='$foldingEngineIcon' alt='folding engine icon' title='${Strings.htmlEscape(e.titleString)}' />" }.
 
     useCase("TraceItems have no icon or title").
     scenario(foldingEngineReport, actualFoldingTI).expected("<!-- no icon -->").
     matchOn { case (_, ti: TI) => "<!-- no icon -->" }.
 
     useCase("Usescase  have icon and title equal to titleString").
-    scenario(engineReport, uc0).expected("<img	src='http://i782.photobucket.com/albums/yy108/phil-rice/useCase_zps23a7250c.png' alt='usecase icon' title='useCase0'/>").
-    matchOn { case (_, u: UseCase[_, _]) => s"<img	src='http://i782.photobucket.com/albums/yy108/phil-rice/useCase_zps23a7250c.png' alt='usecase icon' title='${Strings.htmlEscape(u.titleString)}'/>" }.
+    scenario(engineReport, uc0).expected(s"<img	src='$useCasesIcon' alt='usecase icon' title='useCase0'/>").
+    matchOn { case (_, u: UseCase[_, _]) => s"<img	src='$useCasesIcon' alt='usecase icon' title='${Strings.htmlEscape(u.titleString)}'/>" }.
 
     useCase("Scenarios  have icon and title equal to parameters").
-    scenario(engineReport, uc0s0).expected("<img height='15' width='15' src='http://www.constraintdrivendevelopment.org/mediawiki/images/7/73/Scenario.png' alt='scenario icon' title='0'/>").
+    scenario(engineReport, uc0s0).expected(s"<img height='15' width='15' src='$scenarioIcon' alt='scenario icon' title='0'/>").
     matchOn {
       case (rc, s: AnyScenario) =>
-        s"<img height='15' width='15' src='http://www.constraintdrivendevelopment.org/mediawiki/images/7/73/Scenario.png' alt='scenario icon' title='${Strings.htmlTooltipEscape(rc.cdp(s.toParams))}'/>"
+        s"<img height='15' width='15' src='$scenarioIcon' alt='scenario icon' title='${Strings.htmlTooltipEscape(rc.cdp(s.toParams))}'/>"
     }.
     build
 
@@ -213,5 +220,9 @@ object HtmlRenderer extends DecisionTreeBuilderForTests2[RenderContext, StartChi
       matchOn { case _: Requirement => useCaseOrScenarioReportRenderer }.
       scenario(uc0s0).expected(useCaseOrScenarioReportRenderer).
       build
+
+  def main(args: Array[String]): Unit = {
+    println("Renderer loads")
+  }
 
 }

@@ -94,11 +94,13 @@ class BuilderPimper(builder: Builder3[RenderContext, List[Reportable], StartChil
       case (rc, (fed: FoldingEngineDescription[_, _, _]) :: _, End) =>
         s"</ul>"
     }
+    
+    protected def engineDescription(e: TitledReportable) = e.description.map(d=>s"<div class='engineDescription'>$d</div>\n").getOrElse("")
 
   def renderFoldingEngines = builder.useCase("A folding engine is rendered as a 'engineWithChildren' div. The engineWithChildrenSummary is totally redundant. Inside that is an engineText which holds the engine text, followed by the children ").
     scenario(foldingEngineReport, foldingED, Start).
-    expected(s"\n<div class='engineWithChildren'><div class='engineWithChildrenSummary'><div class='engineText'>${titleAndIcon(foldingEngineReport, foldingED)}</div> <!-- engineText -->\n").
-    matchOn { case (rc, (engine: FoldingEngineDescription[_, _, _]) :: _, Start) => s"\n<div class='engineWithChildren'><div class='engineWithChildrenSummary'><div class='engineText'>${titleAndIcon(rc, engine)}</div> <!-- engineText -->\n" }.
+    expected(s"\n<div class='engineWithChildren'><div class='engineWithChildrenSummary'><div class='engineText'>${titleAndIcon(foldingEngineReport, foldingED)}</div> <!-- engineText -->\n<div class='engineDescription'>folding Engine description</div>\n").
+    matchOn { case (rc, (engine: FoldingEngineDescription[_, _, _]) :: _, Start) => s"\n<div class='engineWithChildren'><div class='engineWithChildrenSummary'><div class='engineText'>${titleAndIcon(rc, engine)}</div> <!-- engineText -->\n${engineDescription(engine)}" }.
 
     scenario(foldingEngineReport, foldingED, End).
     expected("\n</div> <!--engineWithChildrenSummary --></div> <!-- engineWithChildren -->\n").
@@ -106,10 +108,10 @@ class BuilderPimper(builder: Builder3[RenderContext, List[Reportable], StartChil
 
   def renderChildEngines = builder.useCase("A child engine is rendered as childEngine div within that is a engineSummary div. The children are after the engineSummary div").
     scenario(foldingEngineReport, ce0ED, Start).
-    expected(s"<div class='childEngine'><div class='engineSummary'>\n<div class='engineText'>${titleAndIcon(foldingEngineReport, ce0ED)}</div> <!-- engineText -->\n").
+    expected(s"<div class='childEngine'><div class='engineSummary'>\n<div class='engineText'>${titleAndIcon(foldingEngineReport, ce0ED)}</div> <!-- engineText -->\n<div class='engineDescription'>ce0 description</div>\n").
     matchOn {
       case (rc, (engine: EngineDescription[_, _]) :: (_: FoldingEngineDescription[_, _, _]) :: _, Start) =>
-        s"<div class='childEngine'><div class='engineSummary'>\n<div class='engineText'>${titleAndIcon(rc, engine)}</div> <!-- engineText -->\n"
+        s"<div class='childEngine'><div class='engineSummary'>\n<div class='engineText'>${titleAndIcon(rc, engine)}</div> <!-- engineText -->\n${engineDescription(engine)}"
     }.
 
     scenario(foldingEngineReport, ce0ED, End).
@@ -121,7 +123,7 @@ class BuilderPimper(builder: Builder3[RenderContext, List[Reportable], StartChil
     expected(s"<div class='engineWithTests'><div class='engineSummary'>\n<div class='engineText'>${titleAndIcon(engineReport, eWithUsecasesAndScenariosEd)}</div> <!-- engineText -->\n").
     matchOn {
       case (rc, (engine: EngineDescription[_, _]) :: _, Start) =>
-        s"<div class='engineWithTests'><div class='engineSummary'>\n<div class='engineText'>${titleAndIcon(rc, engine)}</div> <!-- engineText -->\n"
+        s"<div class='engineWithTests'><div class='engineSummary'>\n<div class='engineText'>${titleAndIcon(rc, engine)}</div> <!-- engineText -->\n${engineDescription(engine)}"
     }.
 
     scenario(engineReport, eWithUsecasesAndScenariosEd, End).

@@ -20,7 +20,7 @@
 			</div> <!-- cddBox -->
 			<div class='reportTopBox'>
 			<div class='reportTitle'>Report name</div>
-			<div class='reportText'>Project: $REPORT_TITLE$ </div>
+			<div class='reportText'>$REPORT_TITLE$&nbsp;</div>
 			<div class='reportTitle'>Report date</div>
 			<div class='reportDate'>$REPORT_DATE$</div>
 			</div><!--Report Top Box-->
